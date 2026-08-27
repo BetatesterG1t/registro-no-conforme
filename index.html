@@ -46,6 +46,7 @@
     <strong>Cargando datos...</strong>
     <div id="captacionStatus">Base de Órdenes (rep-ov-espec): cargando...</div>
     <div id="validacionesStatus">Listas de Validación: cargando...</div>
+    <div id="sheetsStatus">Google Sheets: verificando...</div>
   </div>
 
   <div id="registro" class="form-panel">
@@ -198,6 +199,8 @@
     const ORDENES_URL = "data/ordenes.json";
     const REGISTROS_KEY = "ncRegistros";
     const ULTIMO_ID_KEY = "ncUltimoID";
+    // URL de la Aplicación web de Apps Script (Implementar > Nueva implementación)
+    const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxlGT0VoABR_uoDhoxy5L6kjFsoSB6wxDtV7B_4RHNsLSRqn0gnaZdb65BSooln6OQ1HQ/exec";
 
     let captacionIndex = {};
     let captacionMeta = null;
@@ -449,16 +452,15 @@
       }
     }
 
-    document.getElementById("formNoConforme").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const data = {};
-      new FormData(this).forEach((valor, clave) => { data[clave] = valor; });
+    function guardarCopiaLocal(data) {
       const registros = leerRegistros();
       registros.push(data);
       localStorage.setItem(REGISTROS_KEY, JSON.stringify(registros));
       localStorage.setItem(ULTIMO_ID_KEY, String(data.id));
-      alert("Registro guardado con ID: " + data.id);
-      this.reset();
+    }
+
+    function limpiarFormulario(form) {
+      form.reset();
       document.getElementById("um").value = "KG";
       document.getElementById("productoSeleccion").style.display = "none";
       ["cliente", "producto", "codigo"].forEach(id => document.getElementById(id).classList.remove("auto-filled"));
@@ -466,6 +468,66 @@
       reiniciarCamposCondicionales();
       asignarID();
       fechaHoy();
+    }
+
+    async function guardarEnGoogleSheets(data) {
+      if (!SHEETS_WEBAPP_URL) {
+        throw new Error("Falta conectar Google Sheets. Publica apps-script/Code.gs y pega la URL en el HTML.");
+      }
+      // text/plain + no-cors: un solo envío, evita el bloqueo CORS de Apps Script
+      await fetch(SHEETS_WEBAPP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(data)
+      });
+      return { ok: true };
+    }
+
+    function actualizarEstadoSheets(ok, mensaje) {
+      const box = document.getElementById("sheetsStatus");
+      box.textContent = mensaje;
+      const contenedor = document.getElementById("fuentesStatus");
+      if (!ok) contenedor.classList.add("warn");
+    }
+
+    async function verificarGoogleSheets() {
+      if (!SHEETS_WEBAPP_URL) {
+        actualizarEstadoSheets(false, "⚠ Google Sheets: aún no está conectado.");
+        return;
+      }
+      try {
+        const respuesta = await fetch(SHEETS_WEBAPP_URL, { cache: "no-store" });
+        const parsed = await respuesta.json();
+        if (parsed && parsed.ok) {
+          actualizarEstadoSheets(true, "✓ Google Sheets: listo para guardar registros.");
+        } else {
+          actualizarEstadoSheets(false, "⚠ Google Sheets: " + (parsed.error || "sin respuesta"));
+        }
+      } catch (err) {
+        actualizarEstadoSheets(false, "⚠ Google Sheets: no se pudo verificar (" + err.message + "). Igual se intentará guardar.");
+      }
+    }
+
+    document.getElementById("formNoConforme").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const data = {};
+      new FormData(this).forEach((valor, clave) => { data[clave] = valor; });
+      const btn = this.querySelector('button[type="submit"]');
+      const textoOriginal = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Guardando en Google Sheets...";
+      guardarCopiaLocal(data);
+      try {
+        await guardarEnGoogleSheets(data);
+        alert("Registro enviado a Google Sheets (ID local: " + data.id + "). Revisa la hoja \"Registro de No Conforme\" en tu Drive.");
+        limpiarFormulario(this);
+      } catch (err) {
+        alert("No se pudo guardar en Google Sheets: " + err.message + "\nSe quedó una copia en este navegador (Exportar registros).");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
+      }
     });
 
     document.getElementById("btnExportar").addEventListener("click", function() {
@@ -493,6 +555,7 @@
       fechaHoy();
       cargarValidaciones();
       cargarOrdenes();
+      verificarGoogleSheets();
     };
   </script>
 </body>
