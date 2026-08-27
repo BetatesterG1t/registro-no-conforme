@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registro de No Conforme</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f3f5f7; color: #222; }
+    h1 { margin-top: 0; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, select, textarea {
+      width: 100%; padding: 8px; margin-top: 5px;
+      border: 1px solid #ccc; border-radius: 4px;
+      box-sizing: border-box; background: #fff;
+    }
+    input[readonly] { background: #eee; }
+    button {
+      margin-top: 20px; padding: 10px 15px; background: #0078d7;
+      color: white; border: none; border-radius: 4px; cursor: pointer;
+    }
+    button:hover { background: #005a9e; }
+    .hint { font-size: 0.85em; color: #555; margin-top: 4px; }
+    .auto-filled { background: #fff8db !important; }
+    #productoSeleccion { display: none; margin-top: 10px; }
+    .form-panel { border: 1px solid #ccc; padding: 20px; border-radius: 8px; background: #f9f9f9; max-width: 820px; }
+    .fuentes-status {
+      max-width: 820px; margin-bottom: 20px; padding: 12px 15px; border-radius: 6px; font-size: 0.9em;
+      background: #eef6ff; border: 1px solid #b6d8ff;
+    }
+    .fuentes-status.ok { background: #eaffea; border-color: #b6e6b6; }
+    .fuentes-status.error { background: #ffecec; border-color: #f3b6b6; }
+    .fuentes-status.warn { background: #fff8e6; border-color: #f0d48a; }
+    .fuentes-status div { margin-top: 4px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+    .span-2 { grid-column: 1 / -1; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .secondary-btn { background: #5f6b7a; }
+    .secondary-btn:hover { background: #45505c; }
+  </style>
+</head>
+<body>
+  <h1>Registro de No Conforme</h1>
+
+  <div id="fuentesStatus" class="fuentes-status">
+    <strong>Cargando datos...</strong>
+    <div id="captacionStatus">Base de Órdenes (rep-ov-espec): cargando...</div>
+    <div id="validacionesStatus">Listas de Validación: cargando...</div>
+  </div>
+
+  <div id="registro" class="form-panel">
+    <form id="formNoConforme">
+      <div class="grid">
+        <div>
+          <label for="id">ID</label>
+          <input type="number" id="id" name="id" readonly value="1">
+        </div>
+        <div>
+          <label for="fecha">Fecha</label>
+          <input type="date" id="fecha" name="fecha" required>
+        </div>
+        <div>
+          <label for="mes">Mes</label>
+          <select id="mes" name="mes" required>
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="orden">Orden</label>
+          <input type="text" id="orden" name="orden" list="ordenesList" autocomplete="off" required>
+          <datalist id="ordenesList"></datalist>
+          <div class="hint" id="ordenHint">Escribe la orden para traer cliente, código y producto desde Seguimiento OT (rep-ov-espec).</div>
+        </div>
+      </div>
+
+      <div id="productoSeleccion">
+        <label for="productoOpciones">Esta orden tiene varios productos, selecciona uno</label>
+        <select id="productoOpciones"></select>
+      </div>
+
+      <div class="grid">
+        <div class="span-2">
+          <label for="cliente">Cliente</label>
+          <input type="text" id="cliente" name="cliente" required>
+        </div>
+        <div>
+          <label for="codigo">Código</label>
+          <input type="text" id="codigo" name="codigo" required>
+        </div>
+        <div class="span-2">
+          <label for="producto">Producto</label>
+          <input type="text" id="producto" name="producto" required>
+        </div>
+        <div>
+          <label for="cantidad">Cantidad KG</label>
+          <input type="number" step="any" id="cantidad" name="cantidad" required min="0">
+        </div>
+        <div>
+          <label for="um">Unidad de Medida</label>
+          <input type="text" id="um" name="um" value="KG" readonly>
+        </div>
+        <div>
+          <label for="cantidad_pzas">Cantidad de Pzas o ML</label>
+          <input type="number" step="any" id="cantidad_pzas" name="cantidad_pzas" required min="0">
+        </div>
+        <div>
+          <label for="um_pzas">Unidad</label>
+          <select id="um_pzas" name="um_pzas" required>
+            <option value="">Seleccione...</option>
+            <option value="PZ">PZ</option>
+            <option value="ML">ML</option>
+          </select>
+        </div>
+        <div>
+          <label for="proceso_detecta">Proceso que detecta</label>
+          <select id="proceso_detecta" name="proceso_detecta" required>
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="maquina_detecta">Máquina que detecta</label>
+          <select id="maquina_detecta" name="maquina_detecta" required>
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="operador_detecta">Operador que detecta</label>
+          <select id="operador_detecta" name="operador_detecta" required>
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="proceso_origina">Proceso que origina</label>
+          <select id="proceso_origina" name="proceso_origina" required>
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="maquina">Máquina que origina</label>
+          <select id="maquina" name="maquina" required>
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="operador">Operador que origina</label>
+          <select id="operador" name="operador" required>
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="defecto">Defecto</label>
+          <select id="defecto" name="defecto" required>
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="reporta">Reporta</label>
+          <select id="reporta" name="reporta" required>
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="se_autoriza">Se autoriza</label>
+          <select id="se_autoriza" name="se_autoriza" required>
+            <option value="">Seleccione...</option>
+            <option value="Sí">Sí</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="saneaBloque" style="display:none">
+        <label for="se_sanea">Se sanea</label>
+        <select id="se_sanea" name="se_sanea">
+          <option value="">Seleccione...</option>
+          <option value="Sí">Sí</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+
+      <div id="materialBloque" style="display:none">
+        <label for="material_recuperado">Material recuperado/liberado</label>
+        <input type="number" step="any" id="material_recuperado" name="material_recuperado" min="0">
+
+        <label for="material_rechazado">Material rechazado/destrucción</label>
+        <input type="number" step="any" id="material_rechazado" name="material_rechazado" min="0">
+      </div>
+
+      <div class="actions">
+        <button type="submit">Guardar Registro</button>
+        <button type="button" id="btnExportar" class="secondary-btn">Exportar registros</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const VALIDACIONES_URL = "data/validaciones.json";
+    const ORDENES_URL = "data/ordenes.json";
+    const REGISTROS_KEY = "ncRegistros";
+    const ULTIMO_ID_KEY = "ncUltimoID";
+
+    let captacionIndex = {};
+    let captacionMeta = null;
+    let validacionesData = {};
+    let validacionesMeta = null;
+
+    function asignarID() {
+      const ultimo = Number(localStorage.getItem(ULTIMO_ID_KEY) || "0") + 1;
+      document.getElementById("id").value = ultimo;
+    }
+
+    function fechaHoy() {
+      const d = new Date();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      document.getElementById("fecha").value = d.getFullYear() + "-" + m + "-" + day;
+    }
+
+    document.getElementById("se_autoriza").addEventListener("change", function() {
+      const saneaBloque = document.getElementById("saneaBloque");
+      const materialBloque = document.getElementById("materialBloque");
+      const seSanea = document.getElementById("se_sanea");
+      const matRecuperado = document.getElementById("material_recuperado");
+      const matRechazado = document.getElementById("material_rechazado");
+      if (this.value === "Sí") {
+        saneaBloque.style.display = "block";
+        seSanea.required = true;
+      } else {
+        saneaBloque.style.display = "none";
+        materialBloque.style.display = "none";
+        seSanea.required = false;
+        seSanea.value = "";
+        matRecuperado.required = false;
+        matRecuperado.value = "";
+        matRechazado.required = false;
+        matRechazado.value = "";
+      }
+    });
+
+    document.getElementById("se_sanea").addEventListener("change", function() {
+      const materialBloque = document.getElementById("materialBloque");
+      const matRecuperado = document.getElementById("material_recuperado");
+      const matRechazado = document.getElementById("material_rechazado");
+      if (this.value === "Sí") {
+        materialBloque.style.display = "block";
+        matRecuperado.required = true;
+        matRechazado.required = true;
+      } else {
+        materialBloque.style.display = "none";
+        matRecuperado.required = false;
+        matRecuperado.value = "";
+        matRechazado.required = false;
+        matRechazado.value = "";
+      }
+    });
+
+    function reiniciarCamposCondicionales() {
+      document.getElementById("saneaBloque").style.display = "none";
+      document.getElementById("materialBloque").style.display = "none";
+      document.getElementById("se_sanea").required = false;
+      document.getElementById("material_recuperado").required = false;
+      document.getElementById("material_rechazado").required = false;
+    }
+
+    function normalizarClave(v) {
+      return String(v == null ? "" : v).trim().toUpperCase();
+    }
+
+    function codigoDe(registro) {
+      return (registro.sku || registro.idArticulo || "").trim();
+    }
+
+    async function cargarJSON(url) {
+      const respuesta = await fetch(url, { cache: "no-store" });
+      if (!respuesta.ok) {
+        throw new Error("No se encontró " + url + " (HTTP " + respuesta.status + ")");
+      }
+      return respuesta.json();
+    }
+
+    function actualizarEstadoFuentes() {
+      const contenedor = document.getElementById("fuentesStatus");
+      const okCaptacion = Boolean(captacionMeta);
+      const okValidaciones = Boolean(validacionesMeta);
+      contenedor.classList.remove("ok", "error", "warn");
+      if (okCaptacion && okValidaciones) {
+        contenedor.classList.add("ok");
+        contenedor.querySelector("strong").textContent = "Datos listos";
+      } else if (!okCaptacion && !okValidaciones) {
+        contenedor.classList.add("error");
+        contenedor.querySelector("strong").textContent = "No se pudieron cargar los datos";
+      } else {
+        contenedor.classList.add("warn");
+        contenedor.querySelector("strong").textContent = "Carga parcial";
+      }
+    }
+
+    async function cargarValidaciones() {
+      const box = document.getElementById("validacionesStatus");
+      try {
+        validacionesData = await cargarJSON(VALIDACIONES_URL);
+        validacionesMeta = { fileName: VALIDACIONES_URL };
+        const listas = ["mes", "proceso_detecta", "maquina_detecta", "operador_detecta", "proceso_origina", "maquina", "operador", "defecto", "reporta"];
+        listas.forEach(id => poblarSelectDesdeLista(id, validacionesData[id] || []));
+        const llenas = listas.filter(id => (validacionesData[id] || []).length).length;
+        box.innerHTML = "✓ Listas de Validación: <strong>" + llenas + " de " + listas.length + " listas</strong> desde VALIDACIONES.xlsx";
+      } catch (err) {
+        box.textContent = "⚠ Listas de Validación: " + err.message;
+      }
+      actualizarEstadoFuentes();
+    }
+
+    function poblarSelectDesdeLista(selectId, valores) {
+      const select = document.getElementById(selectId);
+      if (!select) return;
+      const valorActual = select.value;
+      select.innerHTML = "";
+      const optVacia = document.createElement("option");
+      optVacia.value = "";
+      optVacia.textContent = "Seleccione...";
+      select.appendChild(optVacia);
+      valores.forEach(valor => {
+        const option = document.createElement("option");
+        option.value = valor;
+        option.textContent = valor;
+        select.appendChild(option);
+      });
+      select.value = valores.includes(valorActual) ? valorActual : "";
+    }
+
+    async function cargarOrdenes() {
+      const box = document.getElementById("captacionStatus");
+      try {
+        const registros = await cargarJSON(ORDENES_URL);
+        const index = {};
+        registros.forEach(reg => {
+          [reg.orden, reg.ordenCompra].forEach(clave => {
+            if (!clave) return;
+            const k = normalizarClave(clave);
+            if (!index[k]) index[k] = [];
+            index[k].push(reg);
+          });
+        });
+        captacionIndex = index;
+        captacionMeta = { registros: registros.length, fileName: ORDENES_URL };
+        box.innerHTML = "✓ Base de Órdenes: <strong>" + registros.length + " registros</strong> de rep-ov-espec";
+        poblarDatalistOrdenes();
+      } catch (err) {
+        box.textContent = "⚠ Base de Órdenes: " + err.message;
+      }
+      actualizarEstadoFuentes();
+    }
+
+    function poblarDatalistOrdenes() {
+      const datalist = document.getElementById("ordenesList");
+      datalist.innerHTML = "";
+      const vistos = new Set();
+      Object.keys(captacionIndex).slice(0, 4000).forEach(clave => {
+        const orden = captacionIndex[clave][0].orden || clave;
+        if (vistos.has(orden)) return;
+        vistos.add(orden);
+        const opt = document.createElement("option");
+        opt.value = orden;
+        datalist.appendChild(opt);
+      });
+    }
+
+    document.getElementById("orden").addEventListener("input", function(e) {
+      buscarOrden(e.target.value);
+    });
+    document.getElementById("orden").addEventListener("change", function(e) {
+      buscarOrden(e.target.value);
+    });
+
+    function buscarOrden(valor) {
+      const hint = document.getElementById("ordenHint");
+      const productoSeleccionDiv = document.getElementById("productoSeleccion");
+      const clave = normalizarClave(valor);
+
+      if (!clave) {
+        hint.textContent = "Escribe la orden para traer cliente, código y producto desde Seguimiento OT (rep-ov-espec).";
+        productoSeleccionDiv.style.display = "none";
+        return;
+      }
+
+      if (Object.keys(captacionIndex).length === 0) {
+        hint.textContent = "Aún no hay base de órdenes cargada.";
+        return;
+      }
+
+      const registros = captacionIndex[clave];
+      if (!registros || registros.length === 0) {
+        hint.textContent = "Orden no encontrada en rep-ov-espec.";
+        productoSeleccionDiv.style.display = "none";
+        return;
+      }
+
+      const unicos = [];
+      const vistos = new Set();
+      registros.forEach(r => {
+        const key = codigoDe(r) + "||" + r.producto;
+        if (!vistos.has(key)) {
+          vistos.add(key);
+          unicos.push(r);
+        }
+      });
+
+      setCampo("cliente", registros[0].cliente);
+
+      if (unicos.length === 1) {
+        aplicarProducto(unicos[0]);
+        productoSeleccionDiv.style.display = "none";
+        hint.textContent = "Cliente, código y producto encontrados en rep-ov-espec.";
+      } else {
+        const select = document.getElementById("productoOpciones");
+        select.innerHTML = "";
+        unicos.forEach((r, i) => {
+          const opt = document.createElement("option");
+          opt.value = i;
+          opt.textContent = (codigoDe(r) ? codigoDe(r) + " - " : "") + r.producto;
+          select.appendChild(opt);
+        });
+        select.onchange = function() {
+          aplicarProducto(unicos[parseInt(select.value, 10)]);
+        };
+        productoSeleccionDiv.style.display = "block";
+        aplicarProducto(unicos[0]);
+        hint.textContent = "Esta orden tiene " + unicos.length + " productos. Elige el correcto arriba.";
+      }
+    }
+
+    function aplicarProducto(registro) {
+      setCampo("producto", registro.producto);
+      setCampo("codigo", codigoDe(registro));
+    }
+
+    function setCampo(id, valor) {
+      const input = document.getElementById(id);
+      if (!valor) return;
+      input.value = valor;
+      input.classList.add("auto-filled");
+    }
+
+    function leerRegistros() {
+      try {
+        return JSON.parse(localStorage.getItem(REGISTROS_KEY) || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
+
+    document.getElementById("formNoConforme").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const data = {};
+      new FormData(this).forEach((valor, clave) => { data[clave] = valor; });
+      const registros = leerRegistros();
+      registros.push(data);
+      localStorage.setItem(REGISTROS_KEY, JSON.stringify(registros));
+      localStorage.setItem(ULTIMO_ID_KEY, String(data.id));
+      alert("Registro guardado con ID: " + data.id);
+      this.reset();
+      document.getElementById("um").value = "KG";
+      document.getElementById("productoSeleccion").style.display = "none";
+      ["cliente", "producto", "codigo"].forEach(id => document.getElementById(id).classList.remove("auto-filled"));
+      document.getElementById("ordenHint").textContent = "Escribe la orden para traer cliente, código y producto desde Seguimiento OT (rep-ov-espec).";
+      reiniciarCamposCondicionales();
+      asignarID();
+      fechaHoy();
+    });
+
+    document.getElementById("btnExportar").addEventListener("click", function() {
+      const registros = leerRegistros();
+      if (!registros.length) {
+        alert("No hay registros guardados en este navegador.");
+        return;
+      }
+      const headers = Object.keys(registros[0]);
+      const lineas = [headers.join(",")];
+      registros.forEach(r => {
+        lineas.push(headers.map(h => '"' + String(r[h] == null ? "" : r[h]).replace(/"/g, '""') + '"').join(","));
+      });
+      const blob = new Blob(["\uFEFF" + lineas.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "registros-no-conforme.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    window.onload = function() {
+      asignarID();
+      fechaHoy();
+      cargarValidaciones();
+      cargarOrdenes();
+    };
+  </script>
+</body>
+</html>
