@@ -136,9 +136,11 @@
         </div>
         <div>
           <label for="operador_detecta">Operador que detecta</label>
-          <select id="operador_detecta" name="operador_detecta" required>
-            <option value="">Seleccione...</option>
-          </select>
+          <div class="autocomplete">
+            <input type="text" id="operador_detecta" name="operador_detecta" autocomplete="off" required placeholder="Escribe el nombre...">
+            <div class="sugerencias" id="operador_detectaSugerencias" hidden></div>
+          </div>
+          <div class="hint">Escribe el nombre para ver coincidencias.</div>
         </div>
         <div>
           <label for="proceso_origina">Proceso que origina</label>
@@ -323,12 +325,12 @@
       try {
         validacionesData = await cargarJSON(VALIDACIONES_URL);
         validacionesMeta = { fileName: VALIDACIONES_URL };
-        const listas = ["mes", "proceso_detecta", "maquina_detecta", "operador_detecta", "proceso_origina", "maquina", "defecto", "autorizo"];
+        const listas = ["mes", "proceso_detecta", "maquina_detecta", "proceso_origina", "maquina", "defecto", "autorizo"];
         listas.forEach(id => poblarSelectDesdeLista(id, validacionesData[id] || []));
-        ["operador", "reporta"].forEach(id => activarAutocomplete(id, validacionesData[id] || []));
-        const total = listas.length + 2;
+        ["operador_detecta", "operador", "reporta"].forEach(id => activarAutocomplete(id, validacionesData[id] || []));
+        const total = listas.length + 3;
         const llenas = listas.filter(id => (validacionesData[id] || []).length).length
-          + ["operador", "reporta"].filter(id => (validacionesData[id] || []).length).length;
+          + ["operador_detecta", "operador", "reporta"].filter(id => (validacionesData[id] || []).length).length;
         box.innerHTML = "✓ Listas de Validación: <strong>" + llenas + " de " + total + " listas</strong> desde VALIDACIONES.xlsx";
       } catch (err) {
         box.textContent = "⚠ Listas de Validación: " + err.message;
@@ -448,7 +450,7 @@
     }
 
     function confirmarAutocomplete() {
-      const campos = ["operador", "reporta"];
+      const campos = ["operador_detecta", "operador", "reporta"];
       for (let i = 0; i < campos.length; i++) {
         const id = campos[i];
         const input = document.getElementById(id);

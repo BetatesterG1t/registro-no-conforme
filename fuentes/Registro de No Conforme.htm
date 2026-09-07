@@ -122,8 +122,11 @@
       </select>
 
       <label for="operador_detecta">Operador que detecta</label>
-      <input type="text" id="operador_detecta" name="operador_detecta" list="operadorDetectaList" autocomplete="off" required="">
-      <datalist id="operadorDetectaList"></datalist>
+      <div class="autocomplete">
+        <input type="text" id="operador_detecta" name="operador_detecta" autocomplete="off" required="" placeholder="Escribe el nombre...">
+        <div class="sugerencias" id="operador_detectaSugerencias" hidden></div>
+      </div>
+      <div class="hint">Escribe el nombre para ver coincidencias de la validación.</div>
 
       <label for="proceso_origina">Proceso que origina</label>
       <select id="proceso_origina" name="proceso_origina" required="">
@@ -669,10 +672,8 @@
     }
 
     // Campos que ahora son <input> con <datalist> en vez de <select>
-    const CAMPOS_CON_DATALIST = {
-      operador_detecta: "operadorDetectaList"
-    };
-    const CAMPOS_AUTOCOMPLETE = ["operador", "reporta"];
+    const CAMPOS_CON_DATALIST = {};
+    const CAMPOS_AUTOCOMPLETE = ["operador_detecta", "operador", "reporta"];
     const autocompleteState = {};
 
     function normalizarBusqueda(s) {
