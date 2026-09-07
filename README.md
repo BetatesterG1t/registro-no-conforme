@@ -20,4 +20,4 @@ En la carpeta del proyecto:
 python scripts/actualizar-datos.py
 ```
 
-Lee los archivos de `Desktop\PNCIPROY` y regenera `data/validaciones.json` y `data/ordenes.json`. Después hay que volver a subir esos JSON al repositorio.
+Lee `VALIDACIONES.xlsx` y `SEGUIMIENTO DE OT1 (1).xlsx` desde el Escritorio (`Registro No Conforme - pagina corregida`, `PROYECTO\PNCIPROY2` o `PNCIPROY`) y regenera `data/validaciones.json` y `data/ordenes.json`. Después hay que volver a subir esos JSON al repositorio.

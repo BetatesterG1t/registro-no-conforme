@@ -161,6 +161,12 @@
           </select>
         </div>
         <div>
+          <label for="autorizo">Autorizo</label>
+          <select id="autorizo" name="autorizo" required>
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
           <label for="se_autoriza">Se autoriza</label>
           <select id="se_autoriza" name="se_autoriza" required>
             <option value="">Seleccione...</option>
@@ -303,7 +309,7 @@
       try {
         validacionesData = await cargarJSON(VALIDACIONES_URL);
         validacionesMeta = { fileName: VALIDACIONES_URL };
-        const listas = ["mes", "proceso_detecta", "maquina_detecta", "operador_detecta", "proceso_origina", "maquina", "operador", "defecto", "reporta"];
+        const listas = ["mes", "proceso_detecta", "maquina_detecta", "operador_detecta", "proceso_origina", "maquina", "operador", "defecto", "reporta", "autorizo"];
         listas.forEach(id => poblarSelectDesdeLista(id, validacionesData[id] || []));
         const llenas = listas.filter(id => (validacionesData[id] || []).length).length;
         box.innerHTML = "✓ Listas de Validación: <strong>" + llenas + " de " + listas.length + " listas</strong> desde VALIDACIONES.xlsx";

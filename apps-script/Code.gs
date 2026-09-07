@@ -36,6 +36,7 @@ const HEADERS = [
   "Operador que origina",
   "Defecto",
   "Reporta",
+  "Autorizo",
   "Se autoriza",
   "Se sanea",
   "Material recuperado",
@@ -60,13 +61,21 @@ function getSpreadsheet() {
 function ensureSheet(ss) {
   let sh = ss.getSheetByName(HOJA);
   if (!sh) sh = ss.insertSheet(HOJA);
-  const actuales = sh.getRange(1, 1, 1, HEADERS.length).getValues()[0];
+  const lastCol = Math.max(sh.getLastColumn(), HEADERS.length);
+  const actuales = sh.getRange(1, 1, 1, lastCol).getValues()[0].map(function (v) {
+    return String(v || "").trim();
+  });
   if (String(actuales[0] || "").trim() !== HEADERS[0]) {
     sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
     sh.getRange(1, 1, 1, HEADERS.length).setFontWeight("bold");
     sh.setFrozenRows(1);
     sh.setColumnWidth(7, 180);
     sh.setColumnWidth(8, 320);
+  } else if (actuales.indexOf("Autorizo") === -1) {
+    const reportaIdx = actuales.indexOf("Reporta");
+    const col = reportaIdx >= 0 ? reportaIdx + 2 : HEADERS.indexOf("Autorizo") + 1;
+    sh.insertColumnAfter(col - 1);
+    sh.getRange(1, col).setValue("Autorizo").setFontWeight("bold");
   }
   const extra = ss.getSheetByName("Hoja 1") || ss.getSheetByName("Sheet1");
   if (extra && ss.getSheets().length > 1) {
@@ -132,6 +141,7 @@ function guardarRegistro(data) {
     data.operador || "",
     data.defecto || "",
     data.reporta || "",
+    data.autorizo || "",
     data.se_autoriza || "",
     data.se_sanea || "",
     data.material_recuperado || "",

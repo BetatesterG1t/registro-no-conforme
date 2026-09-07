@@ -1,11 +1,27 @@
-"""Regenera data/validaciones.json y data/ordenes.json desde los Excel de PNCIPROY."""
+"""Regenera data/validaciones.json y data/ordenes.json desde los Excel de PNCIPROY2."""
 from pathlib import Path
 import json
 from openpyxl import load_workbook
 
-DESKTOP = Path.home() / "Desktop" / "PNCIPROY"
-VALIDACIONES_XLSX = DESKTOP / "VALIDACIONES.xlsx"
-SEGUIMIENTO_XLSX = DESKTOP / "SEGUIMIENTO DE OT1 (1).xlsx"
+DESKTOP = Path.home() / "Desktop"
+CANDIDATOS = [
+    DESKTOP / "Registro No Conforme - pagina corregida",
+    DESKTOP / "PROYECTO" / "PNCIPROY2",
+    DESKTOP / "PROYECTO" / "PNCIPROY",
+    DESKTOP / "PNCIPROY",
+]
+
+
+def primer_existente(nombre):
+    for carpeta in CANDIDATOS:
+        ruta = carpeta / nombre
+        if ruta.exists():
+            return ruta
+    raise FileNotFoundError("No se encontró " + nombre + " en: " + ", ".join(str(c) for c in CANDIDATOS))
+
+
+VALIDACIONES_XLSX = primer_existente("VALIDACIONES.xlsx")
+SEGUIMIENTO_XLSX = primer_existente("SEGUIMIENTO DE OT1 (1).xlsx")
 OUT = Path(__file__).resolve().parents[1] / "data"
 
 
@@ -36,7 +52,7 @@ def extraer_validaciones():
         "operador": col_values(ws, 19),
         "defecto": col_values(ws, 22),
         "reporta": col_values(ws, 25),
-        "autoriza": col_values(ws, 28),
+        "autorizo": col_values(ws, 28),
     }
     wb.close()
     return data
@@ -69,6 +85,8 @@ def extraer_ordenes():
 
 
 def main():
+    print("VALIDACIONES:", VALIDACIONES_XLSX)
+    print("SEGUIMIENTO:", SEGUIMIENTO_XLSX)
     OUT.mkdir(parents=True, exist_ok=True)
     validaciones = extraer_validaciones()
     (OUT / "validaciones.json").write_text(

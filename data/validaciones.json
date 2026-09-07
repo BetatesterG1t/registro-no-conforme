@@ -18,7 +18,8 @@
     "LAMINADO",
     "REFINADO",
     "POUCH",
-    "BOLSEO"
+    "BOLSEO",
+    "CALIDAD"
   ],
   "maquina_detecta": [
     "F2-1",
@@ -383,7 +384,8 @@
     "RAUL ESCAMILLA RAMIREZ",
     "KARINA KARLA GARCIA",
     "MARIO ROMERO TORRES",
-    "N/A"
+    "N/A",
+    "-"
   ],
   "proceso_origina": [
     "IMPRESION",
@@ -759,7 +761,8 @@
     "RAUL ESCAMILLA RAMIREZ",
     "KARINA KARLA GARCIA",
     "MARIO ROMERO TORRES",
-    "N/A"
+    "N/A",
+    "-"
   ],
   "defecto": [
     "ARRUGA",
@@ -839,7 +842,7 @@
     "CRISTINA RAMIREZ",
     "JORDAN GOMEZ"
   ],
-  "autoriza": [
+  "autorizo": [
     "ANGEL CABALLERO",
     "LETICIA GARCIA",
     "ELIAS CHAUL",
