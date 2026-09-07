@@ -47,9 +47,39 @@
     }
     .sugerencias div { padding: 8px 10px; cursor: pointer; }
     .sugerencias div:hover, .sugerencias div.activa { background: #e8f3ff; }
+    #pinAcceso {
+      display: none;
+      max-width: 420px;
+      margin: 40px auto;
+      padding: 24px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+    body.bloqueado #pinAcceso { display: block; }
+    body.bloqueado > h1,
+    body.bloqueado #fuentesStatus,
+    body.bloqueado #registro { display: none; }
+    #pin {
+      font-size: 1.6em;
+      letter-spacing: 0.45em;
+      text-align: center;
+    }
+    .pin-error { color: #b00020; margin-top: 8px; min-height: 1.2em; }
   </style>
 </head>
 <body>
+  <div id="pinAcceso">
+    <h1>Registro de No Conforme</h1>
+    <p>Ingresa el PIN de 4 dígitos para continuar.</p>
+    <form id="formPin">
+      <label for="pin">PIN</label>
+      <input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="one-time-code" required>
+      <div id="pinError" class="pin-error"></div>
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+
   <h1>Registro de No Conforme</h1>
 
   <div id="fuentesStatus" class="fuentes-status">
@@ -691,12 +721,50 @@
       URL.revokeObjectURL(url);
     });
 
-    window.onload = function() {
+    const ACCESO_PIN = "2580";
+    const PIN_KEY = "ncPinOk";
+
+    function iniciarApp() {
       asignarID();
       fechaHoy();
       cargarValidaciones();
       cargarOrdenes();
       verificarGoogleSheets();
+    }
+
+    function desbloquearApp() {
+      sessionStorage.setItem(PIN_KEY, "1");
+      document.body.classList.remove("bloqueado");
+      iniciarApp();
+    }
+
+    document.getElementById("formPin").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const pin = document.getElementById("pin");
+      const error = document.getElementById("pinError");
+      if (pin.value === ACCESO_PIN) {
+        error.textContent = "";
+        desbloquearApp();
+      } else {
+        error.textContent = "PIN incorrecto.";
+        pin.value = "";
+        pin.focus();
+      }
+    });
+
+    document.getElementById("pin").addEventListener("input", function() {
+      this.value = this.value.replace(/\D/g, "").slice(0, 4);
+      document.getElementById("pinError").textContent = "";
+    });
+
+    window.onload = function() {
+      if (sessionStorage.getItem(PIN_KEY) === "1") {
+        document.body.classList.remove("bloqueado");
+        iniciarApp();
+      } else {
+        document.body.classList.add("bloqueado");
+        document.getElementById("pin").focus();
+      }
     };
   </script>
 </body>
