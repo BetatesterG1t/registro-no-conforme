@@ -20,4 +20,4 @@ En la carpeta del proyecto:
 python scripts/actualizar-datos.py
 ```
 
-Lee `VALIDACIONES.xlsx` y `SEGUIMIENTO DE OT1 (1).xlsx` desde el Escritorio (`Registro No Conforme - pagina corregida`, `PROYECTO\PNCIPROY2` o `PNCIPROY`) y regenera `data/validaciones.json` y `data/ordenes.json`. Después hay que volver a subir esos JSON al repositorio.
+Lee `VALIDACIONES.xlsx` y `SEGUIMIENTO DE OT1 (1).xlsx` desde el Escritorio y regenera `data/validaciones.json` y `data/ordenes.json`. Al repositorio solo se suben esos JSON; los Excel se quedan en la PC.

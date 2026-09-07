@@ -1,0 +1,14 @@
+---
+description: Excel nunca se sube a GitHub; se convierte a JSON
+alwaysApply: true
+---
+
+# Excel a JSON, no a GitHub
+
+Cuando el usuario entregue el HTML y los dos Excel (`VALIDACIONES.xlsx` y Seguimiento OT):
+
+1. Convierte los Excel a `data/validaciones.json` y `data/ordenes.json` con `python scripts/actualizar-datos.py`.
+2. Sube a GitHub solo esos JSON (y el HTML si aplica).
+3. Nunca hagas commit ni push de `.xlsx` / `.xls`. Deben quedar en la PC, no en el repositorio.
+
+Si hace falta el HTML, va en `fuentes/` o sustituye `index.html`. Los Excel no.
