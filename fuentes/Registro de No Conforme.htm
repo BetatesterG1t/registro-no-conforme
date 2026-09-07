@@ -39,6 +39,16 @@
     .fuentes-status.ok { background: #eaffea; border-color: #b6e6b6; }
     .fuentes-status.error { background: #ffecec; border-color: #f3b6b6; }
     .fuentes-status div { margin-top: 4px; }
+    .autocomplete { position: relative; }
+    .autocomplete.abierto { z-index: 40; }
+    .sugerencias {
+      position: absolute; left: 0; right: 0; z-index: 40;
+      max-height: 220px; overflow-y: auto;
+      background: #fff; border: 1px solid #ccc; border-top: none;
+      border-radius: 0 0 4px 4px; box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+    }
+    .sugerencias div { padding: 8px 10px; cursor: pointer; }
+    .sugerencias div:hover, .sugerencias div.activa { background: #e8f3ff; }
   </style>
 </head>
 <body>
@@ -126,8 +136,11 @@
       </select>
 
       <label for="operador">Operador que origina</label>
-      <input type="text" id="operador" name="operador" list="operadorList" autocomplete="off" required="">
-      <datalist id="operadorList"></datalist>
+      <div class="autocomplete">
+        <input type="text" id="operador" name="operador" autocomplete="off" required="" placeholder="Escribe el nombre...">
+        <div class="sugerencias" id="operadorSugerencias" hidden></div>
+      </div>
+      <div class="hint">Escribe el nombre para ver coincidencias de la validación.</div>
 
       <label for="defecto">Defecto</label>
       <select id="defecto" name="defecto" required="">
@@ -135,9 +148,11 @@
       </select>
 
       <label for="reporta">Reporta</label>
-      <select id="reporta" name="reporta" required="">
-        <option value="" selected="selected">Seleccione...</option>
-      </select>
+      <div class="autocomplete">
+        <input type="text" id="reporta" name="reporta" autocomplete="off" required="" placeholder="Escribe el nombre...">
+        <div class="sugerencias" id="reportaSugerencias" hidden></div>
+      </div>
+      <div class="hint">Escribe el nombre para ver coincidencias de la validación.</div>
 
       <label for="autorizo">Autorizo</label>
       <select id="autorizo" name="autorizo" required="">
@@ -255,6 +270,7 @@
 
     document.getElementById("formNoConforme").addEventListener("submit", function(e){
       e.preventDefault();
+      if (!confirmarAutocomplete()) return;
       alert("Registro guardado con ID: " + document.getElementById("id").value);
       this.reset(); // limpia el formulario
       document.getElementById("um").value = "KG";
@@ -654,14 +670,130 @@
 
     // Campos que ahora son <input> con <datalist> en vez de <select>
     const CAMPOS_CON_DATALIST = {
-      operador_detecta: "operadorDetectaList",
-      operador: "operadorList"
+      operador_detecta: "operadorDetectaList"
     };
+    const CAMPOS_AUTOCOMPLETE = ["operador", "reporta"];
+    const autocompleteState = {};
+
+    function normalizarBusqueda(s) {
+      return String(s == null ? "" : s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
+    }
+
+    function filtrarCoincidencias(lista, texto) {
+      const q = normalizarBusqueda(texto);
+      if (!q) return lista.slice(0, 15);
+      const partes = q.split(" ");
+      return lista.filter(function(nombre) {
+        const n = normalizarBusqueda(nombre);
+        return partes.every(function(p) { return n.indexOf(p) !== -1; });
+      }).slice(0, 20);
+    }
+
+    function activarAutocomplete(inputId, lista) {
+      autocompleteState[inputId] = lista || [];
+      const input = document.getElementById(inputId);
+      const box = document.getElementById(inputId + "Sugerencias");
+      if (!input || !box || input.dataset.acReady) return;
+      input.dataset.acReady = "1";
+      let indice = -1;
+
+      function pintar(items) {
+        box.innerHTML = "";
+        indice = -1;
+        if (!items.length) {
+          box.hidden = true;
+          input.parentElement.classList.remove("abierto");
+          return;
+        }
+        items.forEach(function(nombre) {
+          const div = document.createElement("div");
+          div.textContent = nombre;
+          div.addEventListener("mousedown", function(ev) {
+            ev.preventDefault();
+            elegir(nombre);
+          });
+          box.appendChild(div);
+        });
+        box.hidden = false;
+        input.parentElement.classList.add("abierto");
+      }
+
+      function elegir(nombre) {
+        input.value = nombre;
+        input.setCustomValidity("");
+        box.hidden = true;
+        input.parentElement.classList.remove("abierto");
+      }
+
+      input.addEventListener("input", function() {
+        input.setCustomValidity("");
+        pintar(filtrarCoincidencias(autocompleteState[inputId] || [], input.value));
+      });
+      input.addEventListener("focus", function() {
+        pintar(filtrarCoincidencias(autocompleteState[inputId] || [], input.value));
+      });
+      input.addEventListener("blur", function() {
+        setTimeout(function() {
+          box.hidden = true;
+          input.parentElement.classList.remove("abierto");
+          const exacto = (autocompleteState[inputId] || []).find(function(n) {
+            return normalizarBusqueda(n) === normalizarBusqueda(input.value);
+          });
+          if (exacto) input.value = exacto;
+        }, 120);
+      });
+      input.addEventListener("keydown", function(ev) {
+        const items = box.querySelectorAll("div");
+        if (ev.key === "ArrowDown" && items.length) {
+          ev.preventDefault();
+          indice = (indice + 1) % items.length;
+        } else if (ev.key === "ArrowUp" && items.length) {
+          ev.preventDefault();
+          indice = (indice - 1 + items.length) % items.length;
+        } else if (ev.key === "Enter" && indice >= 0 && items[indice]) {
+          ev.preventDefault();
+          elegir(items[indice].textContent);
+          return;
+        } else if (ev.key === "Escape") {
+          box.hidden = true;
+          input.parentElement.classList.remove("abierto");
+          return;
+        } else {
+          return;
+        }
+        items.forEach(function(el, i) { el.classList.toggle("activa", i === indice); });
+        if (items[indice]) items[indice].scrollIntoView({ block: "nearest" });
+      });
+    }
+
+    function confirmarAutocomplete() {
+      const campos = CAMPOS_AUTOCOMPLETE;
+      for (let i = 0; i < campos.length; i++) {
+        const id = campos[i];
+        const input = document.getElementById(id);
+        const lista = autocompleteState[id];
+        if (!input || !lista || !lista.length) continue;
+        if (!input.value.trim()) continue;
+        const exacto = lista.find(function(n) {
+          return normalizarBusqueda(n) === normalizarBusqueda(input.value);
+        });
+        if (!exacto) {
+          input.setCustomValidity("Elige un nombre de la lista de validación.");
+          input.reportValidity();
+          return false;
+        }
+        input.value = exacto;
+        input.setCustomValidity("");
+      }
+      return true;
+    }
 
     function aplicarValidacionesASelects() {
       Object.keys(VALIDACIONES_CAMPOS).forEach(campoId => {
         const valores = validacionesData[campoId] || [];
-        if (CAMPOS_CON_DATALIST[campoId]) {
+        if (CAMPOS_AUTOCOMPLETE.indexOf(campoId) !== -1) {
+          activarAutocomplete(campoId, valores);
+        } else if (CAMPOS_CON_DATALIST[campoId]) {
           poblarDatalistDesdeLista(CAMPOS_CON_DATALIST[campoId], valores);
         } else {
           poblarSelectDesdeLista(campoId, valores);
