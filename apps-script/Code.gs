@@ -79,6 +79,10 @@ function ensureSheet(ss) {
     sh.insertColumnAfter(col - 1);
     sh.getRange(1, col).setValue("Autorizo").setFontWeight("bold");
   }
+  const codigoIdx = actuales.indexOf("Código");
+  if (codigoIdx !== -1) {
+    sh.getRange(1, codigoIdx + 1).setValue("SKU").setFontWeight("bold");
+  }
   const extra = ss.getSheetByName("Hoja 1") || ss.getSheetByName("Sheet1");
   if (extra && ss.getSheets().length > 1) {
     ss.deleteSheet(extra);
