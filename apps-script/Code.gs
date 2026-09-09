@@ -24,7 +24,7 @@ const HEADERS = [
   "Mes",
   "Orden",
   "Cliente",
-  "Código",
+  "SKU",
   "Producto",
   "Cantidad KG",
   "UM",

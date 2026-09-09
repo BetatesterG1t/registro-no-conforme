@@ -111,7 +111,7 @@
           <label for="orden">Orden</label>
           <input type="text" id="orden" name="orden" list="ordenesList" autocomplete="off" required>
           <datalist id="ordenesList"></datalist>
-          <div class="hint" id="ordenHint">Escribe la orden para traer cliente, código y producto desde Seguimiento OT (rep-ov-espec).</div>
+          <div class="hint" id="ordenHint">Escribe la orden para traer cliente, SKU y producto desde Seguimiento OT (rep-ov-espec).</div>
         </div>
       </div>
 
@@ -126,7 +126,7 @@
           <input type="text" id="cliente" name="cliente" required>
         </div>
         <div>
-          <label for="codigo">Código</label>
+          <label for="codigo">SKU</label>
           <input type="text" id="codigo" name="codigo" required>
         </div>
         <div class="span-2">
@@ -614,7 +614,7 @@
       const clave = normalizarClave(valor);
 
       if (!clave) {
-        hint.textContent = "Escribe la orden para traer cliente, código y producto desde Seguimiento OT (rep-ov-espec).";
+        hint.textContent = "Escribe la orden para traer cliente, SKU y producto desde Seguimiento OT (rep-ov-espec).";
         productoSeleccionDiv.style.display = "none";
         return;
       }
@@ -646,7 +646,7 @@
       if (unicos.length === 1) {
         aplicarProducto(unicos[0]);
         productoSeleccionDiv.style.display = "none";
-        hint.textContent = "Cliente, código y producto encontrados en rep-ov-espec.";
+        hint.textContent = "Cliente, SKU y producto encontrados en rep-ov-espec.";
       } else {
         const select = document.getElementById("productoOpciones");
         select.innerHTML = "";
@@ -697,7 +697,7 @@
       document.getElementById("um").value = "KG";
       document.getElementById("productoSeleccion").style.display = "none";
       ["cliente", "producto", "codigo"].forEach(id => document.getElementById(id).classList.remove("auto-filled"));
-      document.getElementById("ordenHint").textContent = "Escribe la orden para traer cliente, código y producto desde Seguimiento OT (rep-ov-espec).";
+      document.getElementById("ordenHint").textContent = "Escribe la orden para traer cliente, SKU y producto desde Seguimiento OT (rep-ov-espec).";
       reiniciarCamposCondicionales();
       fechaHoy();
     }
