@@ -344,13 +344,18 @@
     document.getElementById("fecha").addEventListener("change", aplicarMesDesdeFecha);
     document.getElementById("fecha").addEventListener("input", aplicarMesDesdeFecha);
 
-    document.getElementById("se_autoriza").addEventListener("change", function() {
+    function opcionNormalizada(v) {
+      return String(v == null ? "" : v).trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function aplicarVisibilidadSanea() {
+      const autoriza = opcionNormalizada(document.getElementById("se_autoriza").value);
       const saneaBloque = document.getElementById("saneaBloque");
       const materialBloque = document.getElementById("materialBloque");
       const seSanea = document.getElementById("se_sanea");
       const matRecuperado = document.getElementById("material_recuperado");
       const matRechazado = document.getElementById("material_rechazado");
-      if (this.value === "No") {
+      if (autoriza === "NO") {
         saneaBloque.style.display = "block";
         seSanea.required = true;
       } else {
@@ -363,7 +368,10 @@
         matRechazado.required = false;
         matRechazado.value = "";
       }
-    });
+    }
+
+    document.getElementById("se_autoriza").addEventListener("change", aplicarVisibilidadSanea);
+    aplicarVisibilidadSanea();
 
     document.getElementById("se_sanea").addEventListener("change", function() {
       const materialBloque = document.getElementById("materialBloque");
