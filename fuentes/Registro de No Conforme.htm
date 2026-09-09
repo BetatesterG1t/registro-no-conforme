@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html lang="es"><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<html lang="es">
+<head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Registro de No Conforme</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f3f5f7; color: #222; }
+    h1 { margin-top: 0; }
     label { display: block; margin-top: 10px; font-weight: bold; }
     input, select, textarea {
       width: 100%; padding: 8px; margin-top: 5px;
       border: 1px solid #ccc; border-radius: 4px;
-      box-sizing: border-box;
+      box-sizing: border-box; background: #fff;
     }
     input[readonly] { background: #eee; }
     button {
@@ -19,26 +20,23 @@
     }
     button:hover { background: #005a9e; }
     .hint { font-size: 0.85em; color: #555; margin-top: 4px; }
-    .status-box {
-      margin-top: 15px; padding: 12px; border-radius: 6px;
-      background: #eef6ff; border: 1px solid #b6d8ff; font-size: 0.9em;
-    }
-    .status-box.ok { background: #eaffea; border-color: #b6e6b6; }
     .auto-filled { background: #fff8db !important; }
     #productoSeleccion { display: none; margin-top: 10px; }
-    .secondary-btn { background: #999; }
-    .secondary-btn:hover { background: #777; }
-
-    .form-panel { border: 1px solid #ccc; padding: 20px; border-radius: 8px; background: #f9f9f9; }
-
-    /* Estado de fuentes de datos (carga automática) */
+    .form-panel { border: 1px solid #ccc; padding: 20px; border-radius: 8px; background: #f9f9f9; max-width: 820px; }
     .fuentes-status {
-      margin-bottom: 20px; padding: 12px 15px; border-radius: 6px; font-size: 0.9em;
+      max-width: 820px; margin-bottom: 20px; padding: 12px 15px; border-radius: 6px; font-size: 0.9em;
       background: #eef6ff; border: 1px solid #b6d8ff;
     }
     .fuentes-status.ok { background: #eaffea; border-color: #b6e6b6; }
     .fuentes-status.error { background: #ffecec; border-color: #f3b6b6; }
+    .fuentes-status.warn { background: #fff8e6; border-color: #f0d48a; }
     .fuentes-status div { margin-top: 4px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+    .span-2 { grid-column: 1 / -1; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .secondary-btn { background: #5f6b7a; }
+    .secondary-btn:hover { background: #45505c; }
     .autocomplete { position: relative; }
     .autocomplete.abierto { z-index: 40; }
     .sugerencias {
@@ -76,7 +74,7 @@
     <p>Ingresa el PIN de 4 dígitos para continuar.</p>
     <form id="formPin">
       <label for="pin">PIN</label>
-      <input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="one-time-code" required="">
+      <input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="one-time-code" required>
       <div id="pinError" class="pin-error"></div>
       <button type="submit">Entrar</button>
     </form>
@@ -84,125 +82,151 @@
 
   <h1>Registro de No Conforme</h1>
 
-  <!-- Estado de carga automática de las fuentes de datos -->
   <div id="fuentesStatus" class="fuentes-status">
-    <strong>Cargando datos desde Excel...</strong>
+    <strong>Cargando datos...</strong>
     <div id="captacionStatus">Base de Órdenes (rep-ov-espec): cargando...</div>
     <div id="validacionesStatus">Listas de Validación: cargando...</div>
+    <div id="sheetsStatus">Google Sheets: verificando...</div>
   </div>
 
-  <!-- Contenido Registro -->
   <div id="registro" class="form-panel">
     <form id="formNoConforme">
-      <label for="id">ID</label>
-      <input type="number" id="id" name="id" readonly="readonly" value="1">
-
-      <label for="fecha">Fecha</label>
-      <input type="date" id="fecha" name="fecha" required="">
-
-      <label for="mes">Mes</label>
-      <select id="mes" name="mes" required="">
-        <option value="" selected="selected">Seleccione...</option>
-      </select>
-
-      <label for="orden">Orden</label>
-      <input type="text" id="orden" name="orden" list="ordenesList" autocomplete="off" required="">
-      <datalist id="ordenesList"></datalist>
-      <div class="hint" id="ordenHint">Escribe la orden para traer cliente y producto desde la Captación.</div>
+      <div class="grid">
+        <div>
+          <label for="id">ID</label>
+          <input type="number" id="id" name="id" readonly value="1">
+          <div class="hint">El ID lo toma de Google Sheets y es el mismo para todos los equipos.</div>
+        </div>
+        <div>
+          <label for="fecha">Fecha</label>
+          <input type="date" id="fecha" name="fecha" required>
+        </div>
+        <div>
+          <label for="mes">Mes</label>
+          <select id="mes" name="mes" required>
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="orden">Orden</label>
+          <input type="text" id="orden" name="orden" list="ordenesList" autocomplete="off" required>
+          <datalist id="ordenesList"></datalist>
+          <div class="hint" id="ordenHint">Escribe la orden para traer cliente, código y producto desde Seguimiento OT (rep-ov-espec).</div>
+        </div>
+      </div>
 
       <div id="productoSeleccion">
         <label for="productoOpciones">Esta orden tiene varios productos, selecciona uno</label>
         <select id="productoOpciones"></select>
       </div>
 
-      <label for="cliente">Cliente</label>
-      <input type="text" id="cliente" name="cliente" required="">
-
-      <label for="codigo">Código</label>
-      <input type="text" id="codigo" name="codigo" required="">
-
-      <label for="producto">Producto</label>
-      <input type="text" id="producto" name="producto" required="">
-
-      <label for="cantidad">Cantidad KG</label>
-      <input type="number" step="any" id="cantidad" name="cantidad" min="0">
-
-      <!-- Unidad de Medida fija -->
-      <label for="um">Unidad de Medida</label>
-      <input type="text" id="um" name="um" value="KG" readonly="readonly">
-
-      <label for="cantidad_pzas">Cantidad de Pzas o ML</label>
-      <input type="number" step="any" id="cantidad_pzas" name="cantidad_pzas" min="0">
-
-      <label for="um_pzas">Unidad</label>
-      <select id="um_pzas" name="um_pzas">
-        <option value="" selected="selected">Seleccione...</option>
-        <option value="PZ">PZ</option>
-        <option value="ML">ML</option>
-      </select>
-
-      <label for="proceso_detecta">Proceso que detecta</label>
-      <select id="proceso_detecta" name="proceso_detecta">
-        <option value="" selected="selected">Seleccione...</option>
-      </select>
-
-      <label for="maquina_detecta">Máquina que detecta</label>
-      <select id="maquina_detecta" name="maquina_detecta">
-        <option value="" selected="selected">Seleccione...</option>
-      </select>
-
-      <label for="operador_detecta">Operador que detecta</label>
-      <div class="autocomplete">
-        <input type="text" id="operador_detecta" name="operador_detecta" autocomplete="off" placeholder="Escribe el nombre...">
-        <div class="sugerencias" id="operador_detectaSugerencias" hidden></div>
+      <div class="grid">
+        <div class="span-2">
+          <label for="cliente">Cliente</label>
+          <input type="text" id="cliente" name="cliente" required>
+        </div>
+        <div>
+          <label for="codigo">Código</label>
+          <input type="text" id="codigo" name="codigo" required>
+        </div>
+        <div class="span-2">
+          <label for="producto">Producto</label>
+          <input type="text" id="producto" name="producto" required>
+        </div>
+        <div>
+          <label for="cantidad">Cantidad KG</label>
+          <input type="number" step="any" id="cantidad" name="cantidad" min="0">
+        </div>
+        <div>
+          <label for="um">Unidad de Medida</label>
+          <input type="text" id="um" name="um" value="KG" readonly>
+        </div>
+        <div>
+          <label for="cantidad_pzas">Cantidad de Pzas o ML</label>
+          <input type="number" step="any" id="cantidad_pzas" name="cantidad_pzas" min="0">
+        </div>
+        <div>
+          <label for="um_pzas">Unidad</label>
+          <select id="um_pzas" name="um_pzas">
+            <option value="">Seleccione...</option>
+            <option value="PZ">PZ</option>
+            <option value="ML">ML</option>
+          </select>
+        </div>
+        <div>
+          <label for="proceso_detecta">Proceso que detecta</label>
+          <select id="proceso_detecta" name="proceso_detecta">
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="maquina_detecta">Máquina que detecta</label>
+          <select id="maquina_detecta" name="maquina_detecta">
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="operador_detecta">Operador que detecta</label>
+          <div class="autocomplete">
+            <input type="text" id="operador_detecta" name="operador_detecta" autocomplete="off" placeholder="Escribe el nombre...">
+            <div class="sugerencias" id="operador_detectaSugerencias" hidden></div>
+          </div>
+          <div class="hint">Escribe el nombre para ver coincidencias.</div>
+        </div>
+        <div>
+          <label for="proceso_origina">Proceso que origina</label>
+          <select id="proceso_origina" name="proceso_origina">
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="maquina">Máquina que origina</label>
+          <select id="maquina" name="maquina">
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="operador">Operador que origina</label>
+          <div class="autocomplete">
+            <input type="text" id="operador" name="operador" autocomplete="off" placeholder="Escribe el nombre...">
+            <div class="sugerencias" id="operadorSugerencias" hidden></div>
+          </div>
+          <div class="hint">Escribe el nombre para ver coincidencias.</div>
+        </div>
+        <div>
+          <label for="defecto">Defecto</label>
+          <select id="defecto" name="defecto">
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="reporta">Reporta</label>
+          <div class="autocomplete">
+            <input type="text" id="reporta" name="reporta" autocomplete="off" placeholder="Escribe el nombre...">
+            <div class="sugerencias" id="reportaSugerencias" hidden></div>
+          </div>
+          <div class="hint">Escribe el nombre para ver coincidencias.</div>
+        </div>
+        <div>
+          <label for="autorizo">Autorizo</label>
+          <select id="autorizo" name="autorizo">
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div>
+          <label for="se_autoriza">Se autoriza</label>
+          <select id="se_autoriza" name="se_autoriza" required>
+            <option value="">Seleccione...</option>
+            <option value="Sí">Sí</option>
+            <option value="No">No</option>
+          </select>
+        </div>
       </div>
-      <div class="hint">Escribe el nombre para ver coincidencias de la validación.</div>
-
-      <label for="proceso_origina">Proceso que origina</label>
-      <select id="proceso_origina" name="proceso_origina">
-        <option value="" selected="selected">Seleccione...</option>
-      </select>
-
-      <label for="maquina">Máquina que origina</label>
-      <select id="maquina" name="maquina">
-        <option value="" selected="selected">Seleccione...</option>
-      </select>
-
-      <label for="operador">Operador que origina</label>
-      <div class="autocomplete">
-        <input type="text" id="operador" name="operador" autocomplete="off" placeholder="Escribe el nombre...">
-        <div class="sugerencias" id="operadorSugerencias" hidden></div>
-      </div>
-      <div class="hint">Escribe el nombre para ver coincidencias de la validación.</div>
-
-      <label for="defecto">Defecto</label>
-      <select id="defecto" name="defecto">
-        <option value="" selected="selected">Seleccione...</option>
-      </select>
-
-      <label for="reporta">Reporta</label>
-      <div class="autocomplete">
-        <input type="text" id="reporta" name="reporta" autocomplete="off" placeholder="Escribe el nombre...">
-        <div class="sugerencias" id="reportaSugerencias" hidden></div>
-      </div>
-      <div class="hint">Escribe el nombre para ver coincidencias de la validación.</div>
-
-      <label for="autorizo">Autorizo</label>
-      <select id="autorizo" name="autorizo">
-        <option value="" selected="selected">Seleccione...</option>
-      </select>
-
-      <label for="se_autoriza">Se autoriza</label>
-      <select id="se_autoriza" name="se_autoriza" required="">
-        <option value="" selected="selected">Seleccione...</option>
-        <option value="Sí">Sí</option>
-        <option value="No">No</option>
-      </select>
 
       <div id="saneaBloque" style="display:none">
         <label for="se_sanea">Se sanea</label>
         <select id="se_sanea" name="se_sanea">
-          <option value="" selected="selected">Seleccione...</option>
+          <option value="">Seleccione...</option>
           <option value="Sí">Sí</option>
           <option value="No">No</option>
         </select>
@@ -216,21 +240,73 @@
         <input type="number" step="any" id="material_rechazado" name="material_rechazado" min="0">
       </div>
 
-      <button type="submit">Guardar Registro</button>
+      <div class="actions">
+        <button type="submit">Guardar Registro</button>
+        <button type="button" id="btnExportar" class="secondary-btn">Exportar registros</button>
+      </div>
     </form>
   </div>
 
   <script>
+    const VALIDACIONES_URL = "data/validaciones.json";
+    const ORDENES_URL = "data/ordenes.json";
+    const REGISTROS_KEY = "ncRegistros";
     const ULTIMO_ID_KEY = "ncUltimoID_v2";
+    // URL de la Aplicación web de Apps Script (Implementar > Nueva implementación)
+    const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxlGT0VoABR_uoDhoxy5L6kjFsoSB6wxDtV7B_4RHNsLSRqn0gnaZdb65BSooln6OQ1HQ/exec";
+
+    let captacionIndex = {};
+    let captacionMeta = null;
+    let validacionesData = {};
+    let validacionesMeta = null;
 
     function asignarID() {
       const ultimo = Number(localStorage.getItem(ULTIMO_ID_KEY) || "0") + 1;
       document.getElementById("id").value = ultimo;
     }
 
-    /* ============================
-       Campos condicionales: Se autoriza -> Se sanea -> Material recuperado/rechazado
-       ============================ */
+    async function pedirSiguienteId() {
+      if (!SHEETS_WEBAPP_URL) return null;
+      const respuesta = await fetch(SHEETS_WEBAPP_URL, { cache: "no-store" });
+      const parsed = await respuesta.json();
+      const n = Number(parsed && parsed.siguienteId);
+      if (parsed && parsed.ok && !isNaN(n) && n > 0) return n;
+      return null;
+    }
+
+    async function aplicarIdDesdeSheets(opciones) {
+      const minEsperado = opciones && opciones.minEsperado ? opciones.minEsperado : 0;
+      const intentos = opciones && opciones.intentos ? opciones.intentos : 1;
+      const espera = opciones && opciones.espera ? opciones.espera : 0;
+      for (let i = 0; i < intentos; i++) {
+        if (espera && (i > 0 || minEsperado)) {
+          await new Promise(function (resolver) { setTimeout(resolver, espera); });
+        }
+        try {
+          const n = await pedirSiguienteId();
+          if (n && n >= minEsperado) {
+            document.getElementById("id").value = n;
+            localStorage.setItem(ULTIMO_ID_KEY, String(Math.max(0, n - 1)));
+            return n;
+          }
+        } catch (err) {}
+      }
+      if (minEsperado) {
+        document.getElementById("id").value = minEsperado;
+        localStorage.setItem(ULTIMO_ID_KEY, String(minEsperado - 1));
+        return minEsperado;
+      }
+      asignarID();
+      return null;
+    }
+
+    function fechaHoy() {
+      const d = new Date();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      document.getElementById("fecha").value = d.getFullYear() + "-" + m + "-" + day;
+    }
+
     document.getElementById("se_autoriza").addEventListener("change", function() {
       const saneaBloque = document.getElementById("saneaBloque");
       const materialBloque = document.getElementById("materialBloque");
@@ -277,471 +353,75 @@
       document.getElementById("material_rechazado").required = false;
     }
 
-    /* ============================
-       NOMBRES DE ARCHIVO (deben estar en la misma carpeta que este .htm,
-       dentro del repositorio de Git)
-       ============================ */
-    const SEGUIMIENTO_OT_FILE = "SEGUIMIENTO_DE_OT1.xlsx";
-    const VALIDACIONES_FILE = "VALIDACIONES.xlsx";
-
-    const ACCESO_PIN = "2580";
-    const PIN_KEY = "ncPinOk";
-
-    function iniciarApp() {
-      asignarID();
-      cargarCaptacionDesdeArchivo();
-      cargarValidacionesDesdeArchivo();
-    }
-
-    function desbloquearApp() {
-      sessionStorage.setItem(PIN_KEY, "1");
-      document.body.classList.remove("bloqueado");
-      iniciarApp();
-    }
-
-    document.getElementById("formPin").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const pin = document.getElementById("pin");
-      const error = document.getElementById("pinError");
-      if (pin.value === ACCESO_PIN) {
-        error.textContent = "";
-        desbloquearApp();
-      } else {
-        error.textContent = "PIN incorrecto.";
-        pin.value = "";
-        pin.focus();
-      }
-    });
-
-    document.getElementById("pin").addEventListener("input", function() {
-      this.value = this.value.replace(/\D/g, "").slice(0, 4);
-      document.getElementById("pinError").textContent = "";
-    });
-
-    window.onload = function() {
-      if (sessionStorage.getItem(PIN_KEY) === "1") {
-        document.body.classList.remove("bloqueado");
-        iniciarApp();
-      } else {
-        document.body.classList.add("bloqueado");
-        document.getElementById("pin").focus();
-      }
-    };
-
-    /* Carga un .xlsx local (mismo folder del repo) vía fetch y devuelve el workbook */
-    async function cargarWorkbookDesdeArchivo(nombreArchivo) {
-      const respuesta = await fetch("./" + nombreArchivo);
-      if (!respuesta.ok) {
-        throw new Error("No se encontró el archivo '" + nombreArchivo + "' (HTTP " + respuesta.status + ")");
-      }
-      const buffer = await respuesta.arrayBuffer();
-      return XLSX.read(new Uint8Array(buffer), { type: "array" });
-    }
-
-    document.getElementById("formNoConforme").addEventListener("submit", function(e){
-      e.preventDefault();
-      if (!confirmarAutocomplete()) return;
-      alert("Registro guardado con ID: " + document.getElementById("id").value);
-      localStorage.setItem(ULTIMO_ID_KEY, String(document.getElementById("id").value));
-      this.reset(); // limpia el formulario
-      document.getElementById("um").value = "KG";
-      document.getElementById("productoSeleccion").style.display = "none";
-      ["cliente", "producto", "codigo"].forEach(id => document.getElementById(id).classList.remove("auto-filled"));
-      document.getElementById("ordenHint").textContent = "Escribe la orden para traer cliente y producto desde la Captación.";
-      reiniciarCamposCondicionales();
-      asignarID(); // asigna el siguiente consecutivo
-    });
-
-    /* ============================
-       Utilidades de normalización
-       ============================ */
-    function normalizarTexto(s) {
-      return String(s == null ? "" : s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
-    }
-
     function normalizarClave(v) {
       return String(v == null ? "" : v).trim().toUpperCase();
     }
 
-    // Obtiene el valor de una columna en un renglón probando varios nombres posibles
-    function obtenerCampo(row, candidatos) {
-      const claves = Object.keys(row);
-      for (const candidato of candidatos) {
-        const objetivo = normalizarTexto(candidato);
-        const clave = claves.find(k => normalizarTexto(k) === objetivo);
-        if (clave !== undefined) return row[clave];
+    function codigoDe(registro) {
+      return (registro.sku || registro.idArticulo || "").trim();
+    }
+
+    async function cargarJSON(url) {
+      const respuesta = await fetch(url, { cache: "no-store" });
+      if (!respuesta.ok) {
+        throw new Error("No se encontró " + url + " (HTTP " + respuesta.status + ")");
       }
-      return "";
+      return respuesta.json();
     }
 
-    // Obtiene todos los valores no vacíos de una columna (por varios nombres posibles) a lo largo de todos los renglones
-    function obtenerColumna(rows, candidatos) {
-      if (!rows.length) return [];
-      const claves = Object.keys(rows[0]);
-      let claveEncontrada;
-      for (const candidato of candidatos) {
-        const objetivo = normalizarTexto(candidato);
-        claveEncontrada = claves.find(k => normalizarTexto(k) === objetivo);
-        if (claveEncontrada !== undefined) break;
-      }
-      if (claveEncontrada === undefined) return [];
-
-      const vistos = new Set();
-      const valores = [];
-      rows.forEach(r => {
-        const v = String(r[claveEncontrada] == null ? "" : r[claveEncontrada]).trim();
-        if (v !== "" && !vistos.has(v)) {
-          vistos.add(v);
-          valores.push(v);
-        }
-      });
-      return valores;
-    }
-
-    // Busca una hoja por nombre, ignorando mayúsculas/minúsculas, espacios y guiones
-    function encontrarHoja(workbook, nombreBuscado) {
-      const normalizar = s => s.toLowerCase().replace(/[\s\-_]/g, "");
-      const objetivo = normalizar(nombreBuscado);
-      return workbook.SheetNames.find(n => normalizar(n) === objetivo) || null;
-    }
-
-    /* ============================
-       CAPTACIÓN (base de órdenes)
-       ============================ */
-
-    const CAPTACION_STORAGE_KEY = "captacionData";
-    let captacionIndex = {}; // { ordenNormalizada: [ {orden, ordenCompra, cliente, sku, producto}, ... ] }
-    let captacionMeta = null; // { fileName, fecha, registros }
-
-    async function cargarCaptacionDesdeArchivo() {
-      try {
-        const workbook = await cargarWorkbookDesdeArchivo(SEGUIMIENTO_OT_FILE);
-
-        const nombreHoja = encontrarHoja(workbook, "rep-ov-espec");
-        if (!nombreHoja) {
-          throw new Error("No se encontró la hoja 'rep-ov-espec'. Hojas disponibles: " + workbook.SheetNames.join(", "));
-        }
-
-        const sheet = workbook.Sheets[nombreHoja];
-        const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-        procesarCaptacion(rows, SEGUIMIENTO_OT_FILE);
-      } catch (err) {
-        console.warn("No se pudo cargar la Captación:", err);
-        mostrarErrorCaptacion(err.message);
-        cargarCaptacionDesdeStorage(); // usa la última copia guardada en localStorage, si existe
-      }
-    }
-
-    function mostrarErrorCaptacion(mensaje) {
-      const box = document.getElementById("captacionStatus");
+    function actualizarEstadoFuentes() {
       const contenedor = document.getElementById("fuentesStatus");
-      contenedor.classList.add("error");
-      box.textContent = "⚠ Base de Órdenes: " + mensaje + " — colócalo junto a este .htm en el repositorio.";
-    }
-
-    function procesarCaptacion(rows, fileName) {
-      const registros = [];
-      rows.forEach(r => {
-        const orden = obtenerCampo(r, ["ID Orden de Venta", "ID Orden De Venta"]);
-        const ordenCompra = obtenerCampo(r, ["Orden Compra"]);
-        const cliente = obtenerCampo(r, ["Nombre Cliente"]);
-        const idArticulo = obtenerCampo(r, ["ID Artículo", "ID Articulo"]);
-        const producto = obtenerCampo(r, ["Descripción", "Descripcion"]);
-
-        if (!orden && !ordenCompra) return;
-
-        const registro = {
-          orden: String(orden).trim(),
-          ordenCompra: String(ordenCompra).trim(),
-          cliente: String(cliente).trim(),
-          idArticulo: String(idArticulo).trim(),
-          producto: String(producto).trim()
-        };
-        registros.push(registro);
-      });
-
-      // Construir índice por ambas claves posibles (orden de venta y orden de compra)
-      const index = {};
-      registros.forEach(reg => {
-        [reg.orden, reg.ordenCompra].forEach(clave => {
-          if (!clave) return;
-          const k = normalizarClave(clave);
-          if (!index[k]) index[k] = [];
-          index[k].push(reg);
-        });
-      });
-
-      captacionIndex = index;
-      captacionMeta = {
-        fileName: fileName,
-        fecha: new Date().toLocaleString(),
-        registros: registros.length
-      };
-
-      guardarCaptacionEnStorage();
-      actualizarUIcaptacion();
-      poblarDatalistOrdenes();
-    }
-
-    function guardarCaptacionEnStorage() {
-      try {
-        localStorage.setItem(CAPTACION_STORAGE_KEY, JSON.stringify({
-          index: captacionIndex,
-          meta: captacionMeta
-        }));
-      } catch (err) {
-        console.warn("No se pudo guardar la captación en localStorage:", err);
-      }
-    }
-
-    function cargarCaptacionDesdeStorage() {
-      try {
-        const raw = localStorage.getItem(CAPTACION_STORAGE_KEY);
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        captacionIndex = parsed.index || {};
-        captacionMeta = parsed.meta || null;
-        actualizarUIcaptacion();
-        poblarDatalistOrdenes();
-      } catch (err) {
-        console.warn("No se pudo cargar la captación guardada:", err);
-      }
-    }
-
-    function actualizarUIcaptacion() {
-      const box = document.getElementById("captacionStatus");
-      const contenedor = document.getElementById("fuentesStatus");
-      if (captacionMeta) {
-        contenedor.classList.remove("error");
+      const okCaptacion = Boolean(captacionMeta);
+      const okValidaciones = Boolean(validacionesMeta);
+      contenedor.classList.remove("ok", "error", "warn");
+      if (okCaptacion && okValidaciones) {
         contenedor.classList.add("ok");
-        box.innerHTML = "✓ Base de Órdenes: <strong>" + captacionMeta.registros + " registros</strong> (" + captacionMeta.fileName + ", " + captacionMeta.fecha + ")";
+        contenedor.querySelector("strong").textContent = "Datos listos";
+      } else if (!okCaptacion && !okValidaciones) {
+        contenedor.classList.add("error");
+        contenedor.querySelector("strong").textContent = "No se pudieron cargar los datos";
       } else {
-        box.textContent = "Base de Órdenes: sin datos.";
+        contenedor.classList.add("warn");
+        contenedor.querySelector("strong").textContent = "Carga parcial";
       }
     }
 
-    function poblarDatalistOrdenes() {
-      const datalist = document.getElementById("ordenesList");
-      datalist.innerHTML = "";
-      const claves = Object.keys(captacionIndex);
-      // Evitar listas gigantes en el DOM; limitar por rendimiento
-      claves.slice(0, 3000).forEach(clave => {
-        const registros = captacionIndex[clave];
-        const opt = document.createElement("option");
-        opt.value = registros[0].orden || clave;
-        datalist.appendChild(opt);
-      });
-    }
-
-    /* Autocompletado al escribir la orden */
-    document.getElementById("orden").addEventListener("input", function(e) {
-      buscarOrden(e.target.value);
-    });
-
-    function buscarOrden(valor) {
-      const hint = document.getElementById("ordenHint");
-      const productoSeleccionDiv = document.getElementById("productoSeleccion");
-      const clave = normalizarClave(valor);
-
-      if (!clave) {
-        hint.textContent = "Escribe la orden para traer cliente y producto desde la Captación.";
-        productoSeleccionDiv.style.display = "none";
-        return;
-      }
-
-      if (Object.keys(captacionIndex).length === 0) {
-        hint.textContent = "No hay datos de la Captación. Verifica que " + SEGUIMIENTO_OT_FILE + " esté junto a este .htm.";
-        return;
-      }
-
-      const registros = captacionIndex[clave];
-      if (!registros || registros.length === 0) {
-        hint.textContent = "Orden no encontrada en la Captación.";
-        productoSeleccionDiv.style.display = "none";
-        return;
-      }
-
-      // Productos únicos (por ID Artículo + descripción) para esa orden
-      const unicos = [];
-      const vistos = new Set();
-      registros.forEach(r => {
-        const key = r.idArticulo + "||" + r.producto;
-        if (!vistos.has(key)) {
-          vistos.add(key);
-          unicos.push(r);
-        }
-      });
-
-      // El cliente debería ser el mismo para todos los renglones de una orden
-      setCliente(registros[0].cliente);
-
-      if (unicos.length === 1) {
-        aplicarProducto(unicos[0]);
-        productoSeleccionDiv.style.display = "none";
-        hint.textContent = "Cliente, código y producto encontrados en rep-ov-espec.";
-      } else {
-        // Varios productos para la misma orden: dejar elegir
-        const select = document.getElementById("productoOpciones");
-        select.innerHTML = "";
-        unicos.forEach((r, i) => {
-          const opt = document.createElement("option");
-          opt.value = i;
-          opt.textContent = (r.idArticulo ? r.idArticulo + " - " : "") + r.producto;
-          select.appendChild(opt);
-        });
-        select.onchange = function() {
-          aplicarProducto(unicos[parseInt(select.value, 10)]);
-        };
-        productoSeleccionDiv.style.display = "block";
-        aplicarProducto(unicos[0]);
-        hint.textContent = "Esta orden tiene " + unicos.length + " productos. Elige el correcto arriba.";
-      }
-    }
-
-    function aplicarProducto(registro) {
-      const productoInput = document.getElementById("producto");
-      const codigoInput = document.getElementById("codigo");
-      productoInput.value = registro.producto;
-      codigoInput.value = registro.idArticulo;
-      productoInput.classList.add("auto-filled");
-      codigoInput.classList.add("auto-filled");
-    }
-
-    function setCliente(nombreCliente) {
-      const input = document.getElementById("cliente");
-      if (!nombreCliente) return;
-      input.value = nombreCliente;
-      input.classList.add("auto-filled");
-    }
-
-    /* ============================
-       VALIDACIONES (listas desplegables)
-       ============================ */
-
-    const VALIDACIONES_STORAGE_KEY = "validacionesData";
-
-    // selectId -> nombres de columna posibles en el Excel
-    const VALIDACIONES_CAMPOS = {
-      mes: ["Mes"],
-      proceso_detecta: ["Proceso que detecta", "Proceso Detecta"],
-      maquina_detecta: ["Máquina que detecta", "Maquina que detecta"],
-      operador_detecta: ["Operador que detecta"],
-      proceso_origina: ["Proceso que origina", "Proceso Origina"],
-      maquina: ["Máquina que origina", "Maquina que origina", "Máquina", "Maquina"],
-      operador: ["Operador que origina", "Operador"],
-      defecto: ["Defecto"],
-      reporta: ["Reporta"],
-      autorizo: ["Autorizo", "Autoriza"]
-    };
-
-    const VALIDACIONES_COLUMNAS = {
-      autorizo: "AB"
-    };
-
-    let validacionesData = {}; // { mes: [...], proceso_detecta: [...], ... }
-    let validacionesMeta = null; // { fileName, fecha, hoja }
-
-    async function cargarValidacionesDesdeArchivo() {
-      try {
-        const workbook = await cargarWorkbookDesdeArchivo(VALIDACIONES_FILE);
-
-        const nombreHoja = encontrarHoja(workbook, "validaciones") || workbook.SheetNames[0];
-        const sheet = workbook.Sheets[nombreHoja];
-        const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
-        procesarValidaciones(rows, VALIDACIONES_FILE, nombreHoja, sheet);
-      } catch (err) {
-        console.warn("No se pudo cargar las Validaciones:", err);
-        mostrarErrorValidaciones(err.message);
-        cargarValidacionesDesdeStorage(); // usa la última copia guardada en localStorage, si existe
-      }
-    }
-
-    function mostrarErrorValidaciones(mensaje) {
+    async function cargarValidaciones() {
       const box = document.getElementById("validacionesStatus");
-      const contenedor = document.getElementById("fuentesStatus");
-      contenedor.classList.add("error");
-      box.textContent = "⚠ Listas de Validación: " + mensaje + " — colócalo junto a este .htm en el repositorio.";
-    }
-
-    function obtenerColumnaPorLetra(sheet, letra) {
-      const matriz = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
-      const colIdx = XLSX.utils.decode_col(letra);
-      const vistos = new Set();
-      const valores = [];
-      for (let i = 1; i < matriz.length; i++) {
-        const v = String(matriz[i][colIdx] == null ? "" : matriz[i][colIdx]).trim();
-        if (v !== "" && !vistos.has(v)) {
-          vistos.add(v);
-          valores.push(v);
-        }
+      try {
+        validacionesData = await cargarJSON(VALIDACIONES_URL);
+        validacionesMeta = { fileName: VALIDACIONES_URL };
+        const listas = ["mes", "proceso_detecta", "maquina_detecta", "proceso_origina", "maquina", "defecto", "autorizo"];
+        listas.forEach(id => poblarSelectDesdeLista(id, validacionesData[id] || []));
+        ["operador_detecta", "operador", "reporta"].forEach(id => activarAutocomplete(id, validacionesData[id] || []));
+        const total = listas.length + 3;
+        const llenas = listas.filter(id => (validacionesData[id] || []).length).length
+          + ["operador_detecta", "operador", "reporta"].filter(id => (validacionesData[id] || []).length).length;
+        box.innerHTML = "✓ Listas de Validación: <strong>" + llenas + " de " + total + " listas</strong> desde VALIDACIONES.xlsx";
+      } catch (err) {
+        box.textContent = "⚠ Listas de Validación: " + err.message;
       }
-      return valores;
+      actualizarEstadoFuentes();
     }
 
-    function procesarValidaciones(rows, fileName, nombreHoja, sheet) {
-      const nuevaData = {};
-      Object.keys(VALIDACIONES_CAMPOS).forEach(selectId => {
-        let valores = obtenerColumna(rows, VALIDACIONES_CAMPOS[selectId]);
-        if (!valores.length && sheet && VALIDACIONES_COLUMNAS[selectId]) {
-          valores = obtenerColumnaPorLetra(sheet, VALIDACIONES_COLUMNAS[selectId]);
-        }
-        nuevaData[selectId] = valores;
+    function poblarSelectDesdeLista(selectId, valores) {
+      const select = document.getElementById(selectId);
+      if (!select || select.tagName !== "SELECT") return;
+      const valorActual = select.value;
+      select.innerHTML = "";
+      const optVacia = document.createElement("option");
+      optVacia.value = "";
+      optVacia.textContent = "Seleccione...";
+      select.appendChild(optVacia);
+      valores.forEach(valor => {
+        const option = document.createElement("option");
+        option.value = valor;
+        option.textContent = valor;
+        select.appendChild(option);
       });
-
-      validacionesData = nuevaData;
-      validacionesMeta = {
-        fileName: fileName,
-        fecha: new Date().toLocaleString(),
-        hoja: nombreHoja
-      };
-
-      guardarValidacionesEnStorage();
-      actualizarUIvalidaciones();
-      aplicarValidacionesASelects();
+      select.value = valores.includes(valorActual) ? valorActual : "";
     }
 
-    function guardarValidacionesEnStorage() {
-      try {
-        localStorage.setItem(VALIDACIONES_STORAGE_KEY, JSON.stringify({
-          data: validacionesData,
-          meta: validacionesMeta
-        }));
-      } catch (err) {
-        console.warn("No se pudo guardar las validaciones en localStorage:", err);
-      }
-    }
-
-    function cargarValidacionesDesdeStorage() {
-      try {
-        const raw = localStorage.getItem(VALIDACIONES_STORAGE_KEY);
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        validacionesData = parsed.data || {};
-        validacionesMeta = parsed.meta || null;
-        actualizarUIvalidaciones();
-        aplicarValidacionesASelects();
-      } catch (err) {
-        console.warn("No se pudo cargar las validaciones guardadas:", err);
-      }
-    }
-
-    function actualizarUIvalidaciones() {
-      const box = document.getElementById("validacionesStatus");
-      const contenedor = document.getElementById("fuentesStatus");
-      if (validacionesMeta) {
-        const totalListas = Object.keys(validacionesData).filter(k => validacionesData[k] && validacionesData[k].length).length;
-        contenedor.classList.remove("error");
-        contenedor.classList.add("ok");
-        box.innerHTML = "✓ Listas de Validación: <strong>" + totalListas + " de " + Object.keys(VALIDACIONES_CAMPOS).length + " listas</strong> (" + validacionesMeta.fileName + ", " + validacionesMeta.fecha + ")";
-      } else {
-        box.textContent = "Listas de Validación: sin datos.";
-      }
-    }
-
-    // Campos que ahora son <input> con <datalist> en vez de <select>
-    const CAMPOS_CON_DATALIST = {};
-    const CAMPOS_AUTOCOMPLETE = ["operador_detecta", "operador", "reporta"];
     const autocompleteState = {};
 
     function normalizarBusqueda(s) {
@@ -836,7 +516,7 @@
     }
 
     function confirmarAutocomplete() {
-      const campos = CAMPOS_AUTOCOMPLETE;
+      const campos = ["operador_detecta", "operador", "reporta"];
       for (let i = 0; i < campos.length; i++) {
         const id = campos[i];
         const input = document.getElementById(id);
@@ -857,56 +537,284 @@
       return true;
     }
 
-    function aplicarValidacionesASelects() {
-      Object.keys(VALIDACIONES_CAMPOS).forEach(campoId => {
-        const valores = validacionesData[campoId] || [];
-        if (CAMPOS_AUTOCOMPLETE.indexOf(campoId) !== -1) {
-          activarAutocomplete(campoId, valores);
-        } else if (CAMPOS_CON_DATALIST[campoId]) {
-          poblarDatalistDesdeLista(CAMPOS_CON_DATALIST[campoId], valores);
-        } else {
-          poblarSelectDesdeLista(campoId, valores);
-        }
-      });
+    async function cargarOrdenes() {
+      const box = document.getElementById("captacionStatus");
+      try {
+        const registros = await cargarJSON(ORDENES_URL);
+        const index = {};
+        registros.forEach(reg => {
+          [reg.orden, reg.ordenCompra].forEach(clave => {
+            if (!clave) return;
+            const k = normalizarClave(clave);
+            if (!index[k]) index[k] = [];
+            index[k].push(reg);
+          });
+        });
+        captacionIndex = index;
+        captacionMeta = { registros: registros.length, fileName: ORDENES_URL };
+        box.innerHTML = "✓ Base de Órdenes: <strong>" + registros.length + " registros</strong> de rep-ov-espec";
+        poblarDatalistOrdenes();
+      } catch (err) {
+        box.textContent = "⚠ Base de Órdenes: " + err.message;
+      }
+      actualizarEstadoFuentes();
     }
 
-    function poblarDatalistDesdeLista(datalistId, valores) {
-      const datalist = document.getElementById(datalistId);
-      if (!datalist) return;
+    function poblarDatalistOrdenes() {
+      const datalist = document.getElementById("ordenesList");
       datalist.innerHTML = "";
-      valores.forEach(valor => {
+      const vistos = new Set();
+      Object.keys(captacionIndex).slice(0, 4000).forEach(clave => {
+        const orden = captacionIndex[clave][0].orden || clave;
+        if (vistos.has(orden)) return;
+        vistos.add(orden);
         const opt = document.createElement("option");
-        opt.value = valor;
+        opt.value = orden;
         datalist.appendChild(opt);
       });
     }
 
-    function poblarSelectDesdeLista(selectId, valores) {
-      const select = document.getElementById(selectId);
-      if (!select) return;
-      const valorActual = select.value;
-      select.innerHTML = "";
+    document.getElementById("orden").addEventListener("input", function(e) {
+      buscarOrden(e.target.value);
+    });
+    document.getElementById("orden").addEventListener("change", function(e) {
+      buscarOrden(e.target.value);
+    });
 
-      const optVacia = document.createElement("option");
-      optVacia.value = "";
-      optVacia.textContent = "Seleccione...";
-      select.appendChild(optVacia);
+    function buscarOrden(valor) {
+      const hint = document.getElementById("ordenHint");
+      const productoSeleccionDiv = document.getElementById("productoSeleccion");
+      const clave = normalizarClave(valor);
 
-      valores.forEach(valor => {
-        const option = document.createElement("option");
-        option.value = valor;
-        option.textContent = valor;
-        select.appendChild(option);
+      if (!clave) {
+        hint.textContent = "Escribe la orden para traer cliente, código y producto desde Seguimiento OT (rep-ov-espec).";
+        productoSeleccionDiv.style.display = "none";
+        return;
+      }
+
+      if (Object.keys(captacionIndex).length === 0) {
+        hint.textContent = "Aún no hay base de órdenes cargada.";
+        return;
+      }
+
+      const registros = captacionIndex[clave];
+      if (!registros || registros.length === 0) {
+        hint.textContent = "Orden no encontrada en rep-ov-espec.";
+        productoSeleccionDiv.style.display = "none";
+        return;
+      }
+
+      const unicos = [];
+      const vistos = new Set();
+      registros.forEach(r => {
+        const key = codigoDe(r) + "||" + r.producto;
+        if (!vistos.has(key)) {
+          vistos.add(key);
+          unicos.push(r);
+        }
       });
 
-      // Mantener la selección previa si sigue siendo válida
-      if (valores.includes(valorActual)) {
-        select.value = valorActual;
+      setCampo("cliente", registros[0].cliente);
+
+      if (unicos.length === 1) {
+        aplicarProducto(unicos[0]);
+        productoSeleccionDiv.style.display = "none";
+        hint.textContent = "Cliente, código y producto encontrados en rep-ov-espec.";
       } else {
-        select.value = "";
+        const select = document.getElementById("productoOpciones");
+        select.innerHTML = "";
+        unicos.forEach((r, i) => {
+          const opt = document.createElement("option");
+          opt.value = i;
+          opt.textContent = (codigoDe(r) ? codigoDe(r) + " - " : "") + r.producto;
+          select.appendChild(opt);
+        });
+        select.onchange = function() {
+          aplicarProducto(unicos[parseInt(select.value, 10)]);
+        };
+        productoSeleccionDiv.style.display = "block";
+        aplicarProducto(unicos[0]);
+        hint.textContent = "Esta orden tiene " + unicos.length + " productos. Elige el correcto arriba.";
       }
     }
+
+    function aplicarProducto(registro) {
+      setCampo("producto", registro.producto);
+      setCampo("codigo", codigoDe(registro));
+    }
+
+    function setCampo(id, valor) {
+      const input = document.getElementById(id);
+      if (!valor) return;
+      input.value = valor;
+      input.classList.add("auto-filled");
+    }
+
+    function leerRegistros() {
+      try {
+        return JSON.parse(localStorage.getItem(REGISTROS_KEY) || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function guardarCopiaLocal(data) {
+      const registros = leerRegistros();
+      registros.push(data);
+      localStorage.setItem(REGISTROS_KEY, JSON.stringify(registros));
+      localStorage.setItem(ULTIMO_ID_KEY, String(data.id));
+    }
+
+    function limpiarFormulario(form) {
+      form.reset();
+      document.getElementById("um").value = "KG";
+      document.getElementById("productoSeleccion").style.display = "none";
+      ["cliente", "producto", "codigo"].forEach(id => document.getElementById(id).classList.remove("auto-filled"));
+      document.getElementById("ordenHint").textContent = "Escribe la orden para traer cliente, código y producto desde Seguimiento OT (rep-ov-espec).";
+      reiniciarCamposCondicionales();
+      fechaHoy();
+    }
+
+    async function guardarEnGoogleSheets(data) {
+      if (!SHEETS_WEBAPP_URL) {
+        throw new Error("Falta conectar Google Sheets. Publica apps-script/Code.gs y pega la URL en el HTML.");
+      }
+      // text/plain + no-cors: un solo envío, evita el bloqueo CORS de Apps Script
+      await fetch(SHEETS_WEBAPP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(data)
+      });
+      return { ok: true };
+    }
+
+    function actualizarEstadoSheets(ok, mensaje) {
+      const box = document.getElementById("sheetsStatus");
+      box.textContent = mensaje;
+      const contenedor = document.getElementById("fuentesStatus");
+      if (!ok) contenedor.classList.add("warn");
+    }
+
+    async function verificarGoogleSheets() {
+      if (!SHEETS_WEBAPP_URL) {
+        actualizarEstadoSheets(false, "⚠ Google Sheets: aún no está conectado.");
+        return;
+      }
+      try {
+        const respuesta = await fetch(SHEETS_WEBAPP_URL, { cache: "no-store" });
+        const parsed = await respuesta.json();
+        if (parsed && parsed.ok) {
+          if (parsed.siguienteId) {
+            document.getElementById("id").value = parsed.siguienteId;
+            localStorage.setItem(ULTIMO_ID_KEY, String(Math.max(0, Number(parsed.siguienteId) - 1)));
+            actualizarEstadoSheets(true, "✓ Google Sheets: listo. Siguiente ID: " + parsed.siguienteId);
+          } else {
+            actualizarEstadoSheets(true, "✓ Google Sheets: listo para guardar registros.");
+          }
+        } else {
+          actualizarEstadoSheets(false, "⚠ Google Sheets: " + (parsed.error || "sin respuesta"));
+        }
+      } catch (err) {
+        actualizarEstadoSheets(false, "⚠ Google Sheets: no se pudo verificar (" + err.message + "). Igual se intentará guardar.");
+      }
+    }
+
+    document.getElementById("formNoConforme").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      if (!confirmarAutocomplete()) return;
+      const data = {};
+      new FormData(this).forEach((valor, clave) => { data[clave] = valor; });
+      const btn = this.querySelector('button[type="submit"]');
+      const textoOriginal = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Guardando en Google Sheets...";
+      guardarCopiaLocal(data);
+      try {
+        await guardarEnGoogleSheets(data);
+        const idEnviado = Number(data.id) || 1;
+        alert("Registro enviado a Google Sheets. El ID definitivo lo asigna la hoja.");
+        limpiarFormulario(this);
+        await aplicarIdDesdeSheets({ minEsperado: idEnviado + 1, intentos: 6, espera: 700 });
+      } catch (err) {
+        alert("No se pudo guardar en Google Sheets: " + err.message + "\nSe quedó una copia en este navegador (Exportar registros).");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
+      }
+    });
+
+    document.getElementById("btnExportar").addEventListener("click", function() {
+      const registros = leerRegistros();
+      if (!registros.length) {
+        alert("No hay registros guardados en este navegador.");
+        return;
+      }
+      const headers = Object.keys(registros[0]);
+      const lineas = [headers.join(",")];
+      registros.forEach(r => {
+        lineas.push(headers.map(h => '"' + String(r[h] == null ? "" : r[h]).replace(/"/g, '""') + '"').join(","));
+      });
+      const blob = new Blob(["\uFEFF" + lineas.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "registros-no-conforme.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    const ACCESO_PIN = "2580";
+    const PIN_KEY = "ncPinOk";
+
+    function iniciarApp() {
+      asignarID();
+      fechaHoy();
+      cargarValidaciones();
+      cargarOrdenes();
+      verificarGoogleSheets();
+    }
+
+    document.addEventListener("visibilitychange", function() {
+      if (document.visibilityState === "visible" && sessionStorage.getItem(PIN_KEY) === "1") {
+        aplicarIdDesdeSheets();
+      }
+    });
+
+    function desbloquearApp() {
+      sessionStorage.setItem(PIN_KEY, "1");
+      document.body.classList.remove("bloqueado");
+      iniciarApp();
+    }
+
+    document.getElementById("formPin").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const pin = document.getElementById("pin");
+      const error = document.getElementById("pinError");
+      if (pin.value === ACCESO_PIN) {
+        error.textContent = "";
+        desbloquearApp();
+      } else {
+        error.textContent = "PIN incorrecto.";
+        pin.value = "";
+        pin.focus();
+      }
+    });
+
+    document.getElementById("pin").addEventListener("input", function() {
+      this.value = this.value.replace(/\D/g, "").slice(0, 4);
+      document.getElementById("pinError").textContent = "";
+    });
+
+    window.onload = function() {
+      if (sessionStorage.getItem(PIN_KEY) === "1") {
+        document.body.classList.remove("bloqueado");
+        iniciarApp();
+      } else {
+        document.body.classList.add("bloqueado");
+        document.getElementById("pin").focus();
+      }
+    };
   </script>
-
-
-</body></html>
+</body>
+</html>
