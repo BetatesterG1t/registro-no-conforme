@@ -194,6 +194,14 @@
           <div class="hint">Escribe el nombre para ver coincidencias.</div>
         </div>
         <div>
+          <label for="supervisor">Supervisor que origina</label>
+          <div class="autocomplete">
+            <input type="text" id="supervisor" name="supervisor" autocomplete="off" placeholder="Escribe el nombre...">
+            <div class="sugerencias" id="supervisorSugerencias" hidden></div>
+          </div>
+          <div class="hint">Escribe el nombre para ver coincidencias.</div>
+        </div>
+        <div>
           <label for="defecto">Defecto</label>
           <select id="defecto" name="defecto">
             <option value="">Seleccione...</option>
@@ -419,11 +427,21 @@
         validacionesMeta = { fileName: VALIDACIONES_URL };
         const listas = ["mes", "proceso_detecta", "maquina_detecta", "proceso_origina", "maquina", "defecto", "autorizo"];
         listas.forEach(id => poblarSelectDesdeLista(id, validacionesData[id] || []));
-        ["operador_detecta", "operador", "reporta"].forEach(id => activarAutocomplete(id, validacionesData[id] || []));
+        ["operador_detecta", "operador", "supervisor", "reporta"].forEach(id => {
+          const lista = (id === "supervisor")
+            ? (validacionesData.supervisor || validacionesData.operador || [])
+            : (validacionesData[id] || []);
+          activarAutocomplete(id, lista);
+        });
         aplicarMesDesdeFecha();
-        const total = listas.length + 3;
+        const total = listas.length + 4;
         const llenas = listas.filter(id => (validacionesData[id] || []).length).length
-          + ["operador_detecta", "operador", "reporta"].filter(id => (validacionesData[id] || []).length).length;
+          + ["operador_detecta", "operador", "supervisor", "reporta"].filter(id => {
+            const lista = (id === "supervisor")
+              ? (validacionesData.supervisor || validacionesData.operador || [])
+              : (validacionesData[id] || []);
+            return lista.length;
+          }).length;
         box.innerHTML = "✓ Listas de Validación: <strong>" + llenas + " de " + total + " listas</strong> desde VALIDACIONES.xlsx";
       } catch (err) {
         box.textContent = "⚠ Listas de Validación: " + err.message;
@@ -543,7 +561,7 @@
     }
 
     function confirmarAutocomplete() {
-      const campos = ["operador_detecta", "operador", "reporta"];
+      const campos = ["operador_detecta", "operador", "supervisor", "reporta"];
       for (let i = 0; i < campos.length; i++) {
         const id = campos[i];
         const input = document.getElementById(id);

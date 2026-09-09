@@ -36,6 +36,7 @@ const HEADERS = [
   "Proceso que origina",
   "Máquina que origina",
   "Operador que origina",
+  "Supervisor que origina",
   "Defecto",
   "Reporta",
   "Autorizo",
@@ -82,6 +83,12 @@ function ensureSheet(ss) {
   const codigoIdx = actuales.indexOf("Código");
   if (codigoIdx !== -1) {
     sh.getRange(1, codigoIdx + 1).setValue("SKU").setFontWeight("bold");
+  }
+  if (actuales.indexOf("Supervisor que origina") === -1) {
+    const opIdx = actuales.indexOf("Operador que origina");
+    const col = opIdx >= 0 ? opIdx + 2 : HEADERS.indexOf("Supervisor que origina") + 1;
+    sh.insertColumnAfter(col - 1);
+    sh.getRange(1, col).setValue("Supervisor que origina").setFontWeight("bold");
   }
   const extra = ss.getSheetByName("Hoja 1") || ss.getSheetByName("Sheet1");
   if (extra && ss.getSheets().length > 1) {
@@ -148,6 +155,7 @@ function guardarRegistro(data) {
       data.proceso_origina || "",
       data.maquina || "",
       data.operador || "",
+      data.supervisor || "",
       data.defecto || "",
       data.reporta || "",
       data.autorizo || "",
