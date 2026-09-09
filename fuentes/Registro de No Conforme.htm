@@ -221,12 +221,11 @@
   </div>
 
   <script>
-    // Consecutivo automático para ID
-    let ultimoID = 0; // inicia en 0
+    const ULTIMO_ID_KEY = "ncUltimoID_v2";
 
     function asignarID() {
-      ultimoID++;
-      document.getElementById("id").value = ultimoID;
+      const ultimo = Number(localStorage.getItem(ULTIMO_ID_KEY) || "0") + 1;
+      document.getElementById("id").value = ultimo;
     }
 
     /* ============================
@@ -343,6 +342,7 @@
       e.preventDefault();
       if (!confirmarAutocomplete()) return;
       alert("Registro guardado con ID: " + document.getElementById("id").value);
+      localStorage.setItem(ULTIMO_ID_KEY, String(document.getElementById("id").value));
       this.reset(); // limpia el formulario
       document.getElementById("um").value = "KG";
       document.getElementById("productoSeleccion").style.display = "none";
