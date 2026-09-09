@@ -61,35 +61,61 @@ function getSpreadsheet() {
   return ss;
 }
 
+function leerEncabezados(sh) {
+  const lastCol = Math.max(sh.getLastColumn(), 1);
+  return sh.getRange(1, 1, 1, lastCol).getValues()[0].map(function (v) {
+    return String(v || "").trim();
+  });
+}
+
+function columnaSinDatos(sh, col) {
+  const lastRow = Math.max(sh.getLastRow(), 1);
+  const vals = sh.getRange(1, col, lastRow, 1).getValues();
+  for (let i = 0; i < vals.length; i++) {
+    if (String(vals[i][0] || "").trim() !== "") return false;
+  }
+  return true;
+}
+
+function quitarColumnasSinTitulo(sh) {
+  for (let c = sh.getLastColumn(); c >= 1; c--) {
+    const titulo = String(sh.getRange(1, c).getValue() || "").trim();
+    if (titulo === "" && columnaSinDatos(sh, c)) {
+      sh.deleteColumn(c);
+    }
+  }
+}
+
 function ensureSheet(ss) {
   let sh = ss.getSheetByName(HOJA);
   if (!sh) sh = ss.insertSheet(HOJA);
-  const lastCol = Math.max(sh.getLastColumn(), HEADERS.length);
-  const actuales = sh.getRange(1, 1, 1, lastCol).getValues()[0].map(function (v) {
-    return String(v || "").trim();
-  });
-  if (String(actuales[0] || "").trim() !== HEADERS[0]) {
-    sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
-    sh.getRange(1, 1, 1, HEADERS.length).setFontWeight("bold");
-    sh.setFrozenRows(1);
-    sh.setColumnWidth(7, 180);
-    sh.setColumnWidth(8, 320);
-  } else if (actuales.indexOf("Autorizo") === -1) {
-    const reportaIdx = actuales.indexOf("Reporta");
-    const col = reportaIdx >= 0 ? reportaIdx + 2 : HEADERS.indexOf("Autorizo") + 1;
-    sh.insertColumnAfter(col - 1);
-    sh.getRange(1, col).setValue("Autorizo").setFontWeight("bold");
-  }
+
+  quitarColumnasSinTitulo(sh);
+
+  let actuales = leerEncabezados(sh);
   const codigoIdx = actuales.indexOf("Código");
   if (codigoIdx !== -1) {
     sh.getRange(1, codigoIdx + 1).setValue("SKU").setFontWeight("bold");
   }
-  if (actuales.indexOf("Supervisor que origina") === -1) {
-    const opIdx = actuales.indexOf("Operador que origina");
-    const col = opIdx >= 0 ? opIdx + 2 : HEADERS.indexOf("Supervisor que origina") + 1;
-    sh.insertColumnAfter(col - 1);
-    sh.getRange(1, col).setValue("Supervisor que origina").setFontWeight("bold");
-  }
+
+  HEADERS.forEach(function (header, i) {
+    actuales = leerEncabezados(sh);
+    const pos = actuales.indexOf(header);
+    const expected = i + 1;
+    if (pos === -1) {
+      if (expected <= Math.max(sh.getLastColumn(), 1)) {
+        sh.insertColumnBefore(expected);
+      }
+      sh.getRange(1, expected).setValue(header).setFontWeight("bold");
+    }
+  });
+
+  sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+  sh.getRange(1, 1, 1, HEADERS.length).setFontWeight("bold");
+  sh.setFrozenRows(1);
+  sh.setColumnWidth(7, 180);
+  sh.setColumnWidth(8, 320);
+
   const extra = ss.getSheetByName("Hoja 1") || ss.getSheetByName("Sheet1");
   if (extra && ss.getSheets().length > 1) {
     ss.deleteSheet(extra);
