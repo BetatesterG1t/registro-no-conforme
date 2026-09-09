@@ -95,6 +95,7 @@
         <div>
           <label for="id">ID</label>
           <input type="number" id="id" name="id" readonly value="1">
+          <div class="hint">El ID lo toma de Google Sheets y es el mismo para todos los equipos.</div>
         </div>
         <div>
           <label for="fecha">Fecha</label>
@@ -262,6 +263,41 @@
     function asignarID() {
       const ultimo = Number(localStorage.getItem(ULTIMO_ID_KEY) || "0") + 1;
       document.getElementById("id").value = ultimo;
+    }
+
+    async function pedirSiguienteId() {
+      if (!SHEETS_WEBAPP_URL) return null;
+      const respuesta = await fetch(SHEETS_WEBAPP_URL, { cache: "no-store" });
+      const parsed = await respuesta.json();
+      const n = Number(parsed && parsed.siguienteId);
+      if (parsed && parsed.ok && !isNaN(n) && n > 0) return n;
+      return null;
+    }
+
+    async function aplicarIdDesdeSheets(opciones) {
+      const minEsperado = opciones && opciones.minEsperado ? opciones.minEsperado : 0;
+      const intentos = opciones && opciones.intentos ? opciones.intentos : 1;
+      const espera = opciones && opciones.espera ? opciones.espera : 0;
+      for (let i = 0; i < intentos; i++) {
+        if (espera && (i > 0 || minEsperado)) {
+          await new Promise(function (resolver) { setTimeout(resolver, espera); });
+        }
+        try {
+          const n = await pedirSiguienteId();
+          if (n && n >= minEsperado) {
+            document.getElementById("id").value = n;
+            localStorage.setItem(ULTIMO_ID_KEY, String(Math.max(0, n - 1)));
+            return n;
+          }
+        } catch (err) {}
+      }
+      if (minEsperado) {
+        document.getElementById("id").value = minEsperado;
+        localStorage.setItem(ULTIMO_ID_KEY, String(minEsperado - 1));
+        return minEsperado;
+      }
+      asignarID();
+      return null;
     }
 
     function fechaHoy() {
@@ -636,7 +672,6 @@
       ["cliente", "producto", "codigo"].forEach(id => document.getElementById(id).classList.remove("auto-filled"));
       document.getElementById("ordenHint").textContent = "Escribe la orden para traer cliente, código y producto desde Seguimiento OT (rep-ov-espec).";
       reiniciarCamposCondicionales();
-      asignarID();
       fechaHoy();
     }
 
@@ -670,7 +705,13 @@
         const respuesta = await fetch(SHEETS_WEBAPP_URL, { cache: "no-store" });
         const parsed = await respuesta.json();
         if (parsed && parsed.ok) {
-          actualizarEstadoSheets(true, "✓ Google Sheets: listo para guardar registros.");
+          if (parsed.siguienteId) {
+            document.getElementById("id").value = parsed.siguienteId;
+            localStorage.setItem(ULTIMO_ID_KEY, String(Math.max(0, Number(parsed.siguienteId) - 1)));
+            actualizarEstadoSheets(true, "✓ Google Sheets: listo. Siguiente ID: " + parsed.siguienteId);
+          } else {
+            actualizarEstadoSheets(true, "✓ Google Sheets: listo para guardar registros.");
+          }
         } else {
           actualizarEstadoSheets(false, "⚠ Google Sheets: " + (parsed.error || "sin respuesta"));
         }
@@ -691,8 +732,10 @@
       guardarCopiaLocal(data);
       try {
         await guardarEnGoogleSheets(data);
-        alert("Registro enviado a Google Sheets (ID local: " + data.id + "). Revisa la hoja \"Registro de No Conforme\" en tu Drive.");
+        const idEnviado = Number(data.id) || 1;
+        alert("Registro enviado a Google Sheets. El ID definitivo lo asigna la hoja.");
         limpiarFormulario(this);
+        await aplicarIdDesdeSheets({ minEsperado: idEnviado + 1, intentos: 6, espera: 700 });
       } catch (err) {
         alert("No se pudo guardar en Google Sheets: " + err.message + "\nSe quedó una copia en este navegador (Exportar registros).");
       } finally {
@@ -731,6 +774,12 @@
       cargarOrdenes();
       verificarGoogleSheets();
     }
+
+    document.addEventListener("visibilitychange", function() {
+      if (document.visibilityState === "visible" && sessionStorage.getItem(PIN_KEY) === "1") {
+        aplicarIdDesdeSheets();
+      }
+    });
 
     function desbloquearApp() {
       sessionStorage.setItem(PIN_KEY, "1");

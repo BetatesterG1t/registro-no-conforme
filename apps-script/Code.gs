@@ -10,6 +10,8 @@
  *    - Quién tiene acceso: Cualquiera
  * 4. Copiar la URL y pegarla en index.html (SHEETS_WEBAPP_URL).
  *
+ * Si ya estaba publicado y cambias este archivo:
+ * Implementar > Administrar implementaciones > lápiz > Nueva versión > Implementar.
  * La primera vez que llegue un registro se crea sola la hoja
  * "Registro de No Conforme" en tu Drive.
  */
@@ -116,38 +118,44 @@ function parseBody(e) {
 }
 
 function guardarRegistro(data) {
-  const ss = getSpreadsheet();
-  const sh = ensureSheet(ss);
-  const id = siguienteId(sh);
-  const captura = Utilities.formatDate(new Date(), "America/Mexico_City", "yyyy-MM-dd HH:mm:ss");
-  sh.appendRow([
-    id,
-    captura,
-    data.fecha || "",
-    data.mes || "",
-    data.orden || "",
-    data.cliente || "",
-    data.codigo || "",
-    data.producto || "",
-    data.cantidad || "",
-    data.um || "KG",
-    data.cantidad_pzas || "",
-    data.um_pzas || "",
-    data.proceso_detecta || "",
-    data.maquina_detecta || "",
-    data.operador_detecta || "",
-    data.proceso_origina || "",
-    data.maquina || "",
-    data.operador || "",
-    data.defecto || "",
-    data.reporta || "",
-    data.autorizo || "",
-    data.se_autoriza || "",
-    data.se_sanea || "",
-    data.material_recuperado || "",
-    data.material_rechazado || ""
-  ]);
-  return { ok: true, id: id, sheetUrl: ss.getUrl() };
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const ss = getSpreadsheet();
+    const sh = ensureSheet(ss);
+    const id = siguienteId(sh);
+    const captura = Utilities.formatDate(new Date(), "America/Mexico_City", "yyyy-MM-dd HH:mm:ss");
+    sh.appendRow([
+      id,
+      captura,
+      data.fecha || "",
+      data.mes || "",
+      data.orden || "",
+      data.cliente || "",
+      data.codigo || "",
+      data.producto || "",
+      data.cantidad || "",
+      data.um || "KG",
+      data.cantidad_pzas || "",
+      data.um_pzas || "",
+      data.proceso_detecta || "",
+      data.maquina_detecta || "",
+      data.operador_detecta || "",
+      data.proceso_origina || "",
+      data.maquina || "",
+      data.operador || "",
+      data.defecto || "",
+      data.reporta || "",
+      data.autorizo || "",
+      data.se_autoriza || "",
+      data.se_sanea || "",
+      data.material_recuperado || "",
+      data.material_rechazado || ""
+    ]);
+    return { ok: true, id: id, siguienteId: id + 1, sheetUrl: ss.getUrl() };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function jsonOut(obj) {
@@ -170,8 +178,8 @@ function doGet(e) {
       return jsonOut(guardarRegistro(parseBody(e)));
     }
     const ss = getSpreadsheet();
-    ensureSheet(ss);
-    return jsonOut({ ok: true, sheetUrl: ss.getUrl() });
+    const sh = ensureSheet(ss);
+    return jsonOut({ ok: true, sheetUrl: ss.getUrl(), siguienteId: siguienteId(sh) });
   } catch (err) {
     return jsonOut({ ok: false, error: String(err) });
   }
