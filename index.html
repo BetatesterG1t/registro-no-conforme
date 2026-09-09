@@ -305,7 +305,33 @@
       const m = String(d.getMonth() + 1).padStart(2, "0");
       const day = String(d.getDate()).padStart(2, "0");
       document.getElementById("fecha").value = d.getFullYear() + "-" + m + "-" + day;
+      aplicarMesDesdeFecha();
     }
+
+    const NOMBRES_MES = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+
+    function aplicarMesDesdeFecha() {
+      const fecha = document.getElementById("fecha").value;
+      const mes = document.getElementById("mes");
+      if (!fecha || !mes) return;
+      const n = Number(fecha.split("-")[1]);
+      if (!n || n < 1 || n > 12) {
+        mes.value = "";
+        return;
+      }
+      const nombre = NOMBRES_MES[n - 1];
+      const existe = Array.prototype.some.call(mes.options, function(opt) { return opt.value === nombre; });
+      if (!existe) {
+        const option = document.createElement("option");
+        option.value = nombre;
+        option.textContent = nombre;
+        mes.appendChild(option);
+      }
+      mes.value = nombre;
+    }
+
+    document.getElementById("fecha").addEventListener("change", aplicarMesDesdeFecha);
+    document.getElementById("fecha").addEventListener("input", aplicarMesDesdeFecha);
 
     document.getElementById("se_autoriza").addEventListener("change", function() {
       const saneaBloque = document.getElementById("saneaBloque");
@@ -394,6 +420,7 @@
         const listas = ["mes", "proceso_detecta", "maquina_detecta", "proceso_origina", "maquina", "defecto", "autorizo"];
         listas.forEach(id => poblarSelectDesdeLista(id, validacionesData[id] || []));
         ["operador_detecta", "operador", "reporta"].forEach(id => activarAutocomplete(id, validacionesData[id] || []));
+        aplicarMesDesdeFecha();
         const total = listas.length + 3;
         const llenas = listas.filter(id => (validacionesData[id] || []).length).length
           + ["operador_detecta", "operador", "reporta"].filter(id => (validacionesData[id] || []).length).length;
