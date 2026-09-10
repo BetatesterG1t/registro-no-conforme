@@ -12,6 +12,8 @@
  *
  * Si ya estaba publicado y cambias este archivo:
  * Implementar > Administrar implementaciones > lápiz > Nueva versión > Implementar.
+ * GET sin parámetros: siguiente ID.
+ * GET ?historial=1: últimos 50 registros para la pestaña Historial.
  * La primera vez que llegue un registro se crea sola la hoja
  * "Registro de No Conforme" en tu Drive.
  */
@@ -135,6 +137,31 @@ function siguienteId(sh) {
   return max + 1;
 }
 
+function celdaTexto(v) {
+  if (Object.prototype.toString.call(v) === "[object Date]" && !isNaN(v.getTime())) {
+    return Utilities.formatDate(v, "America/Mexico_City", "yyyy-MM-dd HH:mm:ss");
+  }
+  return v == null ? "" : String(v);
+}
+
+function leerUltimos(sh, limite) {
+  limite = limite || 50;
+  const last = sh.getLastRow();
+  if (last < 2) return [];
+  const num = Math.min(limite, last - 1);
+  const start = last - num + 1;
+  const valores = sh.getRange(start, 1, num, HEADERS.length).getValues();
+  const registros = [];
+  for (let i = valores.length - 1; i >= 0; i--) {
+    const fila = {};
+    HEADERS.forEach(function (h, c) {
+      fila[h] = celdaTexto(valores[i][c]);
+    });
+    registros.push(fila);
+  }
+  return registros;
+}
+
 function parseBody(e) {
   if (!e) return {};
   if (e.postData && e.postData.contents) {
@@ -212,12 +239,18 @@ function doPost(e) {
 
 function doGet(e) {
   try {
-    if (e && e.parameter && e.parameter.payload) {
+    const p = (e && e.parameter) || {};
+    if (p.payload) {
       return jsonOut(guardarRegistro(parseBody(e)));
     }
     const ss = getSpreadsheet();
     const sh = ensureSheet(ss);
-    return jsonOut({ ok: true, sheetUrl: ss.getUrl(), siguienteId: siguienteId(sh) });
+    const out = { ok: true, sheetUrl: ss.getUrl(), siguienteId: siguienteId(sh) };
+    if (p.historial === "1" || p.accion === "historial") {
+      out.registros = leerUltimos(sh, 50);
+      out.totalHoja = Math.max(0, sh.getLastRow() - 1);
+    }
+    return jsonOut(out);
   } catch (err) {
     return jsonOut({ ok: false, error: String(err) });
   }

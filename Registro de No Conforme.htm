@@ -67,13 +67,40 @@
     body.bloqueado #pinAcceso { display: block; }
     body.bloqueado > h1,
     body.bloqueado #fuentesStatus,
-    body.bloqueado #registro { display: none; }
+    body.bloqueado #tabs,
+    body.bloqueado #registro,
+    body.bloqueado #historial { display: none; }
     #pin {
       font-size: 1.6em;
       letter-spacing: 0.45em;
       text-align: center;
     }
     .pin-error { color: #b00020; margin-top: 8px; min-height: 1.2em; }
+    .tabs { display: flex; gap: 8px; max-width: 820px; margin: 0 0 12px; }
+    .tab {
+      margin-top: 0; padding: 8px 18px; background: #d5dbe3; color: #222;
+    }
+    .tab:hover { background: #6b7785; color: #fff; }
+    .tab.activa { background: #0078d7; color: #fff; }
+    .tab.activa:hover { background: #005a9e; }
+    #historial {
+      display: none;
+      max-width: 1100px;
+    }
+    #historial.panel-visible { display: block; }
+    #registro.panel-oculto { display: none; }
+    .historial-toolbar {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 10px;
+    }
+    .historial-toolbar button { margin-top: 0; }
+    #historialStatus { margin: 0; font-size: 0.9em; color: #555; }
+    .tabla-wrap { overflow: auto; max-height: 70vh; border: 1px solid #ccc; background: #fff; }
+    #tablaHistorial { border-collapse: collapse; width: 100%; font-size: 0.8em; }
+    #tablaHistorial th, #tablaHistorial td {
+      border: 1px solid #ddd; padding: 6px 8px; white-space: nowrap; text-align: left;
+    }
+    #tablaHistorial th { background: #e8eef4; position: sticky; top: 0; z-index: 1; }
+    #tablaHistorial tbody tr:nth-child(even) { background: #f6f8fa; }
   </style>
 </head>
 <body>
@@ -95,6 +122,11 @@
     <div id="captacionStatus">Base de Órdenes (rep-ov-espec): cargando...</div>
     <div id="validacionesStatus">Listas de Validación: cargando...</div>
     <div id="sheetsStatus">Google Sheets: verificando...</div>
+  </div>
+
+  <div id="tabs" class="tabs">
+    <button type="button" id="tabCaptura" class="tab activa">Captura</button>
+    <button type="button" id="tabHistorial" class="tab">Historial</button>
   </div>
 
   <div id="registro" class="form-panel">
@@ -270,6 +302,19 @@
         <div id="pinExportarError" class="pin-error"></div>
       </div>
       <button type="button" id="btnExportar" class="secondary-btn" disabled>Exportar registros</button>
+    </div>
+  </div>
+
+  <div id="historial" class="form-panel">
+    <div class="historial-toolbar">
+      <button type="button" id="btnActualizarHistorial" class="secondary-btn">Actualizar</button>
+      <p id="historialStatus">Últimos 50 registros de Google Sheets.</p>
+    </div>
+    <div class="tabla-wrap">
+      <table id="tablaHistorial">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
     </div>
   </div>
 
@@ -791,6 +836,96 @@
       }
     }
 
+    const HISTORIAL_COLUMNAS = [
+      "ID", "Fecha captura", "Fecha", "Mes", "Orden", "Cliente", "SKU", "Producto",
+      "Cantidad KG", "UM", "Cantidad Pzas/ML", "Unidad",
+      "Proceso que detecta", "Máquina que detecta", "Operador que detecta",
+      "Proceso que origina", "Máquina que origina", "Operador que origina",
+      "Supervisor que origina", "Defecto", "Reporta", "Autorizo",
+      "Se autoriza", "Se sanea", "Material recuperado", "Material rechazado"
+    ];
+
+    function escaparHtml(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+        return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
+      });
+    }
+
+    function mostrarPestana(nombre) {
+      const captura = nombre === "captura";
+      document.getElementById("tabCaptura").classList.toggle("activa", captura);
+      document.getElementById("tabHistorial").classList.toggle("activa", !captura);
+      document.getElementById("registro").classList.toggle("panel-oculto", !captura);
+      document.getElementById("historial").classList.toggle("panel-visible", !captura);
+      if (!captura) cargarHistorial();
+    }
+
+    function pintarHistorial(registros) {
+      const tabla = document.getElementById("tablaHistorial");
+      const thead = tabla.querySelector("thead");
+      const tbody = tabla.querySelector("tbody");
+      thead.innerHTML = "<tr>" + HISTORIAL_COLUMNAS.map(function (h) {
+        return "<th>" + escaparHtml(h) + "</th>";
+      }).join("") + "</tr>";
+      tbody.innerHTML = "";
+      if (!registros.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = HISTORIAL_COLUMNAS.length;
+        td.textContent = "No hay registros para mostrar.";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+      registros.forEach(function (fila) {
+        const tr = document.createElement("tr");
+        HISTORIAL_COLUMNAS.forEach(function (h) {
+          const td = document.createElement("td");
+          td.textContent = fila[h] == null ? "" : fila[h];
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function cargarHistorial() {
+      const status = document.getElementById("historialStatus");
+      const btn = document.getElementById("btnActualizarHistorial");
+      if (!SHEETS_WEBAPP_URL) {
+        status.textContent = "Falta conectar Google Sheets.";
+        pintarHistorial([]);
+        return;
+      }
+      status.textContent = "Cargando últimos 50 registros...";
+      if (btn) btn.disabled = true;
+      try {
+        const sep = SHEETS_WEBAPP_URL.indexOf("?") >= 0 ? "&" : "?";
+        const respuesta = await fetch(SHEETS_WEBAPP_URL + sep + "historial=1", { cache: "no-store" });
+        const parsed = await respuesta.json();
+        if (!parsed || !parsed.ok) {
+          throw new Error((parsed && parsed.error) || "sin respuesta");
+        }
+        if (!Array.isArray(parsed.registros)) {
+          status.textContent = "Para ver el historial, publica una nueva versión del Apps Script (Implementar → Administrar implementaciones → lápiz → Nueva versión).";
+          pintarHistorial([]);
+          return;
+        }
+        pintarHistorial(parsed.registros);
+        const n = parsed.registros.length;
+        const total = parsed.totalHoja != null ? parsed.totalHoja : n;
+        status.textContent = "Mostrando los " + n + " más recientes (hay " + total + " en la hoja).";
+      } catch (err) {
+        status.textContent = "No se pudo leer el historial: " + err.message;
+        pintarHistorial([]);
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    document.getElementById("tabCaptura").addEventListener("click", function () { mostrarPestana("captura"); });
+    document.getElementById("tabHistorial").addEventListener("click", function () { mostrarPestana("historial"); });
+    document.getElementById("btnActualizarHistorial").addEventListener("click", cargarHistorial);
+
     document.getElementById("formNoConforme").addEventListener("submit", async function(e) {
       e.preventDefault();
       if (!confirmarAutocomplete()) return;
@@ -807,6 +942,9 @@
         alert("Registro enviado a Google Sheets. El ID definitivo lo asigna la hoja.");
         limpiarFormulario(this);
         await aplicarIdDesdeSheets({ minEsperado: idEnviado + 1, intentos: 6, espera: 700 });
+        if (document.getElementById("historial").classList.contains("panel-visible")) {
+          cargarHistorial();
+        }
       } catch (err) {
         alert("No se pudo guardar en Google Sheets: " + err.message + "\nSe quedó una copia en este navegador (Exportar registros).");
       } finally {
