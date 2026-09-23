@@ -5,6 +5,8 @@ from openpyxl import load_workbook
 
 DESKTOP = Path.home() / "Desktop"
 CANDIDATOS = [
+    DESKTOP,
+    Path.home() / "Downloads",
     DESKTOP / "Registro No Conforme - pagina corregida",
     DESKTOP / "PROYECTO" / "PNCIPROY2",
     DESKTOP / "PROYECTO" / "PNCIPROY",
