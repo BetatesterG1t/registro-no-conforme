@@ -1,0 +1,2003 @@
+{
+  "meta": {
+    "titulo": "Tiempo muerto",
+    "area": "Área de impresión",
+    "anio": 2026,
+    "corte": "20 de septiembre de 2026",
+    "periodo": "Enero al 20 de septiembre de 2026",
+    "factores": {
+      "ml_por_hora": 8760,
+      "kg_por_hora": 116.8,
+      "costo_teorico_por_hora": 13081.6,
+      "costo_facturacion_por_hora": 13020.833333333334
+    },
+    "advertencias": []
+  },
+  "grupos": [
+    {
+      "id": "aprobacion",
+      "nombre": "Aprobación",
+      "texto": "Visto bueno y liberación de calidad."
+    },
+    {
+      "id": "materiales",
+      "nombre": "Materiales",
+      "texto": "Tintas, sustrato, mangas y anilox."
+    },
+    {
+      "id": "maquina",
+      "nombre": "Máquina",
+      "texto": "Equipo detenido, alarma o falta de luz."
+    },
+    {
+      "id": "montaje",
+      "nombre": "Montaje",
+      "texto": "Preprensa, grabados y montaje."
+    },
+    {
+      "id": "programa",
+      "nombre": "Programa",
+      "texto": "Cambios de orden y órdenes suspendidas."
+    }
+  ],
+  "conceptos": [
+    {
+      "id": "vobo",
+      "nombre": "Visto bueno (VoBo)",
+      "grupo": "aprobacion",
+      "en_grafico": true
+    },
+    {
+      "id": "tintas",
+      "nombre": "Tintas",
+      "grupo": "materiales",
+      "en_grafico": true
+    },
+    {
+      "id": "maquina",
+      "nombre": "Máquina descompuesta, en reparación",
+      "grupo": "maquina",
+      "en_grafico": true
+    },
+    {
+      "id": "calidad",
+      "nombre": "Autorización de calidad",
+      "grupo": "aprobacion",
+      "en_grafico": true
+    },
+    {
+      "id": "mangas",
+      "nombre": "Mangas y/o anilox en mal estado",
+      "grupo": "materiales",
+      "en_grafico": true
+    },
+    {
+      "id": "secuencia",
+      "nombre": "Cambio de secuencia",
+      "grupo": "programa",
+      "en_grafico": true
+    },
+    {
+      "id": "espera_montaje",
+      "nombre": "Espera de montaje de grabados",
+      "grupo": "montaje",
+      "en_grafico": true
+    },
+    {
+      "id": "grabados",
+      "nombre": "Grabados",
+      "grupo": "montaje",
+      "en_grafico": true
+    },
+    {
+      "id": "falta_material",
+      "nombre": "Falta de materiales",
+      "grupo": "materiales",
+      "en_grafico": true
+    },
+    {
+      "id": "preprensa",
+      "nombre": "Preprensa",
+      "grupo": "montaje",
+      "en_grafico": true
+    },
+    {
+      "id": "montaje_mangas",
+      "nombre": "Montaje por mismas mangas",
+      "grupo": "montaje",
+      "en_grafico": true
+    },
+    {
+      "id": "orden_corta",
+      "nombre": "Cambios excesivos por orden corta",
+      "grupo": "programa",
+      "en_grafico": true
+    },
+    {
+      "id": "material_mal",
+      "nombre": "Material en mal estado",
+      "grupo": "materiales",
+      "en_grafico": true
+    },
+    {
+      "id": "programacion",
+      "nombre": "Cambio de programación",
+      "grupo": "programa",
+      "en_grafico": true
+    },
+    {
+      "id": "luz",
+      "nombre": "Luz",
+      "grupo": "maquina",
+      "en_grafico": true
+    },
+    {
+      "id": "error_montaje",
+      "nombre": "Error en montaje",
+      "grupo": "montaje",
+      "en_grafico": true
+    },
+    {
+      "id": "orden_suspendida",
+      "nombre": "Orden suspendida",
+      "grupo": "programa",
+      "en_grafico": true
+    },
+    {
+      "id": "alarmada",
+      "nombre": "Máquina alarmada",
+      "grupo": "maquina",
+      "en_grafico": false
+    }
+  ],
+  "maquinas": [
+    "F4-1",
+    "F4-2",
+    "F4-3",
+    "F2-1",
+    "F2-2",
+    "F2-3",
+    "FJ-2",
+    "FLEXO",
+    "FW"
+  ],
+  "meses": [
+    {
+      "id": "2026-01",
+      "nombre": "Enero",
+      "corto": "Ene",
+      "parcial": false,
+      "archivo": "1._TIEMPO_MUERTO_AREA_IMPRESION__2026_S1-CON_MACROS_ENERO_ba69.xlsm",
+      "semanas": [
+        52.0,
+        44.67,
+        95.02,
+        67.5,
+        104.25
+      ],
+      "semanas_activas": 5,
+      "total_horas": 363.44,
+      "ml": 3183734.4,
+      "kg": 42449.79,
+      "costo_teorico": 4754376.7,
+      "costo_facturacion": 4732291.67,
+      "conceptos": {
+        "vobo": 111.0,
+        "tintas": 61.85,
+        "maquina": 54.67,
+        "mangas": 17.0,
+        "secuencia": 22.42,
+        "espera_montaje": 18.0,
+        "grabados": 14.0,
+        "falta_material": 12.5,
+        "preprensa": 10.0,
+        "montaje_mangas": 8.5,
+        "orden_corta": 9.0,
+        "calidad": 7.5,
+        "material_mal": 4.5,
+        "programacion": 6.5,
+        "luz": 4.0,
+        "error_montaje": 1.0,
+        "orden_suspendida": 1.0
+      },
+      "semanas_concepto": {
+        "vobo": [
+          11.5,
+          15.67,
+          21.0,
+          8.5,
+          54.33
+        ],
+        "tintas": [
+          4.0,
+          7.83,
+          13.02,
+          22.0,
+          15.0
+        ],
+        "maquina": [
+          13.5,
+          2.17,
+          25.0,
+          3.0,
+          11.0
+        ],
+        "mangas": [
+          0.0,
+          1.0,
+          11.0,
+          5.0,
+          0.0
+        ],
+        "secuencia": [
+          2.0,
+          5.0,
+          2.0,
+          5.0,
+          8.42
+        ],
+        "espera_montaje": [
+          6.0,
+          3.0,
+          1.0,
+          3.0,
+          5.0
+        ],
+        "grabados": [
+          1.0,
+          6.0,
+          2.0,
+          3.0,
+          2.0
+        ],
+        "falta_material": [
+          5.5,
+          0.0,
+          3.0,
+          2.0,
+          2.0
+        ],
+        "preprensa": [
+          4.0,
+          0.0,
+          3.0,
+          2.0,
+          1.0
+        ],
+        "montaje_mangas": [
+          3.5,
+          0.0,
+          1.0,
+          4.0,
+          0.0
+        ],
+        "orden_corta": [
+          0.0,
+          0.0,
+          6.0,
+          2.0,
+          1.0
+        ],
+        "calidad": [
+          0.0,
+          0.0,
+          2.0,
+          4.0,
+          1.5
+        ],
+        "material_mal": [
+          0.0,
+          1.0,
+          2.0,
+          1.5,
+          0.0
+        ],
+        "programacion": [
+          0.0,
+          0.0,
+          3.0,
+          1.5,
+          2.0
+        ],
+        "luz": [
+          0.0,
+          3.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "error_montaje": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "orden_suspendida": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "detalle": {
+        "semana_num": 5,
+        "etiqueta": "Semana 5",
+        "rango": "26 ene – 1 feb",
+        "fechas_confiables": true,
+        "horas_oficiales_semana": 104.25,
+        "horas_detalle": 104.25,
+        "horas_sin_alarmada": 104.25,
+        "diferencia": 0.0,
+        "alarmada": 0.0,
+        "por_maquina": {
+          "F2-3": 43.3333,
+          "F2-1": 16.0,
+          "F2-2": 30.5,
+          "FJ-2": 10.4167,
+          "F4-1": 4.0
+        },
+        "por_maquina_concepto": {
+          "F2-3": {
+            "secuencia": 5.0,
+            "vobo": 27.3333,
+            "tintas": 4.0,
+            "grabados": 2.0,
+            "espera_montaje": 5.0
+          },
+          "F2-1": {
+            "vobo": 11.0,
+            "programacion": 2.0,
+            "orden_corta": 1.0,
+            "falta_material": 2.0
+          },
+          "F2-2": {
+            "vobo": 13.0,
+            "calidad": 1.5,
+            "orden_suspendida": 1.0,
+            "tintas": 4.0,
+            "maquina": 11.0
+          },
+          "FJ-2": {
+            "tintas": 7.0,
+            "secuencia": 3.4167
+          },
+          "F4-1": {
+            "preprensa": 1.0,
+            "vobo": 3.0
+          }
+        }
+      }
+    },
+    {
+      "id": "2026-02",
+      "nombre": "Febrero",
+      "corto": "Feb",
+      "parcial": false,
+      "archivo": "2._TIEMPO_MUERTO_AREA_IMPRESION__2026_S2-CON_MACROS_FEBRERO_eb85.xlsm",
+      "semanas": [
+        72.75,
+        110.83,
+        65.0,
+        76.5,
+        null
+      ],
+      "semanas_activas": 4,
+      "total_horas": 325.08,
+      "ml": 2847700.8,
+      "kg": 37969.34,
+      "costo_teorico": 4252566.53,
+      "costo_facturacion": 4232812.5,
+      "conceptos": {
+        "vobo": 129.75,
+        "maquina": 46.0,
+        "tintas": 35.0,
+        "falta_material": 20.0,
+        "calidad": 17.33,
+        "espera_montaje": 15.5,
+        "grabados": 15.0,
+        "secuencia": 12.5,
+        "mangas": 9.0,
+        "preprensa": 5.0,
+        "material_mal": 5.0,
+        "montaje_mangas": 4.0,
+        "error_montaje": 4.0,
+        "orden_corta": 3.0,
+        "orden_suspendida": 3.0,
+        "luz": 1.0,
+        "programacion": 0.0
+      },
+      "semanas_concepto": {
+        "vobo": [
+          21.25,
+          62.5,
+          28.0,
+          18.0,
+          null
+        ],
+        "maquina": [
+          16.5,
+          7.5,
+          14.0,
+          8.0,
+          null
+        ],
+        "tintas": [
+          11.0,
+          14.5,
+          4.5,
+          5.0,
+          null
+        ],
+        "falta_material": [
+          7.0,
+          4.0,
+          0.0,
+          9.0,
+          null
+        ],
+        "calidad": [
+          3.0,
+          3.33,
+          2.0,
+          9.0,
+          null
+        ],
+        "espera_montaje": [
+          7.0,
+          3.5,
+          1.0,
+          4.0,
+          null
+        ],
+        "grabados": [
+          0.0,
+          0.5,
+          4.5,
+          10.0,
+          null
+        ],
+        "secuencia": [
+          0.0,
+          5.0,
+          4.0,
+          3.5,
+          null
+        ],
+        "mangas": [
+          2.0,
+          3.0,
+          1.0,
+          3.0,
+          null
+        ],
+        "preprensa": [
+          4.0,
+          0.0,
+          1.0,
+          0.0,
+          null
+        ],
+        "material_mal": [
+          1.0,
+          4.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "montaje_mangas": [
+          0.0,
+          1.0,
+          1.0,
+          2.0,
+          null
+        ],
+        "error_montaje": [
+          0.0,
+          0.0,
+          3.0,
+          1.0,
+          null
+        ],
+        "orden_corta": [
+          0.0,
+          2.0,
+          1.0,
+          0.0,
+          null
+        ],
+        "orden_suspendida": [
+          0.0,
+          0.0,
+          0.0,
+          3.0,
+          null
+        ],
+        "luz": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          null
+        ],
+        "programacion": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ]
+      },
+      "detalle": {
+        "semana_num": 4,
+        "etiqueta": "Semana 4",
+        "rango": "23 feb – 1 mar",
+        "fechas_confiables": true,
+        "horas_oficiales_semana": 76.5,
+        "horas_detalle": 81.5,
+        "horas_sin_alarmada": 76.5,
+        "diferencia": 0.0,
+        "alarmada": 5.0,
+        "por_maquina": {
+          "F2-2": 35.0,
+          "F2-3": 20.5,
+          "F2-1": 16.0,
+          "F4-1": 4.0,
+          "FJ-2": 2.0,
+          "F4-3": 4.0
+        },
+        "por_maquina_concepto": {
+          "F2-2": {
+            "luz": 1.0,
+            "maquina": 4.0,
+            "secuencia": 2.0,
+            "espera_montaje": 4.0,
+            "montaje_mangas": 2.0,
+            "tintas": 4.0,
+            "falta_material": 6.0,
+            "error_montaje": 1.0,
+            "orden_suspendida": 3.0,
+            "alarmada": 1.0,
+            "mangas": 1.0,
+            "calidad": 5.0,
+            "grabados": 1.0
+          },
+          "F2-3": {
+            "secuencia": 1.5,
+            "vobo": 11.0,
+            "calidad": 4.0,
+            "grabados": 2.0,
+            "falta_material": 2.0
+          },
+          "F2-1": {
+            "falta_material": 1.0,
+            "grabados": 4.0,
+            "vobo": 7.0,
+            "maquina": 4.0
+          },
+          "F4-1": {
+            "alarmada": 4.0
+          },
+          "FJ-2": {
+            "mangas": 1.0,
+            "tintas": 1.0
+          },
+          "F4-3": {
+            "mangas": 1.0,
+            "grabados": 3.0
+          }
+        }
+      }
+    },
+    {
+      "id": "2026-03",
+      "nombre": "Marzo",
+      "corto": "Mar",
+      "parcial": false,
+      "archivo": "3._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_MARZO_1874.xlsm",
+      "semanas": [
+        73.0,
+        36.0,
+        24.5,
+        41.5,
+        30.0
+      ],
+      "semanas_activas": 5,
+      "total_horas": 205.0,
+      "ml": 1795800.0,
+      "kg": 23944.0,
+      "costo_teorico": 2681728.0,
+      "costo_facturacion": 2669270.83,
+      "conceptos": {
+        "tintas": 71.5,
+        "vobo": 33.67,
+        "maquina": 27.5,
+        "calidad": 18.5,
+        "grabados": 16.5,
+        "secuencia": 12.0,
+        "mangas": 5.5,
+        "espera_montaje": 5.0,
+        "montaje_mangas": 4.33,
+        "falta_material": 3.0,
+        "luz": 2.5,
+        "preprensa": 2.0,
+        "orden_corta": 2.0,
+        "error_montaje": 1.0,
+        "material_mal": 0.0,
+        "programacion": 0.0,
+        "orden_suspendida": 0.0
+      },
+      "semanas_concepto": {
+        "tintas": [
+          25.5,
+          11.0,
+          6.0,
+          23.5,
+          5.5
+        ],
+        "vobo": [
+          5.0,
+          13.67,
+          1.0,
+          4.0,
+          10.0
+        ],
+        "maquina": [
+          9.5,
+          4.0,
+          1.0,
+          5.0,
+          8.0
+        ],
+        "calidad": [
+          9.0,
+          3.0,
+          5.0,
+          1.0,
+          0.5
+        ],
+        "grabados": [
+          4.5,
+          3.0,
+          5.0,
+          4.0,
+          0.0
+        ],
+        "secuencia": [
+          11.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "mangas": [
+          2.5,
+          0.0,
+          0.0,
+          2.0,
+          1.0
+        ],
+        "espera_montaje": [
+          0.0,
+          0.0,
+          2.0,
+          0.0,
+          3.0
+        ],
+        "montaje_mangas": [
+          1.0,
+          1.33,
+          2.0,
+          0.0,
+          0.0
+        ],
+        "falta_material": [
+          3.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "luz": [
+          0.0,
+          0.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "preprensa": [
+          1.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "orden_corta": [
+          0.0,
+          0.0,
+          2.0,
+          0.0,
+          0.0
+        ],
+        "error_montaje": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "material_mal": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "programacion": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "orden_suspendida": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "detalle": {
+        "semana_num": 5,
+        "etiqueta": "Semana 5",
+        "rango": "30 mar – 5 abr",
+        "fechas_confiables": true,
+        "horas_oficiales_semana": 30.0,
+        "horas_detalle": 32.5,
+        "horas_sin_alarmada": 30.0,
+        "diferencia": 0.0,
+        "alarmada": 2.5,
+        "por_maquina": {
+          "F2-1": 2.0,
+          "F2-3": 7.0,
+          "F2-2": 18.0,
+          "F4-2": 2.5,
+          "FJ-2": 3.0
+        },
+        "por_maquina_concepto": {
+          "F2-1": {
+            "espera_montaje": 1.0,
+            "tintas": 1.0
+          },
+          "F2-3": {
+            "espera_montaje": 2.0,
+            "vobo": 5.0
+          },
+          "F2-2": {
+            "calidad": 0.5,
+            "tintas": 2.5,
+            "maquina": 8.0,
+            "secuencia": 1.0,
+            "vobo": 5.0,
+            "luz": 1.0
+          },
+          "F4-2": {
+            "alarmada": 2.5
+          },
+          "FJ-2": {
+            "mangas": 1.0,
+            "tintas": 2.0
+          }
+        }
+      }
+    },
+    {
+      "id": "2026-04",
+      "nombre": "Abril",
+      "corto": "Abr",
+      "parcial": false,
+      "archivo": "4._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_ABRIL_fd68.xlsm",
+      "semanas": [
+        62.0,
+        30.5,
+        38.34,
+        42.17,
+        null
+      ],
+      "semanas_activas": 4,
+      "total_horas": 173.01,
+      "ml": 1515567.6,
+      "kg": 20207.57,
+      "costo_teorico": 2263247.62,
+      "costo_facturacion": 2252734.38,
+      "conceptos": {
+        "vobo": 84.5,
+        "maquina": 35.34,
+        "tintas": 28.17,
+        "calidad": 8.5,
+        "grabados": 4.5,
+        "mangas": 4.0,
+        "luz": 3.0,
+        "montaje_mangas": 3.0,
+        "falta_material": 1.0,
+        "secuencia": 1.0,
+        "preprensa": 0.0,
+        "espera_montaje": 0.0,
+        "orden_corta": 0.0,
+        "error_montaje": 0.0,
+        "material_mal": 0.0,
+        "programacion": 0.0,
+        "orden_suspendida": 0.0
+      },
+      "semanas_concepto": {
+        "vobo": [
+          44.83,
+          17.0,
+          10.67,
+          12.0,
+          null
+        ],
+        "maquina": [
+          7.67,
+          7.0,
+          1.67,
+          19.0,
+          null
+        ],
+        "tintas": [
+          4.0,
+          2.0,
+          16.0,
+          6.17,
+          null
+        ],
+        "calidad": [
+          2.5,
+          0.0,
+          3.0,
+          3.0,
+          null
+        ],
+        "grabados": [
+          0.0,
+          2.5,
+          1.0,
+          1.0,
+          null
+        ],
+        "mangas": [
+          0.0,
+          0.0,
+          4.0,
+          0.0,
+          null
+        ],
+        "luz": [
+          3.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "montaje_mangas": [
+          0.0,
+          2.0,
+          1.0,
+          0.0,
+          null
+        ],
+        "falta_material": [
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          null
+        ],
+        "secuencia": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          null
+        ],
+        "preprensa": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "espera_montaje": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "orden_corta": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "error_montaje": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "material_mal": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "programacion": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "orden_suspendida": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ]
+      },
+      "detalle": {
+        "semana_num": 4,
+        "etiqueta": "Semana 4",
+        "rango": "27 abr – 3 may",
+        "fechas_confiables": true,
+        "horas_oficiales_semana": 42.17,
+        "horas_detalle": 44.1667,
+        "horas_sin_alarmada": 42.1667,
+        "diferencia": -0.0033,
+        "alarmada": 2.0,
+        "por_maquina": {
+          "FJ-2": 9.0,
+          "F2-3": 24.1667,
+          "F2-1": 6.0,
+          "F2-2": 5.0
+        },
+        "por_maquina_concepto": {
+          "FJ-2": {
+            "vobo": 5.0,
+            "maquina": 2.0,
+            "tintas": 2.0
+          },
+          "F2-3": {
+            "tintas": 1.1667,
+            "maquina": 11.0,
+            "secuencia": 1.0,
+            "vobo": 7.0,
+            "grabados": 1.0,
+            "calidad": 3.0
+          },
+          "F2-1": {
+            "maquina": 6.0
+          },
+          "F2-2": {
+            "tintas": 3.0,
+            "alarmada": 2.0
+          }
+        }
+      }
+    },
+    {
+      "id": "2026-05",
+      "nombre": "Mayo",
+      "corto": "May",
+      "parcial": false,
+      "archivo": "5._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_MAYO_0180.xlsm",
+      "semanas": [
+        29.17,
+        54.75,
+        78.5,
+        52.59,
+        null
+      ],
+      "semanas_activas": 4,
+      "total_horas": 215.01,
+      "ml": 1883487.6,
+      "kg": 25113.17,
+      "costo_teorico": 2812674.82,
+      "costo_facturacion": 2799609.38,
+      "conceptos": {
+        "vobo": 57.3367,
+        "tintas": 56.0033,
+        "maquina": 31.8333,
+        "calidad": 15.5,
+        "montaje_mangas": 8.67,
+        "espera_montaje": 8.5,
+        "grabados": 6.0,
+        "luz": 5.1667,
+        "programacion": 5.0,
+        "material_mal": 5.0,
+        "preprensa": 4.0,
+        "mangas": 4.0,
+        "secuencia": 4.0,
+        "falta_material": 2.0,
+        "error_montaje": 1.0,
+        "orden_suspendida": 1.0,
+        "orden_corta": 0.0
+      },
+      "semanas_concepto": {
+        "vobo": [
+          2.0,
+          21.0,
+          26.1667,
+          8.17,
+          null
+        ],
+        "tintas": [
+          0.0,
+          20.75,
+          15.3333,
+          19.92,
+          null
+        ],
+        "maquina": [
+          13.0,
+          4.0,
+          8.8333,
+          6.0,
+          null
+        ],
+        "calidad": [
+          2.5,
+          6.0,
+          5.0,
+          2.0,
+          null
+        ],
+        "montaje_mangas": [
+          1.67,
+          0.0,
+          0.0,
+          7.0,
+          null
+        ],
+        "espera_montaje": [
+          2.0,
+          0.0,
+          4.0,
+          2.5,
+          null
+        ],
+        "grabados": [
+          1.0,
+          1.0,
+          3.0,
+          1.0,
+          null
+        ],
+        "luz": [
+          1.0,
+          1.0,
+          2.1667,
+          1.0,
+          null
+        ],
+        "programacion": [
+          0.0,
+          0.0,
+          5.0,
+          0.0,
+          null
+        ],
+        "material_mal": [
+          0.0,
+          0.0,
+          2.0,
+          3.0,
+          null
+        ],
+        "preprensa": [
+          4.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "mangas": [
+          0.0,
+          1.0,
+          3.0,
+          0.0,
+          null
+        ],
+        "secuencia": [
+          0.0,
+          0.0,
+          3.0,
+          1.0,
+          null
+        ],
+        "falta_material": [
+          2.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "error_montaje": [
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          null
+        ],
+        "orden_suspendida": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          null
+        ],
+        "orden_corta": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ]
+      },
+      "detalle": {
+        "semana_num": 4,
+        "etiqueta": "Semana 4",
+        "rango": "25–31 may",
+        "fechas_confiables": true,
+        "horas_oficiales_semana": 52.59,
+        "horas_detalle": 52.5833,
+        "horas_sin_alarmada": 52.5833,
+        "diferencia": -0.0067,
+        "alarmada": 0.0,
+        "por_maquina": {
+          "F2-1": 8.0,
+          "F2-2": 29.4167,
+          "F2-3": 9.1667,
+          "FLEXO": 1.5,
+          "FJ-2": 4.5
+        },
+        "por_maquina_concepto": {
+          "F2-1": {
+            "espera_montaje": 1.0,
+            "vobo": 4.0,
+            "maquina": 2.0,
+            "grabados": 1.0
+          },
+          "F2-2": {
+            "montaje_mangas": 5.3333,
+            "tintas": 11.9167,
+            "vobo": 4.1667,
+            "luz": 1.0,
+            "orden_suspendida": 1.0,
+            "secuencia": 1.0,
+            "material_mal": 3.0,
+            "maquina": 2.0
+          },
+          "F2-3": {
+            "montaje_mangas": 1.6667,
+            "calidad": 2.0,
+            "tintas": 3.5,
+            "maquina": 2.0
+          },
+          "FLEXO": {
+            "espera_montaje": 1.5
+          },
+          "FJ-2": {
+            "tintas": 4.5
+          }
+        }
+      }
+    },
+    {
+      "id": "2026-06",
+      "nombre": "Junio",
+      "corto": "Jun",
+      "parcial": false,
+      "archivo": "6._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_JUNIO_badd.xlsm",
+      "semanas": [
+        54.0,
+        39.66,
+        40.33,
+        45.32,
+        null
+      ],
+      "semanas_activas": 4,
+      "total_horas": 179.31,
+      "ml": 1570755.6,
+      "kg": 20943.41,
+      "costo_teorico": 2345661.7,
+      "costo_facturacion": 2334765.63,
+      "conceptos": {
+        "vobo": 40.67,
+        "tintas": 31.33,
+        "calidad": 22.08,
+        "grabados": 15.0,
+        "mangas": 14.58,
+        "orden_corta": 10.0,
+        "maquina": 7.58,
+        "secuencia": 7.0,
+        "error_montaje": 6.83,
+        "falta_material": 6.41,
+        "montaje_mangas": 5.33,
+        "espera_montaje": 5.0,
+        "preprensa": 4.5,
+        "luz": 3.0,
+        "programacion": 0.0,
+        "material_mal": 0.0,
+        "orden_suspendida": 0.0
+      },
+      "semanas_concepto": {
+        "vobo": [
+          12.5,
+          0.0,
+          11.17,
+          17.0,
+          null
+        ],
+        "tintas": [
+          5.0,
+          13.0,
+          7.0,
+          6.33,
+          null
+        ],
+        "calidad": [
+          10.5,
+          8.58,
+          3.0,
+          0.0,
+          null
+        ],
+        "grabados": [
+          8.0,
+          0.0,
+          1.0,
+          6.0,
+          null
+        ],
+        "mangas": [
+          5.5,
+          5.08,
+          4.0,
+          0.0,
+          null
+        ],
+        "orden_corta": [
+          7.0,
+          0.0,
+          3.0,
+          0.0,
+          null
+        ],
+        "maquina": [
+          2.0,
+          2.0,
+          3.58,
+          0.0,
+          null
+        ],
+        "secuencia": [
+          0.0,
+          4.0,
+          0.0,
+          3.0,
+          null
+        ],
+        "error_montaje": [
+          0.0,
+          0.0,
+          0.0,
+          6.83,
+          null
+        ],
+        "falta_material": [
+          1.0,
+          0.0,
+          4.08,
+          1.33,
+          null
+        ],
+        "montaje_mangas": [
+          1.5,
+          3.0,
+          0.0,
+          0.83,
+          null
+        ],
+        "espera_montaje": [
+          0.0,
+          4.0,
+          0.0,
+          1.0,
+          null
+        ],
+        "preprensa": [
+          0.0,
+          0.0,
+          2.5,
+          2.0,
+          null
+        ],
+        "luz": [
+          1.0,
+          0.0,
+          1.0,
+          1.0,
+          null
+        ],
+        "programacion": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "material_mal": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "orden_suspendida": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ]
+      },
+      "detalle": {
+        "semana_num": 4,
+        "etiqueta": "Semana 4",
+        "rango": "22–28 jun",
+        "fechas_confiables": true,
+        "horas_oficiales_semana": 45.32,
+        "horas_detalle": 45.3333,
+        "horas_sin_alarmada": 45.3333,
+        "diferencia": 0.0133,
+        "alarmada": 0.0,
+        "por_maquina": {
+          "F2-3": 21.0,
+          "FLEXO": 4.8333,
+          "F4-3": 3.0,
+          "F2-2": 7.0,
+          "F2-1": 7.5,
+          "FJ-2": 2.0
+        },
+        "por_maquina_concepto": {
+          "F2-3": {
+            "secuencia": 3.0,
+            "tintas": 3.0,
+            "vobo": 11.0,
+            "preprensa": 2.0,
+            "grabados": 2.0
+          },
+          "FLEXO": {
+            "vobo": 4.0,
+            "error_montaje": 0.8333
+          },
+          "F4-3": {
+            "grabados": 3.0
+          },
+          "F2-2": {
+            "luz": 1.0,
+            "error_montaje": 6.0
+          },
+          "F2-1": {
+            "vobo": 2.0,
+            "grabados": 1.0,
+            "montaje_mangas": 0.8333,
+            "tintas": 1.3333,
+            "falta_material": 1.3333,
+            "espera_montaje": 1.0
+          },
+          "FJ-2": {
+            "tintas": 2.0
+          }
+        }
+      }
+    },
+    {
+      "id": "2026-07",
+      "nombre": "Julio",
+      "corto": "Jul",
+      "parcial": false,
+      "archivo": "7._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS__JULIO_e110.xlsm",
+      "semanas": [
+        46.91,
+        91.83,
+        59.18,
+        12.0,
+        35.0
+      ],
+      "semanas_activas": 5,
+      "total_horas": 244.92,
+      "ml": 2145499.2,
+      "kg": 28606.66,
+      "costo_teorico": 3203945.47,
+      "costo_facturacion": 3189062.5,
+      "conceptos": {
+        "vobo": 76.83,
+        "tintas": 43.08,
+        "maquina": 26.35,
+        "calidad": 24.5,
+        "preprensa": 19.0,
+        "grabados": 15.0,
+        "falta_material": 11.5,
+        "secuencia": 7.33,
+        "material_mal": 7.33,
+        "mangas": 6.0,
+        "montaje_mangas": 4.0,
+        "espera_montaje": 3.0,
+        "programacion": 1.0,
+        "orden_corta": 0.0,
+        "error_montaje": 0.0,
+        "luz": 0.0,
+        "orden_suspendida": 0.0
+      },
+      "semanas_concepto": {
+        "vobo": [
+          12.33,
+          32.5,
+          6.0,
+          6.0,
+          20.0
+        ],
+        "tintas": [
+          6.08,
+          18.0,
+          7.0,
+          0.0,
+          12.0
+        ],
+        "maquina": [
+          8.0,
+          9.5,
+          6.85,
+          0.0,
+          2.0
+        ],
+        "calidad": [
+          0.0,
+          7.0,
+          14.5,
+          3.0,
+          0.0
+        ],
+        "preprensa": [
+          6.0,
+          9.0,
+          2.0,
+          1.0,
+          1.0
+        ],
+        "grabados": [
+          4.0,
+          3.0,
+          8.0,
+          0.0,
+          0.0
+        ],
+        "falta_material": [
+          4.5,
+          4.5,
+          2.5,
+          0.0,
+          0.0
+        ],
+        "secuencia": [
+          0.0,
+          1.0,
+          6.33,
+          0.0,
+          0.0
+        ],
+        "material_mal": [
+          0.0,
+          6.33,
+          1.0,
+          0.0,
+          0.0
+        ],
+        "mangas": [
+          3.0,
+          0.0,
+          1.0,
+          2.0,
+          0.0
+        ],
+        "montaje_mangas": [
+          0.0,
+          0.0,
+          4.0,
+          0.0,
+          0.0
+        ],
+        "espera_montaje": [
+          2.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "programacion": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "orden_corta": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "error_montaje": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "luz": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "orden_suspendida": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "detalle": {
+        "semana_num": 5,
+        "etiqueta": "Semana 5",
+        "rango": "27 jul – 2 ago",
+        "fechas_confiables": true,
+        "horas_oficiales_semana": 35.0,
+        "horas_detalle": 36.0,
+        "horas_sin_alarmada": 35.0,
+        "diferencia": 0.0,
+        "alarmada": 1.0,
+        "por_maquina": {
+          "FJ-2": 2.0,
+          "F2-3": 23.0,
+          "F2-2": 11.0
+        },
+        "por_maquina_concepto": {
+          "FJ-2": {
+            "tintas": 2.0
+          },
+          "F2-3": {
+            "vobo": 12.0,
+            "tintas": 10.0,
+            "alarmada": 1.0
+          },
+          "F2-2": {
+            "maquina": 2.0,
+            "preprensa": 1.0,
+            "vobo": 8.0
+          }
+        }
+      }
+    },
+    {
+      "id": "2026-08",
+      "nombre": "Agosto",
+      "corto": "Ago",
+      "parcial": false,
+      "archivo": "8._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_AGOSTO_bab0.xlsm",
+      "semanas": [
+        52.8,
+        18.5,
+        17.5,
+        42.0,
+        null
+      ],
+      "semanas_activas": 4,
+      "total_horas": 130.8,
+      "ml": 1145808.0,
+      "kg": 15277.44,
+      "costo_teorico": 1711073.28,
+      "costo_facturacion": 1703125.0,
+      "conceptos": {
+        "vobo": 25.0,
+        "tintas": 35.0,
+        "maquina": 24.0,
+        "mangas": 10.0,
+        "calidad": 16.0,
+        "montaje_mangas": 3.5,
+        "grabados": 7.3,
+        "preprensa": 6.0,
+        "secuencia": 1.0,
+        "falta_material": 0.0,
+        "material_mal": 0.0,
+        "espera_montaje": 1.0,
+        "programacion": 0.0,
+        "orden_corta": 0.0,
+        "error_montaje": 0.0,
+        "luz": 0.0,
+        "orden_suspendida": 2.0
+      },
+      "semanas_concepto": {
+        "vobo": [
+          7.0,
+          9.0,
+          9.0,
+          0.0,
+          null
+        ],
+        "tintas": [
+          20.0,
+          4.0,
+          0.0,
+          11.0,
+          null
+        ],
+        "maquina": [
+          17.5,
+          0.0,
+          2.5,
+          4.0,
+          null
+        ],
+        "mangas": [
+          0.0,
+          0.0,
+          6.0,
+          4.0,
+          null
+        ],
+        "calidad": [
+          3.0,
+          2.0,
+          0.0,
+          11.0,
+          null
+        ],
+        "montaje_mangas": [
+          2.0,
+          1.5,
+          0.0,
+          0.0,
+          null
+        ],
+        "grabados": [
+          2.3,
+          0.0,
+          0.0,
+          5.0,
+          null
+        ],
+        "preprensa": [
+          0.0,
+          2.0,
+          0.0,
+          4.0,
+          null
+        ],
+        "secuencia": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "falta_material": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "material_mal": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "espera_montaje": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          null
+        ],
+        "programacion": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "orden_corta": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "error_montaje": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "luz": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          null
+        ],
+        "orden_suspendida": [
+          0.0,
+          0.0,
+          0.0,
+          2.0,
+          null
+        ]
+      },
+      "detalle": {
+        "semana_num": 4,
+        "etiqueta": "Semana 4",
+        "rango": "24–30 ago",
+        "fechas_confiables": true,
+        "horas_oficiales_semana": 42.0,
+        "horas_detalle": 42.0,
+        "horas_sin_alarmada": 42.0,
+        "diferencia": 0.0,
+        "alarmada": 0.0,
+        "por_maquina": {
+          "F2-3": 20.0,
+          "FJ-2": 13.0,
+          "F2-2": 9.0
+        },
+        "por_maquina_concepto": {
+          "F2-3": {
+            "mangas": 4.0,
+            "grabados": 5.0,
+            "calidad": 5.0,
+            "tintas": 2.0,
+            "preprensa": 4.0
+          },
+          "FJ-2": {
+            "maquina": 2.0,
+            "tintas": 9.0,
+            "orden_suspendida": 2.0
+          },
+          "F2-2": {
+            "calidad": 6.0,
+            "maquina": 2.0,
+            "espera_montaje": 1.0
+          }
+        }
+      }
+    },
+    {
+      "id": "2026-09",
+      "nombre": "Septiembre",
+      "corto": "Sep",
+      "parcial": true,
+      "archivo": "9._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_AL_20_SEPTIEMBRE_5d60.xlsm",
+      "semanas": [
+        15.5,
+        19.5,
+        39.0,
+        null,
+        null
+      ],
+      "semanas_activas": 3,
+      "total_horas": 74.0,
+      "ml": 648240.0,
+      "kg": 8643.2,
+      "costo_teorico": 968038.4,
+      "costo_facturacion": 963541.67,
+      "conceptos": {
+        "vobo": 31.0,
+        "tintas": 8.5,
+        "preprensa": 7.5,
+        "grabados": 6.67,
+        "secuencia": 5.0,
+        "maquina": 4.5,
+        "mangas": 3.83,
+        "calidad": 3.0,
+        "luz": 2.0,
+        "montaje_mangas": 2.0,
+        "falta_material": 0.0,
+        "material_mal": 0.0,
+        "espera_montaje": 0.0,
+        "programacion": 0.0,
+        "orden_corta": 0.0,
+        "error_montaje": 0.0,
+        "orden_suspendida": 0.0
+      },
+      "semanas_concepto": {
+        "vobo": [
+          7.0,
+          11.0,
+          13.0,
+          null,
+          null
+        ],
+        "tintas": [
+          0.0,
+          2.0,
+          6.5,
+          null,
+          null
+        ],
+        "preprensa": [
+          1.0,
+          1.5,
+          5.0,
+          null,
+          null
+        ],
+        "grabados": [
+          0.67,
+          5.0,
+          1.0,
+          null,
+          null
+        ],
+        "secuencia": [
+          0.0,
+          0.0,
+          5.0,
+          null,
+          null
+        ],
+        "maquina": [
+          0.0,
+          0.0,
+          4.5,
+          null,
+          null
+        ],
+        "mangas": [
+          1.83,
+          0.0,
+          2.0,
+          null,
+          null
+        ],
+        "calidad": [
+          3.0,
+          0.0,
+          0.0,
+          null,
+          null
+        ],
+        "luz": [
+          2.0,
+          0.0,
+          0.0,
+          null,
+          null
+        ],
+        "montaje_mangas": [
+          0.0,
+          0.0,
+          2.0,
+          null,
+          null
+        ],
+        "falta_material": [
+          0.0,
+          0.0,
+          0.0,
+          null,
+          null
+        ],
+        "material_mal": [
+          0.0,
+          0.0,
+          0.0,
+          null,
+          null
+        ],
+        "espera_montaje": [
+          0.0,
+          0.0,
+          0.0,
+          null,
+          null
+        ],
+        "programacion": [
+          0.0,
+          0.0,
+          0.0,
+          null,
+          null
+        ],
+        "orden_corta": [
+          0.0,
+          0.0,
+          0.0,
+          null,
+          null
+        ],
+        "error_montaje": [
+          0.0,
+          0.0,
+          0.0,
+          null,
+          null
+        ],
+        "orden_suspendida": [
+          0.0,
+          0.0,
+          0.0,
+          null,
+          null
+        ]
+      },
+      "detalle": {
+        "semana_num": 3,
+        "etiqueta": "Semana 3",
+        "rango": "",
+        "fechas_confiables": false,
+        "horas_oficiales_semana": 39.0,
+        "horas_detalle": 39.0,
+        "horas_sin_alarmada": 39.0,
+        "diferencia": 0.0,
+        "alarmada": 0.0,
+        "por_maquina": {
+          "F2-2": 10.0,
+          "FJ-2": 9.0,
+          "F2-3": 18.5,
+          "FLEXO": 1.5
+        },
+        "por_maquina_concepto": {
+          "F2-2": {
+            "tintas": 2.0,
+            "preprensa": 2.0,
+            "secuencia": 1.0,
+            "vobo": 5.0
+          },
+          "FJ-2": {
+            "maquina": 2.0,
+            "tintas": 3.0,
+            "secuencia": 1.0,
+            "mangas": 2.0,
+            "grabados": 1.0
+          },
+          "F2-3": {
+            "preprensa": 3.0,
+            "secuencia": 3.0,
+            "vobo": 8.0,
+            "tintas": 1.5,
+            "maquina": 1.0,
+            "montaje_mangas": 2.0
+          },
+          "FLEXO": {
+            "maquina": 1.5
+          }
+        }
+      }
+    }
+  ]
+}

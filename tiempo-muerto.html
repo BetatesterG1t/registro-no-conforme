@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiempo muerto · Área de impresión 2026</title>
+<style>
+  :root {
+    --bg: #efe8dc;
+    --ink: #1c1915;
+    --muted: #5e574c;
+    --card: #fffdf8;
+    --line: #e3d9c8;
+    --accent: #9f1239;
+    --accent-soft: #f8e8ec;
+    --good: #0f6e56;
+    --good-soft: #e5f4ef;
+    --warn: #9a3412;
+    --shadow: 0 1px 0 rgba(28, 25, 21, 0.04);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 400px at 10% -10%, #f7f1e6 0%, transparent 50%),
+      var(--bg);
+    color: var(--ink);
+    font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+    font-size: 15.5px;
+    line-height: 1.45;
+  }
+  button, select { font: inherit; color: inherit; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 72px; }
+  header.top { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; margin-bottom: 18px; }
+  .eyebrow { letter-spacing: 0.14em; text-transform: uppercase; font-size: 12px; color: var(--accent); font-weight: 700; margin: 0 0 6px; }
+  h1 { font-family: Palatino, "Iowan Old Style", Georgia, serif; font-size: 46px; line-height: 0.95; font-weight: 600; margin: 0; letter-spacing: -0.03em; }
+  .lede { margin: 8px 0 0; max-width: 640px; color: var(--muted); }
+  .corte { text-align: right; font-size: 13px; color: var(--muted); }
+  .corte strong { display: block; color: var(--ink); font-size: 15px; }
+  nav.bar {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    background: rgba(239, 232, 220, 0.92); backdrop-filter: blur(8px);
+    padding: 10px 0 12px; margin-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pills button, .jump { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 11px; cursor: pointer; }
+  .pills button[aria-pressed="true"] { background: var(--ink); color: #fffdf8; border-color: var(--ink); }
+  .jump { text-decoration: none; color: var(--muted); font-size: 13px; }
+  .jump:hover { color: var(--ink); }
+  .spacer { flex: 1; }
+  section { margin-top: 22px; }
+  h2 { font-family: Palatino, Georgia, serif; font-size: 28px; margin: 0 0 4px; font-weight: 600; }
+  h2 span { color: var(--muted); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 15px; font-weight: 500; margin-left: 8px; }
+  .sub { color: var(--muted); margin: 0 0 14px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+  section { scroll-margin-top: 72px; }
+  .kpi, .card, .call { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+  .kpi { padding: 14px 14px 12px; }
+  .kpi .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .kpi .num { font-variant-numeric: tabular-nums; font-size: 26px; font-weight: 650; letter-spacing: -0.03em; margin-top: 4px; }
+  .kpi .hint { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .grid-2 { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: 1.4fr 0.8fr; gap: 12px; margin-top: 12px; }
+  .card { padding: 16px; }
+  .card h3, .call h3 { margin: 0 0 8px; font-size: 15px; }
+  ol.lectura { margin: 0; padding-left: 18px; }
+  ol.lectura li { margin: 0 0 8px; }
+  .grupos { display: flex; flex-direction: column; gap: 8px; }
+  .grupo { display: grid; grid-template-columns: 118px 1fr auto; gap: 8px; align-items: center; font-size: 14px; }
+  .track { height: 10px; background: #f3eee6; border-radius: 99px; overflow: hidden; }
+  .track span { display: block; height: 100%; border-radius: 99px; }
+  .cols { display: flex; align-items: flex-end; gap: 10px; height: 220px; padding-top: 8px; }
+  .colwrap { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+  .col { width: 100%; max-width: 48px; display: flex; flex-direction: column-reverse; border-radius: 8px 8px 3px 3px; overflow: hidden; background: #f3eee6; }
+  .seg { width: 100%; }
+  .colwrap button { border: 0; background: transparent; cursor: pointer; padding: 6px 0 0; color: var(--muted); font-size: 12px; }
+  .colwrap button strong { display: block; color: var(--ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+  .leyenda { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+  .dot { width: 9px; height: 9px; border-radius: 99px; display: inline-block; margin-right: 5px; }
+  .tabla-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13.5px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  th { font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 650; background: #fbf7f1; position: sticky; top: 0; }
+  th.l, td.l { text-align: left; white-space: normal; }
+  th button { border: 0; background: transparent; cursor: pointer; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; }
+  tr.total td { font-weight: 700; background: #fbf7f1; border-bottom: 0; }
+  tr.click td { cursor: pointer; }
+  tr.click:hover td { background: #fbf7f1; }
+  tr.on td { background: var(--accent-soft); }
+  td.dim, th.dim { opacity: 0.45; }
+  td.on, th.on { opacity: 1; background: #f8e8ec; }
+  .panel { margin-top: 12px; }
+  .bars { display: flex; flex-direction: column; gap: 6px; }
+  .bar-row { display: grid; grid-template-columns: 150px 1fr 92px; gap: 8px; align-items: center; font-size: 13.5px; }
+  .bar-row button { border: 0; background: transparent; text-align: left; cursor: pointer; padding: 0; }
+  .bar-track { height: 12px; background: #f3eee6; border-radius: 99px; overflow: hidden; }
+  .bar-fill { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+  .calls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 12px 0; }
+  .call { padding: 14px 16px; }
+  .call .who { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 22px; margin: 2px 0; }
+  .call .num { font-size: 20px; font-variant-numeric: tabular-nums; }
+  .call.alto { border-color: #e7c2cb; background: linear-gradient(180deg, #fff 0%, #fdf2f4 100%); }
+  .call.bajo { border-color: #c9e6dc; background: linear-gradient(180deg, #fff 0%, #f1faf6 100%); }
+  .nota { background: #f7f1e6; border: 1px dashed #d9cdb8; border-radius: 12px; padding: 12px 14px; color: var(--muted); font-size: 14px; }
+  .nota strong { color: var(--ink); }
+  .heat { border-radius: 6px; padding: 4px 6px; display: inline-block; min-width: 52px; }
+  select.maq {
+    border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 8px 10px;
+  }
+  .fila-titulo { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 8px; }
+  footer { margin-top: 28px; color: var(--muted); font-size: 13px; }
+  footer p { margin: 0 0 6px; }
+  .modo { display: flex; gap: 6px; }
+  .modo button[aria-pressed="true"] { background: var(--ink); color: white; border-color: var(--ink); }
+  @media (max-width: 980px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .grid-2, .grid-3, .calls, header.top { grid-template-columns: 1fr; display: grid; }
+    h1 { font-size: 36px; }
+    .corte { text-align: left; }
+    .bar-row { grid-template-columns: 110px 1fr 72px; }
+  }
+  @media print {
+    body { background: white; }
+    nav.bar { position: static; }
+    .no-print { display: none !important; }
+    .card, .kpi, .call, .tabla-wrap { break-inside: avoid; }
+    section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">Área de impresión · 2026</p>
+      <h1>Tiempo muerto</h1>
+      <p class="lede" id="lede"></p>
+    </div>
+    <div class="corte">
+      <strong id="corte"></strong>
+      <span id="periodo"></span>
+    </div>
+  </header>
+
+  <nav class="bar">
+    <div class="pills" id="meses" role="group" aria-label="Mes"></div>
+    <div class="spacer"></div>
+    <a class="jump" href="#conceptos">Conceptos</a>
+    <a class="jump" href="#maquinas">Máquinas</a>
+    <a class="jump" href="#semanas">Semanas</a>
+    <a class="jump" href="#costo">Costo</a>
+    <button class="jump no-print" type="button" id="imprimir">Imprimir</button>
+  </nav>
+
+  <section id="resumen">
+    <div class="kpis" id="kpis"></div>
+    <div class="grid-3">
+      <article class="card">
+        <h3>Lectura para dirección</h3>
+        <ol class="lectura" id="lectura"></ol>
+      </article>
+      <article class="card">
+        <h3>Horas por tipo de paro</h3>
+        <div class="grupos" id="grupos"></div>
+      </article>
+    </div>
+    <article class="card" style="margin-top:12px">
+      <div class="fila-titulo">
+        <h3 id="titulo-tendencia" style="margin:0">Horas por mes</h3>
+      </div>
+      <div class="cols" id="tendencia"></div>
+      <div class="leyenda" id="leyenda"></div>
+    </article>
+  </section>
+
+  <section id="conceptos">
+    <h2>Conceptos <span>por mes y acumulado del año</span></h2>
+    <p class="sub">Cada cifra sale de la columna Total Hrs del gráfico mensual. La fila final es el total oficial de esa hoja.</p>
+    <div class="fila-titulo">
+      <div class="modo no-print" role="group" aria-label="Unidad">
+        <button type="button" id="modo-horas" aria-pressed="true">Horas</button>
+        <button type="button" id="modo-pct" aria-pressed="false">% del mes</button>
+      </div>
+    </div>
+    <div class="tabla-wrap" id="tabla-conceptos"></div>
+    <article class="card panel" id="foco-concepto"></article>
+  </section>
+
+  <section id="maquinas">
+    <h2>Máquinas <span>semana guardada de cada mes</span></h2>
+    <p class="nota" id="nota-maquinas"></p>
+    <div class="calls" id="calls"></div>
+    <article class="card">
+      <h3 id="titulo-barras">Horas en las semanas con detalle</h3>
+      <div class="bars" id="barras-maq"></div>
+    </article>
+    <div class="tabla-wrap" style="margin-top:12px" id="matriz-mes"></div>
+    <article class="card panel">
+      <div class="fila-titulo">
+        <h3 style="margin:0">Concepto por mes, de una máquina</h3>
+        <select class="maq" id="elige-maq" aria-label="Máquina"></select>
+      </div>
+      <p class="sub" id="sub-maq"></p>
+      <div class="tabla-wrap" id="tabla-maq" style="border:0"></div>
+    </article>
+  </section>
+
+  <section id="semanas">
+    <h2>Semanas <span>ritmo dentro de cada mes</span></h2>
+    <p class="sub">Una celda vacía es una semana que el archivo no trae. Septiembre está cortado en la semana 3.</p>
+    <div class="tabla-wrap" id="tabla-semanas"></div>
+  </section>
+
+  <section id="costo">
+    <h2>Equivalente <span>metros, kilos y costo del propio Excel</span></h2>
+    <p class="sub" id="sub-costo"></p>
+    <div class="kpis" id="kpis-costo"></div>
+    <div class="tabla-wrap" style="margin-top:12px" id="tabla-costo"></div>
+  </section>
+
+  <footer>
+    <p id="metodo"></p>
+    <p>Los libros de Excel se quedan fuera del repositorio. Este archivo lee los totales ya calculados en cada gráfico mensual y el detalle de la hoja semanal.</p>
+  </footer>
+</div>
+
+<script id="tm-data" type="application/json">
+{"meta":{"titulo":"Tiempo muerto","area":"Área de impresión","anio":2026,"corte":"20 de septiembre de 2026","periodo":"Enero al 20 de septiembre de 2026","factores":{"ml_por_hora":8760,"kg_por_hora":116.8,"costo_teorico_por_hora":13081.6,"costo_facturacion_por_hora":13020.833333333334},"advertencias":[]},"grupos":[{"id":"aprobacion","nombre":"Aprobación","texto":"Visto bueno y liberación de calidad."},{"id":"materiales","nombre":"Materiales","texto":"Tintas, sustrato, mangas y anilox."},{"id":"maquina","nombre":"Máquina","texto":"Equipo detenido, alarma o falta de luz."},{"id":"montaje","nombre":"Montaje","texto":"Preprensa, grabados y montaje."},{"id":"programa","nombre":"Programa","texto":"Cambios de orden y órdenes suspendidas."}],"conceptos":[{"id":"vobo","nombre":"Visto bueno (VoBo)","grupo":"aprobacion","en_grafico":true},{"id":"tintas","nombre":"Tintas","grupo":"materiales","en_grafico":true},{"id":"maquina","nombre":"Máquina descompuesta, en reparación","grupo":"maquina","en_grafico":true},{"id":"calidad","nombre":"Autorización de calidad","grupo":"aprobacion","en_grafico":true},{"id":"mangas","nombre":"Mangas y/o anilox en mal estado","grupo":"materiales","en_grafico":true},{"id":"secuencia","nombre":"Cambio de secuencia","grupo":"programa","en_grafico":true},{"id":"espera_montaje","nombre":"Espera de montaje de grabados","grupo":"montaje","en_grafico":true},{"id":"grabados","nombre":"Grabados","grupo":"montaje","en_grafico":true},{"id":"falta_material","nombre":"Falta de materiales","grupo":"materiales","en_grafico":true},{"id":"preprensa","nombre":"Preprensa","grupo":"montaje","en_grafico":true},{"id":"montaje_mangas","nombre":"Montaje por mismas mangas","grupo":"montaje","en_grafico":true},{"id":"orden_corta","nombre":"Cambios excesivos por orden corta","grupo":"programa","en_grafico":true},{"id":"material_mal","nombre":"Material en mal estado","grupo":"materiales","en_grafico":true},{"id":"programacion","nombre":"Cambio de programación","grupo":"programa","en_grafico":true},{"id":"luz","nombre":"Luz","grupo":"maquina","en_grafico":true},{"id":"error_montaje","nombre":"Error en montaje","grupo":"montaje","en_grafico":true},{"id":"orden_suspendida","nombre":"Orden suspendida","grupo":"programa","en_grafico":true},{"id":"alarmada","nombre":"Máquina alarmada","grupo":"maquina","en_grafico":false}],"maquinas":["F4-1","F4-2","F4-3","F2-1","F2-2","F2-3","FJ-2","FLEXO","FW"],"meses":[{"id":"2026-01","nombre":"Enero","corto":"Ene","parcial":false,"archivo":"1._TIEMPO_MUERTO_AREA_IMPRESION__2026_S1-CON_MACROS_ENERO_ba69.xlsm","semanas":[52.0,44.67,95.02,67.5,104.25],"semanas_activas":5,"total_horas":363.44,"ml":3183734.4,"kg":42449.79,"costo_teorico":4754376.7,"costo_facturacion":4732291.67,"conceptos":{"vobo":111.0,"tintas":61.85,"maquina":54.67,"mangas":17.0,"secuencia":22.42,"espera_montaje":18.0,"grabados":14.0,"falta_material":12.5,"preprensa":10.0,"montaje_mangas":8.5,"orden_corta":9.0,"calidad":7.5,"material_mal":4.5,"programacion":6.5,"luz":4.0,"error_montaje":1.0,"orden_suspendida":1.0},"semanas_concepto":{"vobo":[11.5,15.67,21.0,8.5,54.33],"tintas":[4.0,7.83,13.02,22.0,15.0],"maquina":[13.5,2.17,25.0,3.0,11.0],"mangas":[0.0,1.0,11.0,5.0,0.0],"secuencia":[2.0,5.0,2.0,5.0,8.42],"espera_montaje":[6.0,3.0,1.0,3.0,5.0],"grabados":[1.0,6.0,2.0,3.0,2.0],"falta_material":[5.5,0.0,3.0,2.0,2.0],"preprensa":[4.0,0.0,3.0,2.0,1.0],"montaje_mangas":[3.5,0.0,1.0,4.0,0.0],"orden_corta":[0.0,0.0,6.0,2.0,1.0],"calidad":[0.0,0.0,2.0,4.0,1.5],"material_mal":[0.0,1.0,2.0,1.5,0.0],"programacion":[0.0,0.0,3.0,1.5,2.0],"luz":[0.0,3.0,0.0,1.0,0.0],"error_montaje":[1.0,0.0,0.0,0.0,0.0],"orden_suspendida":[0.0,0.0,0.0,0.0,1.0]},"detalle":{"semana_num":5,"etiqueta":"Semana 5","rango":"26 ene – 1 feb","fechas_confiables":true,"horas_oficiales_semana":104.25,"horas_detalle":104.25,"horas_sin_alarmada":104.25,"diferencia":0.0,"alarmada":0.0,"por_maquina":{"F2-3":43.3333,"F2-1":16.0,"F2-2":30.5,"FJ-2":10.4167,"F4-1":4.0},"por_maquina_concepto":{"F2-3":{"secuencia":5.0,"vobo":27.3333,"tintas":4.0,"grabados":2.0,"espera_montaje":5.0},"F2-1":{"vobo":11.0,"programacion":2.0,"orden_corta":1.0,"falta_material":2.0},"F2-2":{"vobo":13.0,"calidad":1.5,"orden_suspendida":1.0,"tintas":4.0,"maquina":11.0},"FJ-2":{"tintas":7.0,"secuencia":3.4167},"F4-1":{"preprensa":1.0,"vobo":3.0}}}},{"id":"2026-02","nombre":"Febrero","corto":"Feb","parcial":false,"archivo":"2._TIEMPO_MUERTO_AREA_IMPRESION__2026_S2-CON_MACROS_FEBRERO_eb85.xlsm","semanas":[72.75,110.83,65.0,76.5,null],"semanas_activas":4,"total_horas":325.08,"ml":2847700.8,"kg":37969.34,"costo_teorico":4252566.53,"costo_facturacion":4232812.5,"conceptos":{"vobo":129.75,"maquina":46.0,"tintas":35.0,"falta_material":20.0,"calidad":17.33,"espera_montaje":15.5,"grabados":15.0,"secuencia":12.5,"mangas":9.0,"preprensa":5.0,"material_mal":5.0,"montaje_mangas":4.0,"error_montaje":4.0,"orden_corta":3.0,"orden_suspendida":3.0,"luz":1.0,"programacion":0.0},"semanas_concepto":{"vobo":[21.25,62.5,28.0,18.0,null],"maquina":[16.5,7.5,14.0,8.0,null],"tintas":[11.0,14.5,4.5,5.0,null],"falta_material":[7.0,4.0,0.0,9.0,null],"calidad":[3.0,3.33,2.0,9.0,null],"espera_montaje":[7.0,3.5,1.0,4.0,null],"grabados":[0.0,0.5,4.5,10.0,null],"secuencia":[0.0,5.0,4.0,3.5,null],"mangas":[2.0,3.0,1.0,3.0,null],"preprensa":[4.0,0.0,1.0,0.0,null],"material_mal":[1.0,4.0,0.0,0.0,null],"montaje_mangas":[0.0,1.0,1.0,2.0,null],"error_montaje":[0.0,0.0,3.0,1.0,null],"orden_corta":[0.0,2.0,1.0,0.0,null],"orden_suspendida":[0.0,0.0,0.0,3.0,null],"luz":[0.0,0.0,0.0,1.0,null],"programacion":[0.0,0.0,0.0,0.0,null]},"detalle":{"semana_num":4,"etiqueta":"Semana 4","rango":"23 feb – 1 mar","fechas_confiables":true,"horas_oficiales_semana":76.5,"horas_detalle":81.5,"horas_sin_alarmada":76.5,"diferencia":0.0,"alarmada":5.0,"por_maquina":{"F2-2":35.0,"F2-3":20.5,"F2-1":16.0,"F4-1":4.0,"FJ-2":2.0,"F4-3":4.0},"por_maquina_concepto":{"F2-2":{"luz":1.0,"maquina":4.0,"secuencia":2.0,"espera_montaje":4.0,"montaje_mangas":2.0,"tintas":4.0,"falta_material":6.0,"error_montaje":1.0,"orden_suspendida":3.0,"alarmada":1.0,"mangas":1.0,"calidad":5.0,"grabados":1.0},"F2-3":{"secuencia":1.5,"vobo":11.0,"calidad":4.0,"grabados":2.0,"falta_material":2.0},"F2-1":{"falta_material":1.0,"grabados":4.0,"vobo":7.0,"maquina":4.0},"F4-1":{"alarmada":4.0},"FJ-2":{"mangas":1.0,"tintas":1.0},"F4-3":{"mangas":1.0,"grabados":3.0}}}},{"id":"2026-03","nombre":"Marzo","corto":"Mar","parcial":false,"archivo":"3._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_MARZO_1874.xlsm","semanas":[73.0,36.0,24.5,41.5,30.0],"semanas_activas":5,"total_horas":205.0,"ml":1795800.0,"kg":23944.0,"costo_teorico":2681728.0,"costo_facturacion":2669270.83,"conceptos":{"tintas":71.5,"vobo":33.67,"maquina":27.5,"calidad":18.5,"grabados":16.5,"secuencia":12.0,"mangas":5.5,"espera_montaje":5.0,"montaje_mangas":4.33,"falta_material":3.0,"luz":2.5,"preprensa":2.0,"orden_corta":2.0,"error_montaje":1.0,"material_mal":0.0,"programacion":0.0,"orden_suspendida":0.0},"semanas_concepto":{"tintas":[25.5,11.0,6.0,23.5,5.5],"vobo":[5.0,13.67,1.0,4.0,10.0],"maquina":[9.5,4.0,1.0,5.0,8.0],"calidad":[9.0,3.0,5.0,1.0,0.5],"grabados":[4.5,3.0,5.0,4.0,0.0],"secuencia":[11.0,0.0,0.0,0.0,1.0],"mangas":[2.5,0.0,0.0,2.0,1.0],"espera_montaje":[0.0,0.0,2.0,0.0,3.0],"montaje_mangas":[1.0,1.33,2.0,0.0,0.0],"falta_material":[3.0,0.0,0.0,0.0,0.0],"luz":[0.0,0.0,0.5,1.0,1.0],"preprensa":[1.0,0.0,0.0,1.0,0.0],"orden_corta":[0.0,0.0,2.0,0.0,0.0],"error_montaje":[1.0,0.0,0.0,0.0,0.0],"material_mal":[0.0,0.0,0.0,0.0,0.0],"programacion":[0.0,0.0,0.0,0.0,0.0],"orden_suspendida":[0.0,0.0,0.0,0.0,0.0]},"detalle":{"semana_num":5,"etiqueta":"Semana 5","rango":"30 mar – 5 abr","fechas_confiables":true,"horas_oficiales_semana":30.0,"horas_detalle":32.5,"horas_sin_alarmada":30.0,"diferencia":0.0,"alarmada":2.5,"por_maquina":{"F2-1":2.0,"F2-3":7.0,"F2-2":18.0,"F4-2":2.5,"FJ-2":3.0},"por_maquina_concepto":{"F2-1":{"espera_montaje":1.0,"tintas":1.0},"F2-3":{"espera_montaje":2.0,"vobo":5.0},"F2-2":{"calidad":0.5,"tintas":2.5,"maquina":8.0,"secuencia":1.0,"vobo":5.0,"luz":1.0},"F4-2":{"alarmada":2.5},"FJ-2":{"mangas":1.0,"tintas":2.0}}}},{"id":"2026-04","nombre":"Abril","corto":"Abr","parcial":false,"archivo":"4._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_ABRIL_fd68.xlsm","semanas":[62.0,30.5,38.34,42.17,null],"semanas_activas":4,"total_horas":173.01,"ml":1515567.6,"kg":20207.57,"costo_teorico":2263247.62,"costo_facturacion":2252734.38,"conceptos":{"vobo":84.5,"maquina":35.34,"tintas":28.17,"calidad":8.5,"grabados":4.5,"mangas":4.0,"luz":3.0,"montaje_mangas":3.0,"falta_material":1.0,"secuencia":1.0,"preprensa":0.0,"espera_montaje":0.0,"orden_corta":0.0,"error_montaje":0.0,"material_mal":0.0,"programacion":0.0,"orden_suspendida":0.0},"semanas_concepto":{"vobo":[44.83,17.0,10.67,12.0,null],"maquina":[7.67,7.0,1.67,19.0,null],"tintas":[4.0,2.0,16.0,6.17,null],"calidad":[2.5,0.0,3.0,3.0,null],"grabados":[0.0,2.5,1.0,1.0,null],"mangas":[0.0,0.0,4.0,0.0,null],"luz":[3.0,0.0,0.0,0.0,null],"montaje_mangas":[0.0,2.0,1.0,0.0,null],"falta_material":[0.0,0.0,1.0,0.0,null],"secuencia":[0.0,0.0,0.0,1.0,null],"preprensa":[0.0,0.0,0.0,0.0,null],"espera_montaje":[0.0,0.0,0.0,0.0,null],"orden_corta":[0.0,0.0,0.0,0.0,null],"error_montaje":[0.0,0.0,0.0,0.0,null],"material_mal":[0.0,0.0,0.0,0.0,null],"programacion":[0.0,0.0,0.0,0.0,null],"orden_suspendida":[0.0,0.0,0.0,0.0,null]},"detalle":{"semana_num":4,"etiqueta":"Semana 4","rango":"27 abr – 3 may","fechas_confiables":true,"horas_oficiales_semana":42.17,"horas_detalle":44.1667,"horas_sin_alarmada":42.1667,"diferencia":-0.0033,"alarmada":2.0,"por_maquina":{"FJ-2":9.0,"F2-3":24.1667,"F2-1":6.0,"F2-2":5.0},"por_maquina_concepto":{"FJ-2":{"vobo":5.0,"maquina":2.0,"tintas":2.0},"F2-3":{"tintas":1.1667,"maquina":11.0,"secuencia":1.0,"vobo":7.0,"grabados":1.0,"calidad":3.0},"F2-1":{"maquina":6.0},"F2-2":{"tintas":3.0,"alarmada":2.0}}}},{"id":"2026-05","nombre":"Mayo","corto":"May","parcial":false,"archivo":"5._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_MAYO_0180.xlsm","semanas":[29.17,54.75,78.5,52.59,null],"semanas_activas":4,"total_horas":215.01,"ml":1883487.6,"kg":25113.17,"costo_teorico":2812674.82,"costo_facturacion":2799609.38,"conceptos":{"vobo":57.3367,"tintas":56.0033,"maquina":31.8333,"calidad":15.5,"montaje_mangas":8.67,"espera_montaje":8.5,"grabados":6.0,"luz":5.1667,"programacion":5.0,"material_mal":5.0,"preprensa":4.0,"mangas":4.0,"secuencia":4.0,"falta_material":2.0,"error_montaje":1.0,"orden_suspendida":1.0,"orden_corta":0.0},"semanas_concepto":{"vobo":[2.0,21.0,26.1667,8.17,null],"tintas":[0.0,20.75,15.3333,19.92,null],"maquina":[13.0,4.0,8.8333,6.0,null],"calidad":[2.5,6.0,5.0,2.0,null],"montaje_mangas":[1.67,0.0,0.0,7.0,null],"espera_montaje":[2.0,0.0,4.0,2.5,null],"grabados":[1.0,1.0,3.0,1.0,null],"luz":[1.0,1.0,2.1667,1.0,null],"programacion":[0.0,0.0,5.0,0.0,null],"material_mal":[0.0,0.0,2.0,3.0,null],"preprensa":[4.0,0.0,0.0,0.0,null],"mangas":[0.0,1.0,3.0,0.0,null],"secuencia":[0.0,0.0,3.0,1.0,null],"falta_material":[2.0,0.0,0.0,0.0,null],"error_montaje":[0.0,0.0,1.0,0.0,null],"orden_suspendida":[0.0,0.0,0.0,1.0,null],"orden_corta":[0.0,0.0,0.0,0.0,null]},"detalle":{"semana_num":4,"etiqueta":"Semana 4","rango":"25–31 may","fechas_confiables":true,"horas_oficiales_semana":52.59,"horas_detalle":52.5833,"horas_sin_alarmada":52.5833,"diferencia":-0.0067,"alarmada":0.0,"por_maquina":{"F2-1":8.0,"F2-2":29.4167,"F2-3":9.1667,"FLEXO":1.5,"FJ-2":4.5},"por_maquina_concepto":{"F2-1":{"espera_montaje":1.0,"vobo":4.0,"maquina":2.0,"grabados":1.0},"F2-2":{"montaje_mangas":5.3333,"tintas":11.9167,"vobo":4.1667,"luz":1.0,"orden_suspendida":1.0,"secuencia":1.0,"material_mal":3.0,"maquina":2.0},"F2-3":{"montaje_mangas":1.6667,"calidad":2.0,"tintas":3.5,"maquina":2.0},"FLEXO":{"espera_montaje":1.5},"FJ-2":{"tintas":4.5}}}},{"id":"2026-06","nombre":"Junio","corto":"Jun","parcial":false,"archivo":"6._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_JUNIO_badd.xlsm","semanas":[54.0,39.66,40.33,45.32,null],"semanas_activas":4,"total_horas":179.31,"ml":1570755.6,"kg":20943.41,"costo_teorico":2345661.7,"costo_facturacion":2334765.63,"conceptos":{"vobo":40.67,"tintas":31.33,"calidad":22.08,"grabados":15.0,"mangas":14.58,"orden_corta":10.0,"maquina":7.58,"secuencia":7.0,"error_montaje":6.83,"falta_material":6.41,"montaje_mangas":5.33,"espera_montaje":5.0,"preprensa":4.5,"luz":3.0,"programacion":0.0,"material_mal":0.0,"orden_suspendida":0.0},"semanas_concepto":{"vobo":[12.5,0.0,11.17,17.0,null],"tintas":[5.0,13.0,7.0,6.33,null],"calidad":[10.5,8.58,3.0,0.0,null],"grabados":[8.0,0.0,1.0,6.0,null],"mangas":[5.5,5.08,4.0,0.0,null],"orden_corta":[7.0,0.0,3.0,0.0,null],"maquina":[2.0,2.0,3.58,0.0,null],"secuencia":[0.0,4.0,0.0,3.0,null],"error_montaje":[0.0,0.0,0.0,6.83,null],"falta_material":[1.0,0.0,4.08,1.33,null],"montaje_mangas":[1.5,3.0,0.0,0.83,null],"espera_montaje":[0.0,4.0,0.0,1.0,null],"preprensa":[0.0,0.0,2.5,2.0,null],"luz":[1.0,0.0,1.0,1.0,null],"programacion":[0.0,0.0,0.0,0.0,null],"material_mal":[0.0,0.0,0.0,0.0,null],"orden_suspendida":[0.0,0.0,0.0,0.0,null]},"detalle":{"semana_num":4,"etiqueta":"Semana 4","rango":"22–28 jun","fechas_confiables":true,"horas_oficiales_semana":45.32,"horas_detalle":45.3333,"horas_sin_alarmada":45.3333,"diferencia":0.0133,"alarmada":0.0,"por_maquina":{"F2-3":21.0,"FLEXO":4.8333,"F4-3":3.0,"F2-2":7.0,"F2-1":7.5,"FJ-2":2.0},"por_maquina_concepto":{"F2-3":{"secuencia":3.0,"tintas":3.0,"vobo":11.0,"preprensa":2.0,"grabados":2.0},"FLEXO":{"vobo":4.0,"error_montaje":0.8333},"F4-3":{"grabados":3.0},"F2-2":{"luz":1.0,"error_montaje":6.0},"F2-1":{"vobo":2.0,"grabados":1.0,"montaje_mangas":0.8333,"tintas":1.3333,"falta_material":1.3333,"espera_montaje":1.0},"FJ-2":{"tintas":2.0}}}},{"id":"2026-07","nombre":"Julio","corto":"Jul","parcial":false,"archivo":"7._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS__JULIO_e110.xlsm","semanas":[46.91,91.83,59.18,12.0,35.0],"semanas_activas":5,"total_horas":244.92,"ml":2145499.2,"kg":28606.66,"costo_teorico":3203945.47,"costo_facturacion":3189062.5,"conceptos":{"vobo":76.83,"tintas":43.08,"maquina":26.35,"calidad":24.5,"preprensa":19.0,"grabados":15.0,"falta_material":11.5,"secuencia":7.33,"material_mal":7.33,"mangas":6.0,"montaje_mangas":4.0,"espera_montaje":3.0,"programacion":1.0,"orden_corta":0.0,"error_montaje":0.0,"luz":0.0,"orden_suspendida":0.0},"semanas_concepto":{"vobo":[12.33,32.5,6.0,6.0,20.0],"tintas":[6.08,18.0,7.0,0.0,12.0],"maquina":[8.0,9.5,6.85,0.0,2.0],"calidad":[0.0,7.0,14.5,3.0,0.0],"preprensa":[6.0,9.0,2.0,1.0,1.0],"grabados":[4.0,3.0,8.0,0.0,0.0],"falta_material":[4.5,4.5,2.5,0.0,0.0],"secuencia":[0.0,1.0,6.33,0.0,0.0],"material_mal":[0.0,6.33,1.0,0.0,0.0],"mangas":[3.0,0.0,1.0,2.0,0.0],"montaje_mangas":[0.0,0.0,4.0,0.0,0.0],"espera_montaje":[2.0,1.0,0.0,0.0,0.0],"programacion":[1.0,0.0,0.0,0.0,0.0],"orden_corta":[0.0,0.0,0.0,0.0,0.0],"error_montaje":[0.0,0.0,0.0,0.0,0.0],"luz":[0.0,0.0,0.0,0.0,0.0],"orden_suspendida":[0.0,0.0,0.0,0.0,0.0]},"detalle":{"semana_num":5,"etiqueta":"Semana 5","rango":"27 jul – 2 ago","fechas_confiables":true,"horas_oficiales_semana":35.0,"horas_detalle":36.0,"horas_sin_alarmada":35.0,"diferencia":0.0,"alarmada":1.0,"por_maquina":{"FJ-2":2.0,"F2-3":23.0,"F2-2":11.0},"por_maquina_concepto":{"FJ-2":{"tintas":2.0},"F2-3":{"vobo":12.0,"tintas":10.0,"alarmada":1.0},"F2-2":{"maquina":2.0,"preprensa":1.0,"vobo":8.0}}}},{"id":"2026-08","nombre":"Agosto","corto":"Ago","parcial":false,"archivo":"8._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_AGOSTO_bab0.xlsm","semanas":[52.8,18.5,17.5,42.0,null],"semanas_activas":4,"total_horas":130.8,"ml":1145808.0,"kg":15277.44,"costo_teorico":1711073.28,"costo_facturacion":1703125.0,"conceptos":{"vobo":25.0,"tintas":35.0,"maquina":24.0,"mangas":10.0,"calidad":16.0,"montaje_mangas":3.5,"grabados":7.3,"preprensa":6.0,"secuencia":1.0,"falta_material":0.0,"material_mal":0.0,"espera_montaje":1.0,"programacion":0.0,"orden_corta":0.0,"error_montaje":0.0,"luz":0.0,"orden_suspendida":2.0},"semanas_concepto":{"vobo":[7.0,9.0,9.0,0.0,null],"tintas":[20.0,4.0,0.0,11.0,null],"maquina":[17.5,0.0,2.5,4.0,null],"mangas":[0.0,0.0,6.0,4.0,null],"calidad":[3.0,2.0,0.0,11.0,null],"montaje_mangas":[2.0,1.5,0.0,0.0,null],"grabados":[2.3,0.0,0.0,5.0,null],"preprensa":[0.0,2.0,0.0,4.0,null],"secuencia":[1.0,0.0,0.0,0.0,null],"falta_material":[0.0,0.0,0.0,0.0,null],"material_mal":[0.0,0.0,0.0,0.0,null],"espera_montaje":[0.0,0.0,0.0,1.0,null],"programacion":[0.0,0.0,0.0,0.0,null],"orden_corta":[0.0,0.0,0.0,0.0,null],"error_montaje":[0.0,0.0,0.0,0.0,null],"luz":[0.0,0.0,0.0,0.0,null],"orden_suspendida":[0.0,0.0,0.0,2.0,null]},"detalle":{"semana_num":4,"etiqueta":"Semana 4","rango":"24–30 ago","fechas_confiables":true,"horas_oficiales_semana":42.0,"horas_detalle":42.0,"horas_sin_alarmada":42.0,"diferencia":0.0,"alarmada":0.0,"por_maquina":{"F2-3":20.0,"FJ-2":13.0,"F2-2":9.0},"por_maquina_concepto":{"F2-3":{"mangas":4.0,"grabados":5.0,"calidad":5.0,"tintas":2.0,"preprensa":4.0},"FJ-2":{"maquina":2.0,"tintas":9.0,"orden_suspendida":2.0},"F2-2":{"calidad":6.0,"maquina":2.0,"espera_montaje":1.0}}}},{"id":"2026-09","nombre":"Septiembre","corto":"Sep","parcial":true,"archivo":"9._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_AL_20_SEPTIEMBRE_5d60.xlsm","semanas":[15.5,19.5,39.0,null,null],"semanas_activas":3,"total_horas":74.0,"ml":648240.0,"kg":8643.2,"costo_teorico":968038.4,"costo_facturacion":963541.67,"conceptos":{"vobo":31.0,"tintas":8.5,"preprensa":7.5,"grabados":6.67,"secuencia":5.0,"maquina":4.5,"mangas":3.83,"calidad":3.0,"luz":2.0,"montaje_mangas":2.0,"falta_material":0.0,"material_mal":0.0,"espera_montaje":0.0,"programacion":0.0,"orden_corta":0.0,"error_montaje":0.0,"orden_suspendida":0.0},"semanas_concepto":{"vobo":[7.0,11.0,13.0,null,null],"tintas":[0.0,2.0,6.5,null,null],"preprensa":[1.0,1.5,5.0,null,null],"grabados":[0.67,5.0,1.0,null,null],"secuencia":[0.0,0.0,5.0,null,null],"maquina":[0.0,0.0,4.5,null,null],"mangas":[1.83,0.0,2.0,null,null],"calidad":[3.0,0.0,0.0,null,null],"luz":[2.0,0.0,0.0,null,null],"montaje_mangas":[0.0,0.0,2.0,null,null],"falta_material":[0.0,0.0,0.0,null,null],"material_mal":[0.0,0.0,0.0,null,null],"espera_montaje":[0.0,0.0,0.0,null,null],"programacion":[0.0,0.0,0.0,null,null],"orden_corta":[0.0,0.0,0.0,null,null],"error_montaje":[0.0,0.0,0.0,null,null],"orden_suspendida":[0.0,0.0,0.0,null,null]},"detalle":{"semana_num":3,"etiqueta":"Semana 3","rango":"","fechas_confiables":false,"horas_oficiales_semana":39.0,"horas_detalle":39.0,"horas_sin_alarmada":39.0,"diferencia":0.0,"alarmada":0.0,"por_maquina":{"F2-2":10.0,"FJ-2":9.0,"F2-3":18.5,"FLEXO":1.5},"por_maquina_concepto":{"F2-2":{"tintas":2.0,"preprensa":2.0,"secuencia":1.0,"vobo":5.0},"FJ-2":{"maquina":2.0,"tintas":3.0,"secuencia":1.0,"mangas":2.0,"grabados":1.0},"F2-3":{"preprensa":3.0,"secuencia":3.0,"vobo":8.0,"tintas":1.5,"maquina":1.0,"montaje_mangas":2.0},"FLEXO":{"maquina":1.5}}}}]}
+</script>
+<script>
+const GCOLOR = {
+  aprobacion: "#9f1239",
+  materiales: "#1d4e89",
+  maquina: "#c2410c",
+  montaje: "#6d28d9",
+  programa: "#0f6e56"
+};
+const PALETA = ["#9f1239", "#c2410c", "#b45309", "#1d4e89", "#0f6e56", "#6d28d9"];
+
+const state = { mes: "all", concepto: null, maquina: null, modo: "horas", sort: "total" };
+
+function cargar() {
+  const raw = document.getElementById("tm-data").textContent.trim();
+  const data = JSON.parse(raw);
+  if (!data.meses || !data.meses.length) {
+    document.body.innerHTML = "<p style='padding:24px'>No hay datos. Ejecuta <code>python scripts/tiempo-muerto.py</code> con la carpeta de los archivos.</p>";
+    return null;
+  }
+  return data;
+}
+
+const D = cargar();
+if (D) iniciar();
+
+function iniciar() {
+  const ytd = rankingConceptos(D.meses);
+  state.concepto = ytd[0].id;
+  state.maquina = rankingMaquinas(D.meses)[0].nombre;
+  document.getElementById("lede").textContent = "Horas de paro del área, de enero al 20 de septiembre. Los conceptos cubren todas las semanas del gráfico mensual. Las máquinas salen de la semana que cada archivo todavía conserva.";
+  document.getElementById("corte").textContent = "Corte " + D.meta.corte;
+  document.getElementById("periodo").textContent = D.meta.periodo;
+  document.getElementById("sub-costo").textContent = "El archivo usa 8,760 ml, 116.8 kg, $13,081.60 teóricos y $13,020.83 de facturación por cada hora. Aquí se muestran los totales que ya trae cada gráfico mensual.";
+  pintarMeses();
+  document.getElementById("imprimir").addEventListener("click", () => window.print());
+  document.getElementById("modo-horas").addEventListener("click", () => { state.modo = "horas"; render(); });
+  document.getElementById("modo-pct").addEventListener("click", () => { state.modo = "pct"; render(); });
+  document.getElementById("elige-maq").addEventListener("change", (ev) => {
+    state.maquina = ev.target.value;
+    render();
+  });
+  document.body.addEventListener("click", (ev) => {
+    const mes = ev.target.closest("[data-mes]");
+    if (mes) { state.mes = mes.dataset.mes; render(); return; }
+    const concepto = ev.target.closest("[data-concepto]");
+    if (concepto) { state.concepto = concepto.dataset.concepto; render(); return; }
+    const maquina = ev.target.closest("[data-maquina]");
+    if (maquina) { state.maquina = maquina.dataset.maquina; render(); return; }
+    const sort = ev.target.closest("[data-sort]");
+    if (sort) { state.sort = sort.dataset.sort; render(); }
+  });
+  render();
+}
+
+function foco() {
+  return state.mes === "all" ? D.meses : D.meses.filter((m) => m.id === state.mes);
+}
+function nombreConcepto(id) {
+  const item = D.conceptos.find((c) => c.id === id);
+  return item ? item.nombre : id;
+}
+function grupoDe(id) {
+  const item = D.conceptos.find((c) => c.id === id);
+  return item ? item.grupo : "";
+}
+function fmt(n, d) {
+  const digits = d == null ? 2 : d;
+  return (Number(n) || 0).toLocaleString("es-MX", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+function money(n) {
+  return (Number(n) || 0).toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
+}
+function pct(part, total) {
+  if (!total) return "0%";
+  return (part / total * 100).toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "%";
+}
+function esc(value) {
+  return String(value).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+}
+function horasConcepto(meses, id) {
+  return meses.reduce((sum, mes) => sum + (mes.conceptos[id] || 0), 0);
+}
+function horasMaquina(meses, nombre) {
+  return meses.reduce((sum, mes) => sum + ((mes.detalle.por_maquina || {})[nombre] || 0), 0);
+}
+function horasMaquinaConcepto(meses, nombre, id) {
+  return meses.reduce((sum, mes) => {
+    const bloque = (mes.detalle.por_maquina_concepto || {})[nombre] || {};
+    return sum + (bloque[id] || 0);
+  }, 0);
+}
+function totalOficial(meses) {
+  return meses.reduce((sum, mes) => sum + mes.total_horas, 0);
+}
+function rankingConceptos(meses) {
+  return D.conceptos
+    .filter((c) => c.en_grafico)
+    .map((c) => ({ id: c.id, nombre: c.nombre, grupo: c.grupo, h: horasConcepto(meses, c.id) }))
+    .sort((a, b) => b.h - a.h);
+}
+function rankingMaquinas(meses) {
+  return D.maquinas
+    .map((nombre) => ({ nombre, h: horasMaquina(meses, nombre) }))
+    .sort((a, b) => b.h - a.h);
+}
+function conceptosTop(meses) {
+  const ranking = rankingConceptos(meses).filter((c) => c.h > 0);
+  const top = ranking.slice(0, 5);
+  const ids = new Set(top.map((c) => c.id));
+  return { top, ids };
+}
+function horasGrupo(meses, gid) {
+  return D.conceptos
+    .filter((c) => c.grupo === gid && c.en_grafico)
+    .reduce((sum, c) => sum + horasConcepto(meses, c.id), 0);
+}
+
+function pintarMeses() {
+  const botones = ['<button type="button" data-mes="all" aria-pressed="true">Año</button>']
+    .concat(D.meses.map((m) => `<button type="button" data-mes="${m.id}">${esc(m.corto)}${m.parcial ? " · parcial" : ""}</button>`));
+  document.getElementById("meses").innerHTML = botones.join("");
+}
+
+function render() {
+  document.querySelectorAll("[data-mes]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(btn.dataset.mes === state.mes));
+  });
+  document.getElementById("modo-horas").setAttribute("aria-pressed", String(state.modo === "horas"));
+  document.getElementById("modo-pct").setAttribute("aria-pressed", String(state.modo === "pct"));
+  pintarKpis();
+  pintarLectura();
+  pintarGrupos();
+  pintarTendencia();
+  pintarConceptos();
+  pintarFoco();
+  pintarMaquinas();
+  pintarSemanas();
+  pintarCosto();
+  pintarMetodo();
+}
+
+function pintarKpis() {
+  const meses = foco();
+  const total = totalOficial(meses);
+  const ranking = rankingConceptos(meses);
+  const top = ranking[0];
+  const costo = meses.reduce((s, m) => s + m.costo_facturacion, 0);
+  const maquinas = rankingMaquinas(meses);
+  let items;
+  if (state.mes === "all") {
+    const mayorMes = D.meses.slice().sort((a, b) => b.total_horas - a.total_horas)[0];
+    const menorMes = D.meses.filter((m) => !m.parcial).slice().sort((a, b) => a.total_horas - b.total_horas)[0];
+    items = [
+      ["Horas del año", fmt(total), `${fmt(total / 8, 1)} jornadas de 8 h`],
+      ["Concepto principal", top.nombre, `${fmt(top.h)} h · ${pct(top.h, total)}`],
+      ["Mes más alto", mayorMes.nombre, `${fmt(mayorMes.total_horas)} h`],
+      ["Mes cerrado más bajo", menorMes.nombre, `${fmt(menorMes.total_horas)} h`],
+      ["Costo facturación", money(costo), "equivalente del Excel"],
+      ["Máquina con más paro", maquinas[0].nombre, `${fmt(maquinas[0].h)} h en semanas guardadas`]
+    ];
+  } else {
+    const mes = meses[0];
+    const semanaAlta = mes.semanas.map((v, i) => ({ v, i })).filter((s) => s.v != null).sort((a, b) => b.v - a.v)[0];
+    items = [
+      ["Horas del mes", fmt(total), `${mes.semanas_activas} semanas · ${fmt(total / mes.semanas_activas, 1)} h/sem`],
+      ["Concepto principal", top.nombre, `${fmt(top.h)} h · ${pct(top.h, total)}`],
+      ["Semana más alta", "Semana " + (semanaAlta.i + 1), `${fmt(semanaAlta.v)} h`],
+      ["Semana con máquinas", mes.detalle.etiqueta, `${fmt(mes.detalle.horas_oficiales_semana)} h · ${pct(mes.detalle.horas_oficiales_semana, total)}`],
+      ["Costo facturación", money(costo), "equivalente del Excel"],
+      ["Máquina con más paro", maquinas[0].nombre, `${fmt(maquinas[0].h)} h en esa semana`]
+    ];
+  }
+  document.getElementById("kpis").innerHTML = items.map(([lbl, num, hint]) =>
+    `<article class="kpi"><div class="lbl">${esc(lbl)}</div><div class="num">${esc(num)}</div><div class="hint">${esc(hint)}</div></article>`
+  ).join("");
+}
+
+function pintarLectura() {
+  const meses = foco();
+  const total = totalOficial(meses);
+  const lineas = [];
+  if (state.mes === "all") {
+    const ranking = rankingConceptos(D.meses);
+    const top = ranking[0];
+    const pico = D.meses.slice().sort((a, b) => (b.conceptos[top.id] || 0) - (a.conceptos[top.id] || 0))[0];
+    lineas.push(`De enero al 20 de septiembre el gráfico mensual suma ${fmt(total)} horas. Equivale a ${fmt(total / 8, 1)} jornadas de 8 horas, o a ${fmt(total / 24, 1)} días de 24 horas.`);
+    lineas.push(`${top.nombre} concentra ${fmt(top.h)} horas, ${pct(top.h, total)} del año. El mes más alto de ese concepto es ${pico.nombre.toLowerCase()}, con ${fmt(pico.conceptos[top.id])} h.`);
+    const mayor = D.meses.slice().sort((a, b) => b.total_horas - a.total_horas)[0];
+    const cerrados = D.meses.filter((m) => !m.parcial);
+    const menor = cerrados.slice().sort((a, b) => a.total_horas - b.total_horas)[0];
+    const previos = D.meses.filter((m) => m.id < "2026-09");
+    const horasPrev = totalOficial(previos);
+    const semanasPrev = previos.reduce((s, m) => s + m.semanas_activas, 0);
+    const sep = D.meses.find((m) => m.parcial);
+    lineas.push(`${mayor.nombre} es el mes con más horas (${fmt(mayor.total_horas)}). ${menor.nombre} es el mes cerrado más bajo (${fmt(menor.total_horas)}). ${sep.nombre} lleva ${fmt(sep.total_horas)} h en ${sep.semanas_activas} semanas, a ${fmt(sep.total_horas / sep.semanas_activas, 1)} h por semana, frente a ${fmt(horasPrev / semanasPrev, 1)} h por semana de enero a agosto.`);
+    const distintos = D.meses.filter((m) => {
+      const local = rankingConceptos([m])[0];
+      return local && local.id !== top.id;
+    });
+    if (distintos.length) {
+      const partes = distintos.map((m) => {
+        const local = rankingConceptos([m])[0];
+        return `${m.nombre.toLowerCase()} (${local.nombre}, ${fmt(local.h)} h)`;
+      });
+      const texto = partes.length === 1 ? partes[0] : partes.slice(0, -1).join(", ") + " y " + partes[partes.length - 1];
+      lineas.push(`En ${texto} otro concepto queda al frente del mes.`);
+    }
+    let acum = 0;
+    let n80 = 0;
+    for (const item of ranking) {
+      acum += item.h;
+      n80 += 1;
+      if (acum >= total * 0.8) break;
+    }
+    lineas.push(`${n80} conceptos reúnen el 80% de las horas. Los tres primeros — ${ranking[0].nombre}, ${ranking[1].nombre} y ${ranking[2].nombre} — suman ${pct(ranking[0].h + ranking[1].h + ranking[2].h, total)}.`);
+    const partes = D.grupos.map((g) => `${g.nombre.toLowerCase()} ${pct(horasGrupo(D.meses, g.id), total)}`);
+    lineas.push(`Por tipo de paro: ${partes.join(", ")}.`);
+  } else {
+    const mes = meses[0];
+    const ranking = rankingConceptos(meses);
+    lineas.push(`${mes.nombre} suma ${fmt(mes.total_horas)} horas en ${mes.semanas_activas} semanas, ${fmt(mes.total_horas / mes.semanas_activas, 1)} h por semana.`);
+    lineas.push(`${ranking[0].nombre} aporta ${fmt(ranking[0].h)} h, ${pct(ranking[0].h, mes.total_horas)} del mes. Sigue ${ranking[1].nombre.toLowerCase()} con ${fmt(ranking[1].h)} h.`);
+    const det = mes.detalle;
+    const rango = det.fechas_confiables && det.rango ? ` (${det.rango})` : "";
+    lineas.push(`La hoja semanal guardada es la ${det.etiqueta.toLowerCase()}${rango}: ${fmt(det.horas_oficiales_semana)} h, ${pct(det.horas_oficiales_semana, mes.total_horas)} del mes.`);
+    if (!det.fechas_confiables) {
+      lineas.push("Las fechas de esa hoja semanal quedaron de otro mes. Las horas coinciden con la semana del gráfico y el reporte usa esa semana.");
+    }
+  }
+  const maquinas = rankingMaquinas(meses);
+  const mayores = maquinas.filter((m) => Math.abs(m.h - maquinas[0].h) < 0.05);
+  const positivos = maquinas.filter((m) => m.h > 0.05);
+  const ceros = maquinas.filter((m) => m.h <= 0.05);
+  const minPos = positivos.length ? Math.min(...positivos.map((m) => m.h)) : 0;
+  const menores = positivos.filter((m) => Math.abs(m.h - minPos) < 0.05);
+  const cobertura = meses.reduce((s, m) => s + m.detalle.horas_oficiales_semana, 0);
+  const alcance = state.mes === "all" ? "en las semanas guardadas" : "en la semana guardada";
+  const nombresMayores = mayores.map((m) => m.nombre).join(" y ");
+  let frase = mayores.length > 1
+    ? `${nombresMayores} empatan con el mayor tiempo muerto ${alcance}, cerca de ${fmt(mayores[0].h)} h.`
+    : `${nombresMayores} concentra el mayor tiempo muerto ${alcance}: ${fmt(mayores[0].h)} h.`;
+  if (menores.length > 1) frase += ` ${menores.map((m) => m.nombre).join(" y ")} empatan como las más bajas con paro registrado, cerca de ${fmt(menores[0].h)} h.`;
+  else if (menores.length === 1) frase += ` ${menores[0].nombre} es la más baja con paro registrado: ${fmt(menores[0].h)} h.`;
+  if (ceros.length) frase += ` En cero: ${ceros.map((m) => m.nombre).join(", ")}.`;
+  frase += ` Esas semanas suman ${fmt(cobertura)} h, ${pct(cobertura, total)} de las horas del periodo.`;
+  lineas.push(frase);
+  const costo = meses.reduce((s, m) => s + m.costo_facturacion, 0);
+  lineas.push(`El costo equivalente de facturación es ${money(costo)}. El teórico del mismo archivo es ${money(meses.reduce((s, m) => s + m.costo_teorico, 0))}.`);
+  document.getElementById("lectura").innerHTML = lineas.map((linea) => `<li>${esc(linea)}</li>`).join("");
+}
+
+function pintarGrupos() {
+  const meses = foco();
+  const total = Math.max(totalOficial(meses), 1);
+  document.getElementById("grupos").innerHTML = D.grupos.map((g) => {
+    const horas = horasGrupo(meses, g.id);
+    const ancho = horas > 0.05 ? Math.max(2, horas / total * 100) : 0;
+    return `<div class="grupo"><strong>${esc(g.nombre)}</strong><div class="track"><span style="width:${ancho}%;background:${GCOLOR[g.id]}"></span></div><span>${fmt(horas)} h · ${pct(horas, total)}</span></div>`;
+  }).join("");
+}
+
+function pintarTendencia() {
+  const titulo = document.getElementById("titulo-tendencia");
+  const cont = document.getElementById("tendencia");
+  const leyenda = document.getElementById("leyenda");
+  if (state.mes === "all") {
+    titulo.textContent = "Horas por mes, con los cinco conceptos más altos";
+    const { top, ids } = conceptosTop(D.meses);
+    const max = Math.max(...D.meses.map((m) => m.total_horas));
+    cont.innerHTML = D.meses.map((mes) => {
+      const otros = mes.total_horas - top.reduce((s, c) => s + (mes.conceptos[c.id] || 0), 0);
+      const segs = top.map((c, i) => `<div class="seg" style="flex:${Math.max(mes.conceptos[c.id] || 0, 0)} 1 0;background:${PALETA[i]}" title="${esc(c.nombre)}: ${fmt(mes.conceptos[c.id] || 0)} h"></div>`).join("");
+      const extra = otros > 0.05 ? `<div class="seg" style="flex:${otros} 1 0;background:#d6d3d1" title="Otros: ${fmt(otros)} h"></div>` : "";
+      return `<div class="colwrap"><div class="col" style="height:${Math.max(8, mes.total_horas / max * 100)}%">${extra}${segs}</div><button type="button" data-mes="${mes.id}"><strong>${fmt(mes.total_horas, 0)}</strong>${esc(mes.corto)}</button></div>`;
+    }).join("");
+    leyenda.innerHTML = top.map((c, i) => `<span><i class="dot" style="background:${PALETA[i]}"></i>${esc(c.nombre)}</span>`).join("") + `<span><i class="dot" style="background:#d6d3d1"></i>Otros</span>`;
+  } else {
+    const mes = foco()[0];
+    titulo.textContent = `Semanas de ${mes.nombre}`;
+    const semanas = mes.semanas.map((valor, i) => ({ i, valor })).filter((s) => s.valor != null);
+    const max = Math.max(...semanas.map((s) => s.valor), 1);
+    cont.innerHTML = semanas.map((s) => `<div class="colwrap"><div class="col" style="height:${Math.max(8, s.valor / max * 100)}%"><div class="seg" style="flex:1;background:${s.i + 1 === mes.detalle.semana_num ? "#9f1239" : "#1d4e89"}"></div></div><button type="button"><strong>${fmt(s.valor, 1)}</strong>Sem ${s.i + 1}</button></div>`).join("");
+    leyenda.innerHTML = `<span><i class="dot" style="background:#9f1239"></i>Semana con detalle de máquina (${esc(mes.detalle.etiqueta.toLowerCase())})</span><span><i class="dot" style="background:#1d4e89"></i>Resto de semanas del mes</span>`;
+  }
+}
+
+function ordenConceptos() {
+  const ranking = rankingConceptos(D.meses);
+  const key = state.sort;
+  const copia = ranking.slice();
+  copia.sort((a, b) => {
+    const va = valorSort(a.id, key);
+    const vb = valorSort(b.id, key);
+    return vb - va;
+  });
+  return copia;
+}
+function valorSort(id, key) {
+  if (key === "total") return horasConcepto(D.meses, id);
+  const mes = D.meses.find((m) => m.id === key);
+  return mes ? (mes.conceptos[id] || 0) : 0;
+}
+function pintarConceptos() {
+  const lista = ordenConceptos();
+  const total = totalOficial(D.meses);
+  const head = D.meses.map((m) => {
+    const cls = state.mes !== "all" && state.mes !== m.id ? "dim" : (state.mes === m.id ? "on" : "");
+    return `<th class="${cls}"><button type="button" data-sort="${m.id}">${esc(m.corto)}</button></th>`;
+  }).join("");
+  const body = lista.map((c) => {
+    const celdas = D.meses.map((m) => {
+      const cls = state.mes !== "all" && state.mes !== m.id ? "dim" : (state.mes === m.id ? "on" : "");
+      const valor = m.conceptos[c.id] || 0;
+      const texto = state.modo === "pct"
+        ? (valor ? pct(valor, m.total_horas) : "·")
+        : (valor ? fmt(valor) : "·");
+      return `<td class="${cls}">${texto}</td>`;
+    }).join("");
+    const on = c.id === state.concepto ? " on" : "";
+    return `<tr class="click${on}" data-concepto="${c.id}"><td class="l"><i class="dot" style="background:${GCOLOR[c.grupo]}"></i>${esc(c.nombre)}</td>${celdas}<td><strong>${fmt(c.h)}</strong></td><td>${pct(c.h, total)}</td></tr>`;
+  }).join("");
+  const totales = D.meses.map((m) => {
+    const cls = state.mes !== "all" && state.mes !== m.id ? "dim" : (state.mes === m.id ? "on" : "");
+    const texto = state.modo === "pct" ? "100%" : fmt(m.total_horas);
+    return `<td class="${cls}">${texto}</td>`;
+  }).join("");
+  document.getElementById("tabla-conceptos").innerHTML = `<table><thead><tr><th class="l">Concepto</th>${head}<th><button type="button" data-sort="total">Año</button></th><th>%</th></tr></thead><tbody>${body}<tr class="total"><td class="l">Total oficial</td>${totales}<td>${fmt(total)}</td><td>100%</td></tr></tbody></table>`;
+}
+
+function pintarFoco() {
+  const id = state.concepto;
+  const nombre = nombreConcepto(id);
+  const ytd = horasConcepto(D.meses, id);
+  const total = totalOficial(D.meses);
+  const semanas = D.meses.map((mes) => {
+    const vals = (mes.semanas_concepto[id] || []).map((v, i) => {
+      if (v == null) return "";
+      const marca = i + 1 === mes.detalle.semana_num ? "font-weight:700;color:#9f1239" : "";
+      return `<td style="${marca}">${fmt(v)}</td>`;
+    }).join("");
+    return `<tr><td class="l">${esc(mes.nombre)}</td>${vals}<td><strong>${fmt(mes.conceptos[id] || 0)}</strong></td></tr>`;
+  }).join("");
+  const porMaq = D.maquinas.map((mq) => ({ nombre: mq, h: horasMaquinaConcepto(D.meses, mq, id) })).filter((m) => m.h > 0.05).sort((a, b) => b.h - a.h);
+  const enDetalle = porMaq.reduce((s, m) => s + m.h, 0);
+  const max = porMaq.length ? porMaq[0].h : 1;
+  const barras = porMaq.length
+    ? porMaq.map((m) => `<div class="bar-row"><button type="button" data-maquina="${esc(m.nombre)}">${esc(m.nombre)}</button><div class="bar-track"><span class="bar-fill" style="width:${m.h / max * 100}%;background:${GCOLOR[grupoDe(id)] || "#9f1239"}"></span></div><span>${fmt(m.h)} h</span></div>`).join("")
+    : "<p class='sub'>Este concepto no aparece en las semanas guardadas por máquina.</p>";
+  document.getElementById("foco-concepto").innerHTML = `
+    <div class="fila-titulo"><h3 style="margin:0">${esc(nombre)}</h3><strong>${fmt(ytd)} h · ${pct(ytd, total)} del año</strong></div>
+    <p class="sub">En las semanas con máquina hay ${fmt(enDetalle)} h de este concepto. La celda en rojo es la semana cuyo detalle sí está en el archivo.</p>
+    <div class="grid-2">
+      <div class="tabla-wrap" style="border:0"><table><thead><tr><th class="l">Mes</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th><th>Total</th></tr></thead><tbody>${semanas}</tbody></table></div>
+      <div><h3>En qué máquina cayó, dentro de las semanas guardadas</h3><div class="bars">${barras}</div></div>
+    </div>`;
+}
+
+function pintarMaquinas() {
+  const meses = foco();
+  const total = totalOficial(meses);
+  const cobertura = meses.reduce((s, m) => s + m.detalle.horas_oficiales_semana, 0);
+  const alarmada = meses.reduce((s, m) => s + (m.detalle.alarmada || 0), 0);
+  const listaSemanas = meses.map((m) => `${m.corto.toLowerCase()} sem. ${m.detalle.semana_num}`).join(", ");
+  const avisoFechas = D.meses.some((m) => !m.detalle.fechas_confiables)
+    ? " En septiembre la hoja semanal todavía trae fechas de agosto; las horas coinciden con la semana 3 del gráfico y así se tomaron."
+    : "";
+  document.getElementById("nota-maquinas").innerHTML = `<strong>Qué máquina está medida.</strong> Cada libro conserva una sola semana con horas por máquina: ${esc(listaSemanas)}. Esas semanas suman ${fmt(cobertura)} h, ${pct(cobertura, total)} de las ${fmt(total)} h del periodo. Máquina alarmada suma ${fmt(alarmada)} h en ese detalle y el gráfico mensual no la incluye en su total.${esc(avisoFechas)}`;
+
+  const maquinas = rankingMaquinas(meses);
+  const mayores = maquinas.filter((m) => Math.abs(m.h - maquinas[0].h) < 0.05);
+  const positivos = maquinas.filter((m) => m.h > 0.05);
+  const ceros = maquinas.filter((m) => m.h <= 0.05);
+  const minPos = positivos.length ? Math.min(...positivos.map((m) => m.h)) : 0;
+  const menores = positivos.filter((m) => Math.abs(m.h - minPos) < 0.05);
+  const conceptosDe = (nombre) => {
+    const map = {};
+    meses.forEach((mes) => {
+      const bloque = mes.detalle.por_maquina_concepto[nombre] || {};
+      Object.entries(bloque).forEach(([cid, horas]) => { map[cid] = (map[cid] || 0) + horas; });
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  };
+  const tarjeta = (clase, titulo, grupo, extra) => {
+    const tops = grupo.length === 1 ? conceptosDe(grupo[0].nombre).map(([cid, h]) => `${nombreConcepto(cid)} ${fmt(h)} h`).join(" · ") : "";
+    return `<article class="call ${clase}"><div class="lbl" style="color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase">${titulo}</div><div class="who">${grupo.map((m) => esc(m.nombre)).join("<br>")}</div><div class="num">${fmt(grupo[0].h)} h</div><div class="hint" style="color:var(--muted);font-size:13px">${esc(tops || extra)}</div></article>`;
+  };
+  document.getElementById("calls").innerHTML = [
+    tarjeta("alto", "Mayor tiempo muerto", mayores, ""),
+    tarjeta("bajo", "Menor con paro registrado", menores.length ? menores : [{ nombre: "—", h: 0 }], ""),
+    `<article class="call"><div class="lbl" style="color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase">En cero en estas semanas</div><div class="who">${ceros.length ? ceros.map((m) => esc(m.nombre)).join("<br>") : "Ninguna"}</div><div class="num">${ceros.length} ${ceros.length === 1 ? "máquina" : "máquinas"}</div><div class="hint" style="color:var(--muted);font-size:13px">Cero en la semana guardada de cada mes del filtro.</div></article>`
+  ].join("");
+
+  const max = maquinas[0].h || 1;
+  document.getElementById("titulo-barras").textContent = state.mes === "all" ? "Suma de las semanas guardadas" : `Semana guardada de ${foco()[0].nombre}`;
+  document.getElementById("barras-maq").innerHTML = maquinas.map((m) => `<div class="bar-row"><button type="button" data-maquina="${esc(m.nombre)}" style="${m.nombre === state.maquina ? "font-weight:700" : ""}">${esc(m.nombre)}</button><div class="bar-track"><span class="bar-fill" style="width:${max ? m.h / max * 100 : 0}%"></span></div><span>${fmt(m.h)} h</span></div>`).join("");
+
+  const head = D.meses.map((m) => `<th class="${state.mes === m.id ? "on" : ""}">${esc(m.corto)}<div style="font-weight:500;text-transform:none;letter-spacing:0">sem ${m.detalle.semana_num}</div></th>`).join("");
+  const cuerpo = D.maquinas.map((nombre) => {
+    const celdas = D.meses.map((m) => {
+      const valor = (m.detalle.por_maquina || {})[nombre] || 0;
+      const maxMes = Math.max(...D.maquinas.map((mq) => (m.detalle.por_maquina || {})[mq] || 0), 1);
+      const tono = valor ? `background:rgba(159,18,57,${0.08 + valor / maxMes * 0.75});color:${valor / maxMes > 0.62 ? "#fff" : "#1c1915"}` : "";
+      return `<td class="${state.mes === m.id ? "on" : ""}"><span class="heat" style="${tono}">${valor ? fmt(valor) : "·"}</span></td>`;
+    }).join("");
+    const suma = horasMaquina(D.meses, nombre);
+    return `<tr class="click${nombre === state.maquina ? " on" : ""}" data-maquina="${esc(nombre)}"><td class="l">${esc(nombre)}</td>${celdas}<td><strong>${fmt(suma)}</strong></td></tr>`;
+  }).join("");
+  document.getElementById("matriz-mes").innerHTML = `<table><thead><tr><th class="l">Máquina</th>${head}<th>Suma</th></tr></thead><tbody>${cuerpo}</tbody></table>`;
+
+  const select = document.getElementById("elige-maq");
+  const prev = state.maquina;
+  select.innerHTML = D.maquinas.map((nombre) => `<option value="${esc(nombre)}">${esc(nombre)}</option>`).join("");
+  select.value = prev;
+  const conceptos = D.conceptos
+    .map((c) => ({ c, suma: horasMaquinaConcepto(D.meses, state.maquina, c.id) }))
+    .filter((item) => item.suma > 0.0001)
+    .sort((a, b) => b.suma - a.suma);
+  const filas = conceptos.map(({ c }) => {
+    const celdas = D.meses.map((m) => {
+      const valor = (m.detalle.por_maquina_concepto[state.maquina] || {})[c.id] || 0;
+      return `<td class="${state.mes === m.id ? "on" : ""}">${valor ? fmt(valor) : "·"}</td>`;
+    }).join("");
+    const suma = horasMaquinaConcepto(D.meses, state.maquina, c.id);
+    return `<tr data-concepto="${c.id}" class="click"><td class="l">${esc(c.nombre)}</td>${celdas}<td><strong>${fmt(suma)}</strong></td></tr>`;
+  });
+  const totMes = D.meses.map((m) => `<td class="${state.mes === m.id ? "on" : ""}">${fmt((m.detalle.por_maquina || {})[state.maquina] || 0)}</td>`).join("");
+  document.getElementById("sub-maq").textContent = `${state.maquina} en la semana guardada de cada mes. La suma no es el año completo de la máquina: es la suma de esas nueve semanas.`;
+  document.getElementById("tabla-maq").innerHTML = conceptos.length
+    ? `<table><thead><tr><th class="l">Concepto</th>${D.meses.map((m) => `<th>${esc(m.corto)}</th>`).join("")}<th>Suma</th></tr></thead><tbody>${filas.join("")}<tr class="total"><td class="l">Total de la máquina</td>${totMes}<td>${fmt(horasMaquina(D.meses, state.maquina))}</td></tr></tbody></table>`
+    : "<p>Esta máquina no tiene horas en las semanas guardadas.</p>";
+}
+
+function pintarSemanas() {
+  let pico = { h: -1, texto: "" };
+  D.meses.forEach((mes) => {
+    mes.semanas.forEach((valor, i) => {
+      if (valor != null && valor > pico.h) pico = { h: valor, texto: `${mes.nombre}, semana ${i + 1}` };
+    });
+  });
+  const cuerpo = D.meses.map((mes) => {
+    const celdas = mes.semanas.map((valor, i) => {
+      if (valor == null) return "<td>·</td>";
+      const max = Math.max(...mes.semanas.filter((v) => v != null));
+      const marca = i + 1 === mes.detalle.semana_num;
+      const tono = `background:rgba(29,78,137,${0.12 + valor / max * 0.7});${marca ? "outline:2px solid #9f1239;outline-offset:-2px;" : ""}`;
+      return `<td><span class="heat" style="${tono}">${fmt(valor)}</span></td>`;
+    }).join("");
+    const ritmo = mes.total_horas / mes.semanas_activas;
+    return `<tr><td class="l">${esc(mes.nombre)}${mes.parcial ? " · parcial" : ""}</td>${celdas}<td><strong>${fmt(mes.total_horas)}</strong></td><td>${fmt(ritmo, 1)}</td></tr>`;
+  }).join("");
+  document.getElementById("tabla-semanas").innerHTML = `<table><thead><tr><th class="l">Mes</th><th>Sem 1</th><th>Sem 2</th><th>Sem 3</th><th>Sem 4</th><th>Sem 5</th><th>Total</th><th>h / sem</th></tr></thead><tbody>${cuerpo}<tr class="total"><td class="l" colspan="7">Semana más alta del año: ${esc(pico.texto)}</td><td>${fmt(pico.h)} h</td></tr></tbody></table>`;
+}
+
+function pintarCosto() {
+  const meses = foco();
+  const ml = meses.reduce((s, m) => s + m.ml, 0);
+  const kg = meses.reduce((s, m) => s + m.kg, 0);
+  const teo = meses.reduce((s, m) => s + m.costo_teorico, 0);
+  const fac = meses.reduce((s, m) => s + m.costo_facturacion, 0);
+  const horas = totalOficial(meses);
+  const items = [
+    ["Metros equivalentes", fmt(ml, 0) + " ml", fmt(ml / 1000, 1) + " km"],
+    ["Kilos equivalentes", fmt(kg, 0) + " kg", ""],
+    ["Costo teórico", money(teo), fmt(teo / horas, 0) + " por hora"],
+    ["Costo facturación", money(fac), fmt(fac / horas, 0) + " por hora"]
+  ];
+  document.getElementById("kpis-costo").innerHTML = items.map(([lbl, num, hint]) =>
+    `<article class="kpi"><div class="lbl">${esc(lbl)}</div><div class="num">${esc(num)}</div><div class="hint">${esc(hint)}</div></article>`
+  ).join("");
+  const cuerpo = D.meses.map((m) => `<tr class="${state.mes === m.id ? "on" : ""}"><td class="l">${esc(m.nombre)}</td><td>${fmt(m.total_horas)}</td><td>${fmt(m.ml, 0)}</td><td>${fmt(m.kg, 0)}</td><td>${money(m.costo_teorico)}</td><td>${money(m.costo_facturacion)}</td></tr>`).join("");
+  const tot = D.meses.reduce((a, m) => ({ h: a.h + m.total_horas, ml: a.ml + m.ml, kg: a.kg + m.kg, t: a.t + m.costo_teorico, f: a.f + m.costo_facturacion }), { h: 0, ml: 0, kg: 0, t: 0, f: 0 });
+  document.getElementById("tabla-costo").innerHTML = `<table><thead><tr><th class="l">Mes</th><th>Horas</th><th>ml eq</th><th>kg eq</th><th>$ teórico</th><th>$ facturación</th></tr></thead><tbody>${cuerpo}<tr class="total"><td class="l">Año</td><td>${fmt(tot.h)}</td><td>${fmt(tot.ml, 0)}</td><td>${fmt(tot.kg, 0)}</td><td>${money(tot.t)}</td><td>${money(tot.f)}</td></tr></tbody></table>`;
+}
+
+function pintarMetodo() {
+  const diffs = D.meses.map((m) => `${m.corto} sem. ${m.detalle.semana_num} (${fmt(Math.abs(m.detalle.diferencia), 2)} h)`);
+  document.getElementById("metodo").textContent = `Conciliación del detalle contra el gráfico: ${diffs.join(", ")}. Diferencia después de separar máquina alarmada.`;
+}
+</script>
+</body>
+</html>
