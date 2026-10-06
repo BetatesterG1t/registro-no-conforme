@@ -14,6 +14,7 @@
  * Implementar > Administrar implementaciones > lápiz > Nueva versión > Implementar.
  * GET sin parámetros: siguiente ID.
  * GET ?historial=1: últimos 50 registros para la pestaña Historial.
+ * GET ?exportar=1: todos los registros de la hoja (botón Exportar registros).
  * La primera vez que llegue un registro se crea sola la hoja
  * "Registro de No Conforme" en tu Drive.
  */
@@ -144,15 +145,11 @@ function celdaTexto(v) {
   return v == null ? "" : String(v);
 }
 
-function leerUltimos(sh, limite) {
-  limite = limite || 50;
-  const last = sh.getLastRow();
-  if (last < 2) return [];
-  const num = Math.min(limite, last - 1);
-  const start = last - num + 1;
-  const valores = sh.getRange(start, 1, num, HEADERS.length).getValues();
+function filasAObjetos(valores, invertir) {
   const registros = [];
-  for (let i = valores.length - 1; i >= 0; i--) {
+  const n = valores.length;
+  for (let k = 0; k < n; k++) {
+    const i = invertir ? n - 1 - k : k;
     const fila = {};
     HEADERS.forEach(function (h, c) {
       fila[h] = celdaTexto(valores[i][c]);
@@ -160,6 +157,23 @@ function leerUltimos(sh, limite) {
     registros.push(fila);
   }
   return registros;
+}
+
+function leerUltimos(sh, limite) {
+  limite = limite || 50;
+  const last = sh.getLastRow();
+  if (last < 2) return [];
+  const num = Math.min(limite, last - 1);
+  const start = last - num + 1;
+  const valores = sh.getRange(start, 1, num, HEADERS.length).getValues();
+  return filasAObjetos(valores, true);
+}
+
+function leerTodos(sh) {
+  const last = sh.getLastRow();
+  if (last < 2) return [];
+  const valores = sh.getRange(2, 1, last - 1, HEADERS.length).getValues();
+  return filasAObjetos(valores, false);
 }
 
 function parseBody(e) {
@@ -246,7 +260,11 @@ function doGet(e) {
     const ss = getSpreadsheet();
     const sh = ensureSheet(ss);
     const out = { ok: true, sheetUrl: ss.getUrl(), siguienteId: siguienteId(sh) };
-    if (p.historial === "1" || p.accion === "historial") {
+    if (p.exportar === "1" || p.accion === "exportar") {
+      out.registros = leerTodos(sh);
+      out.totalHoja = out.registros.length;
+      out.exportar = true;
+    } else if (p.historial === "1" || p.accion === "historial") {
       out.registros = leerUltimos(sh, 50);
       out.totalHoja = Math.max(0, sh.getLastRow() - 1);
     }

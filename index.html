@@ -983,17 +983,7 @@
       }
     });
 
-    document.getElementById("btnExportar").addEventListener("click", function() {
-      if (sessionStorage.getItem(EXPORTAR_PIN_KEY) !== "1") {
-        alert("Ingresa el PIN de 4 dígitos para descargar.");
-        return;
-      }
-      const registros = leerRegistros();
-      if (!registros.length) {
-        alert("No hay registros guardados en este navegador.");
-        return;
-      }
-      const headers = Object.keys(registros[0]);
+    function descargarCsv(registros, headers, nombreArchivo) {
       const lineas = [headers.join(",")];
       registros.forEach(r => {
         lineas.push(headers.map(h => '"' + String(r[h] == null ? "" : r[h]).replace(/"/g, '""') + '"').join(","));
@@ -1002,9 +992,60 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "registros-no-conforme.csv";
+      a.download = nombreArchivo;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    }
+
+    async function exportarDesdeSheets() {
+      if (!SHEETS_WEBAPP_URL) throw new Error("Falta conectar Google Sheets.");
+      const sep = SHEETS_WEBAPP_URL.indexOf("?") >= 0 ? "&" : "?";
+      const respuesta = await fetch(SHEETS_WEBAPP_URL + sep + "exportar=1", { cache: "no-store" });
+      const parsed = await respuesta.json();
+      if (!parsed || !parsed.ok) {
+        throw new Error((parsed && parsed.error) || "sin respuesta");
+      }
+      if (!Array.isArray(parsed.registros) || !parsed.exportar) {
+        throw new Error("El Apps Script publicado no tiene la opción de exportar. Publica una nueva versión (Implementar → Administrar implementaciones → lápiz → Nueva versión).");
+      }
+      return parsed.registros;
+    }
+
+    function exportarCopiaLocal(motivo) {
+      const registros = leerRegistros();
+      if (!registros.length) {
+        alert(motivo + "\n\nTampoco hay registros guardados en este navegador.");
+        return;
+      }
+      if (!confirm(motivo + "\n\n¿Descargar la copia local de este navegador (" + registros.length + " registros)?")) return;
+      descargarCsv(registros, Object.keys(registros[0]), "registros-no-conforme-local.csv");
+    }
+
+    document.getElementById("btnExportar").addEventListener("click", async function() {
+      if (sessionStorage.getItem(EXPORTAR_PIN_KEY) !== "1") {
+        alert("Ingresa el PIN de 4 dígitos para descargar.");
+        return;
+      }
+      const btn = this;
+      const textoOriginal = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Descargando de Google Sheets...";
+      try {
+        const registros = await exportarDesdeSheets();
+        if (!registros.length) {
+          alert("La hoja de Google Sheets aún no tiene registros.");
+          return;
+        }
+        const hoy = new Date().toISOString().slice(0, 10);
+        descargarCsv(registros, HISTORIAL_COLUMNAS, "registros-no-conforme-" + hoy + ".csv");
+      } catch (err) {
+        exportarCopiaLocal("No se pudo descargar desde Google Sheets: " + err.message);
+      } finally {
+        btn.textContent = textoOriginal;
+        actualizarBotonExportar();
+      }
     });
 
     function iniciarApp() {
