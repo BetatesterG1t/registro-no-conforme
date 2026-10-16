@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bolseo · productividad, corte 12 al 17 de octubre de 2026</title>
+<style>
+  :root {
+    --bg: #efe8dc;
+    --ink: #1c1915;
+    --muted: #5e574c;
+    --card: #fffdf8;
+    --line: #e3d9c8;
+    --accent: #9f1239;
+    --accent-soft: #f8e8ec;
+    --good: #0f6e56;
+    --good-soft: #e5f4ef;
+    --warn: #9a3412;
+    --shadow: 0 1px 0 rgba(28, 25, 21, 0.04);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 400px at 10% -10%, #f7f1e6 0%, transparent 50%),
+      var(--bg);
+    color: var(--ink);
+    font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+    font-size: 15.5px;
+    line-height: 1.45;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 72px; }
+  header.top { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; margin-bottom: 18px; }
+  .eyebrow { letter-spacing: 0.14em; text-transform: uppercase; font-size: 12px; color: var(--accent); font-weight: 700; margin: 0 0 6px; }
+  h1 { font-family: Palatino, "Iowan Old Style", Georgia, serif; font-size: 40px; line-height: 1.02; font-weight: 600; margin: 0; letter-spacing: -0.03em; }
+  .lede { margin: 8px 0 0; max-width: 680px; color: var(--muted); }
+  .corte { text-align: right; font-size: 13px; color: var(--muted); }
+  .corte strong { display: block; color: var(--ink); font-size: 15px; }
+  nav.bar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    background: rgba(239, 232, 220, 0.92); backdrop-filter: blur(8px);
+    padding: 10px 0 12px; margin-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .jump { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 11px; text-decoration: none; color: var(--muted); font-size: 13px; }
+  .jump:hover { color: var(--ink); }
+  .spacer { flex: 1; }
+  section { margin-top: 22px; scroll-margin-top: 72px; }
+  h2 { font-family: Palatino, Georgia, serif; font-size: 28px; margin: 0 0 4px; font-weight: 600; }
+  h2 span { color: var(--muted); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 15px; font-weight: 500; margin-left: 8px; }
+  .sub { color: var(--muted); margin: 0 0 14px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .kpi, .card, .call { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+  .kpi { padding: 14px 14px 12px; }
+  .kpi .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .kpi .num { font-variant-numeric: tabular-nums; font-size: 26px; font-weight: 650; letter-spacing: -0.03em; margin-top: 4px; }
+  .kpi .hint { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .card { padding: 16px; }
+  .card h3, .call h3 { margin: 0 0 8px; font-size: 15px; }
+  .calls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 12px 0; }
+  .call { padding: 14px 16px; }
+  .call .who { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 22px; margin: 2px 0; }
+  .call .num { font-size: 20px; font-variant-numeric: tabular-nums; }
+  .call.alto { border-color: #c9e6dc; background: linear-gradient(180deg, #fff 0%, #f1faf6 100%); }
+  .call.bajo { border-color: #e7c2cb; background: linear-gradient(180deg, #fff 0%, #fdf2f4 100%); }
+  .nota { background: #f7f1e6; border: 1px dashed #d9cdb8; border-radius: 12px; padding: 12px 14px; color: var(--muted); font-size: 14px; }
+  .nota strong { color: var(--ink); }
+  .tabla-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13.5px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  th { font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 650; background: #fbf7f1; }
+  th.l, td.l { text-align: left; white-space: normal; }
+  tr.total td { font-weight: 700; background: #fbf7f1; border-bottom: 0; }
+  tr.cero td { color: var(--muted); }
+  .tag { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+  .tag.ok { background: var(--good-soft); color: var(--good); }
+  .cols { display: flex; align-items: flex-end; gap: 10px; height: 200px; padding-top: 8px; }
+  .colwrap { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+  .col { width: 100%; max-width: 48px; border-radius: 8px 8px 3px 3px; background: var(--accent); }
+  .col.bajo { background: #c4b6a6; }
+  .colwrap .etiq { padding: 6px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
+  .colwrap .etiq strong { display: block; color: var(--ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+  .bars { display: flex; flex-direction: column; gap: 8px; }
+  .bar-row { display: grid; grid-template-columns: 92px 1fr 118px; gap: 8px; align-items: center; font-size: 14px; }
+  .bar-track { height: 12px; background: #f3eee6; border-radius: 99px; overflow: hidden; }
+  .bar-fill { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+  .bar-fill.bueno { background: var(--good); }
+  .bar-num { text-align: right; font-variant-numeric: tabular-nums; }
+  @media (max-width: 980px) {
+    .kpis { grid-template-columns: 1fr 1fr; }
+    .calls, header.top { display: grid; grid-template-columns: 1fr; }
+    h1 { font-size: 32px; }
+    .corte { text-align: left; }
+    .bar-row { grid-template-columns: 72px 1fr 88px; }
+  }
+  @media print {
+    body { background: white; }
+    nav.bar { position: static; }
+    .no-print { display: none !important; }
+    .card, .kpi, .call, .tabla-wrap { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">Bolseo · semana del 12 al 17</p>
+      <h1>Bolseo · productividad, corte 12 al 17 de octubre de 2026</h1>
+      <p class="lede">Meta 2 = velocidad × 6 h, menos el tiempo muerto registrado. Meta 3 = velocidad × 7.5 h.</p>
+    </div>
+    <div class="corte">
+      <strong>12 al 17 de octubre de 2026</strong>
+      Lunes a sábado · cuadrícula diaria
+    </div>
+  </header>
+
+  <nav class="bar">
+    <a class="jump" href="#dias">Días</a>
+    <a class="jump" href="#turnos">Turnos</a>
+    <a class="jump" href="#lineas">Líneas</a>
+    <span class="spacer"></span>
+    <button class="jump no-print" type="button" onclick="window.print()">Imprimir</button>
+  </nav>
+
+  <section id="kpis">
+    <div class="kpis">
+      <article class="kpi">
+        <div class="lbl">Millares</div>
+        <div class="num">3,838,090</div>
+        <div class="hint">Suma de la cuadrícula diaria</div>
+      </article>
+      <article class="kpi">
+        <div class="lbl">Meta 2</div>
+        <div class="num">5,153,940</div>
+        <div class="hint">74.5% de cumplimiento</div>
+      </article>
+      <article class="kpi">
+        <div class="lbl">Meta 3</div>
+        <div class="num">6,664,200</div>
+        <div class="hint">57.6% de cumplimiento</div>
+      </article>
+      <article class="kpi">
+        <div class="lbl">Tiempo muerto</div>
+        <div class="num">68.7 h</div>
+        <div class="hint">50.7 h el jueves 15</div>
+      </article>
+    </div>
+  </section>
+
+  <section id="dias">
+    <h2>Por día <span>12 al 17 de octubre</span></h2>
+    <p class="sub">Producción de la cuadrícula. El viernes solo trabajó SD-10. El sábado quedó en cero.</p>
+    <article class="card">
+      <h3>Millares por día</h3>
+      <div class="cols" aria-hidden="true">
+        <div class="colwrap">
+          <div class="col" style="height:90%"></div>
+          <div class="etiq">Lun 12<strong>898,830</strong></div>
+        </div>
+        <div class="colwrap">
+          <div class="col" style="height:100%"></div>
+          <div class="etiq">Mar 13<strong>996,700</strong></div>
+        </div>
+        <div class="colwrap">
+          <div class="col" style="height:94%"></div>
+          <div class="etiq">Mié 14<strong>937,260</strong></div>
+        </div>
+        <div class="colwrap">
+          <div class="col" style="height:99%"></div>
+          <div class="etiq">Jue 15<strong>992,600</strong></div>
+        </div>
+        <div class="colwrap">
+          <div class="col bajo" style="height:4%"></div>
+          <div class="etiq">Vie 16<strong>12,700</strong></div>
+        </div>
+        <div class="colwrap">
+          <div class="col bajo" style="height:2%"></div>
+          <div class="etiq">Sáb 17<strong>0</strong></div>
+        </div>
+      </div>
+    </article>
+    <div class="tabla-wrap" style="margin-top:12px">
+      <table>
+        <thead>
+          <tr>
+            <th class="l">Día</th>
+            <th>Millares</th>
+            <th>% meta 2</th>
+            <th>Tiempo muerto</th>
+            <th class="l">Nota</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="l">Lunes 12</td>
+            <td>898,830</td>
+            <td>67.3%</td>
+            <td>3.5 h</td>
+            <td class="l">Día completo</td>
+          </tr>
+          <tr>
+            <td class="l">Martes 13</td>
+            <td>996,700</td>
+            <td>73.2%</td>
+            <td>2.0 h</td>
+            <td class="l">Día más alto en millares</td>
+          </tr>
+          <tr>
+            <td class="l">Miércoles 14</td>
+            <td>937,260</td>
+            <td>74.7%</td>
+            <td>2.0 h</td>
+            <td class="l">Día completo</td>
+          </tr>
+          <tr>
+            <td class="l">Jueves 15</td>
+            <td>992,600</td>
+            <td>85.0%</td>
+            <td>50.7 h</td>
+            <td class="l">Casi todo el tiempo muerto de la semana</td>
+          </tr>
+          <tr>
+            <td class="l">Viernes 16</td>
+            <td>12,700</td>
+            <td>77.1%</td>
+            <td>10.5 h</td>
+            <td class="l">Solo SD-10</td>
+          </tr>
+          <tr>
+            <td class="l">Sábado 17</td>
+            <td>0</td>
+            <td>0%</td>
+            <td>0 h</td>
+            <td class="l">Sin producción</td>
+          </tr>
+          <tr class="total">
+            <td class="l">Semana</td>
+            <td>3,838,090</td>
+            <td>74.5%</td>
+            <td>68.7 h</td>
+            <td class="l">Meta 3 de la semana: 57.6%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="turnos">
+    <h2>Por turno <span>contra meta 2</span></h2>
+    <p class="sub">El tercer turno suma más millares y cumple mejor la meta 2.</p>
+    <article class="card">
+      <div class="bars">
+        <div class="bar-row">
+          <span>Turno 1</span>
+          <div class="bar-track"><span class="bar-fill" style="width:73.2%"></span></div>
+          <span class="bar-num">1,239,530 · 73.2%</span>
+        </div>
+        <div class="bar-row">
+          <span>Turno 2</span>
+          <div class="bar-track"><span class="bar-fill" style="width:68.1%"></span></div>
+          <span class="bar-num">1,188,960 · 68.1%</span>
+        </div>
+        <div class="bar-row">
+          <span>Turno 3</span>
+          <div class="bar-track"><span class="bar-fill bueno" style="width:82.3%"></span></div>
+          <span class="bar-num">1,409,600 · 82.3%</span>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section id="lineas">
+    <h2>Por línea <span>ordenadas por % de meta 2</span></h2>
+    <p class="sub">Millares de la semana, cumplimiento de meta 2 y horas de tiempo muerto. A, B, C e Italiana quedaron en cero.</p>
+    <div class="calls">
+      <article class="call alto">
+        <h3>Por encima de la meta 2</h3>
+        <div class="who">CH-1</div>
+        <div class="num">115.4%</div>
+        <p class="sub" style="margin:6px 0 0">191,100 millares · 1.0 h de tiempo muerto</p>
+      </article>
+      <article class="call alto">
+        <h3>Más volumen</h3>
+        <div class="who">SD-7</div>
+        <div class="num">411,000</div>
+        <p class="sub" style="margin:6px 0 0">97.6% de la meta 2 · sin tiempo muerto</p>
+      </article>
+      <article class="call bajo">
+        <h3>Más baja con producción</h3>
+        <div class="who">Lian Yu-1</div>
+        <div class="num">40.5%</div>
+        <p class="sub" style="margin:6px 0 0">53,700 millares · sin tiempo muerto</p>
+      </article>
+    </div>
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="l">Línea</th>
+            <th>Millares</th>
+            <th>% meta 2</th>
+            <th>Tiempo muerto</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="l">CH-1 <span class="tag ok">115.4%</span></td>
+            <td>191,100</td>
+            <td>115.4%</td>
+            <td>1.0 h</td>
+          </tr>
+          <tr>
+            <td class="l">SD-7 <span class="tag ok">más volumen</span></td>
+            <td>411,000</td>
+            <td>97.6%</td>
+            <td>0 h</td>
+          </tr>
+          <tr><td class="l">SD-3</td><td>362,500</td><td>91.3%</td><td>1.0 h</td></tr>
+          <tr><td class="l">SD-9</td><td>352,500</td><td>90.7%</td><td>1.0 h</td></tr>
+          <tr><td class="l">CH-2</td><td>193,800</td><td>87.6%</td><td>2.0 h</td></tr>
+          <tr><td class="l">SD-1</td><td>318,500</td><td>85.3%</td><td>4.0 h</td></tr>
+          <tr><td class="l">SD-2</td><td>322,700</td><td>82.4%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-13</td><td>175,400</td><td>77.2%</td><td>3.0 h</td></tr>
+          <tr><td class="l">F</td><td>121,500</td><td>76.8%</td><td>3.5 h</td></tr>
+          <tr><td class="l">Lian Yu-2</td><td>115,300</td><td>73.0%</td><td>2.0 h</td></tr>
+          <tr><td class="l">SD-4</td><td>91,800</td><td>72.6%</td><td>9.5 h</td></tr>
+          <tr><td class="l">H</td><td>107,400</td><td>65.8%</td><td>2.5 h</td></tr>
+          <tr><td class="l">SD-14</td><td>91,400</td><td>64.4%</td><td>1.0 h</td></tr>
+          <tr><td class="l">D</td><td>104,360</td><td>64.3%</td><td>0 h</td></tr>
+          <tr><td class="l">CONTEC</td><td>126,500</td><td>63.4%</td><td>2.0 h</td></tr>
+          <tr><td class="l">SD-15</td><td>87,100</td><td>63.0%</td><td>8.7 h</td></tr>
+          <tr><td class="l">SD-5</td><td>78,700</td><td>59.8%</td><td>2.5 h</td></tr>
+          <tr><td class="l">E</td><td>63,730</td><td>58.7%</td><td>8.0 h</td></tr>
+          <tr><td class="l">G</td><td>70,500</td><td>56.0%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-8</td><td>136,900</td><td>52.9%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-6</td><td>62,600</td><td>48.6%</td><td>1.5 h</td></tr>
+          <tr><td class="l">SD-11</td><td>71,500</td><td>48.1%</td><td>3.0 h</td></tr>
+          <tr><td class="l">SD-10</td><td>81,500</td><td>45.6%</td><td>10.5 h</td></tr>
+          <tr><td class="l">SD-12</td><td>46,100</td><td>43.0%</td><td>2.0 h</td></tr>
+          <tr>
+            <td class="l">Lian Yu-1 <span class="tag">40.5% con producción</span></td>
+            <td>53,700</td>
+            <td>40.5%</td>
+            <td>0 h</td>
+          </tr>
+          <tr class="cero"><td class="l">A <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
+          <tr class="cero"><td class="l">B <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
+          <tr class="cero"><td class="l">C <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
+          <tr class="cero"><td class="l">Italiana <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <p class="nota"><strong>El letrero de 3,453,190 no entra en esta página.</strong> No cuadra con la cuadrícula diaria, que suma 3,838,090 millares. Las cifras de arriba salen de esa cuadrícula.</p>
+  </section>
+</div>
+</body>
+</html>
