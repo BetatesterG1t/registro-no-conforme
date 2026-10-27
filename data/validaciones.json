@@ -754,6 +754,7 @@
   ],
   "defecto": [
     "ARRUGA",
+    "BARNIZ FUERA DE REGISTRO",
     "BURBUJA",
     "CONFETI",
     "CURLING",
@@ -764,7 +765,6 @@
     "FALTA DE ADHESIVO",
     "FANTASMAS",
     "FUERA DE REGISTRO",
-    "BARNIZ FUERA DE REGISTRO",
     "FUERA DE WICKET",
     "GOLPE DE ANILOX",
     "GOLPE DE TAMBOR",
@@ -778,6 +778,7 @@
     "MEDIDA DE TROQUEL",
     "PIEL DE NARANJA",
     "POROSIDAD",
+    "PUNTO CALIENTE",
     "PUNTO HINCHADO",
     "RASGADURA",
     "RAYA",
@@ -790,9 +791,9 @@
     "SIN LAMINAR",
     "SIN SALIDA DE AIRE",
     "TABLETEO",
-    "TUBING",
     "TELESCOPEO",
-    "TONOS DIFERENTES"
+    "TONOS DIFERENTES",
+    "TUBING"
   ],
   "reporta": [
     "ABRAHAM CRUZ CRUZ",
