@@ -64,7 +64,8 @@
     body.bloqueado #fuentesStatus,
     body.bloqueado #tabs,
     body.bloqueado #registro,
-    body.bloqueado #historial { display: none; }
+    body.bloqueado #historial,
+    body.bloqueado #etiquetaImprimir { display: none; }
     #pin {
       font-size: 1.6em;
       letter-spacing: 0.45em;
@@ -96,6 +97,50 @@
     }
     #tablaHistorial th { background: #e8eef4; position: sticky; top: 0; z-index: 1; }
     #tablaHistorial tbody tr:nth-child(even) { background: #f6f8fa; }
+    #tablaHistorial .etiq-btn {
+      margin-top: 0; padding: 4px 8px; font-size: 0.85em; background: #5f6b7a;
+    }
+    #tablaHistorial .etiq-btn:hover { background: #45505c; }
+    #etiquetaImprimir { display: none; }
+    @media print {
+      @page { margin: 8mm; }
+      body { background: #fff; margin: 0; }
+      body.bloqueado #pinAcceso,
+      body > h1,
+      #fuentesStatus, #tabs, #registro, #historial { display: none !important; }
+      #etiquetaImprimir { display: block !important; }
+    }
+    .etiq-marco {
+      width: 100mm;
+      min-height: 70mm;
+      border: 3px solid #111;
+      padding: 8px 10px;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+      color: #111;
+      background: #fff;
+    }
+    .etiq-titulo {
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      border-bottom: 2px solid #111;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+    .etiq-id {
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+      margin: 4px 0 8px;
+    }
+    .etiq-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .etiq-tabla th {
+      text-align: left; width: 28mm; padding: 2px 4px 2px 0; vertical-align: top; font-weight: bold;
+    }
+    .etiq-tabla td { padding: 2px 0; vertical-align: top; word-break: break-word; }
+    .etiq-sku { font-size: 16px; font-weight: bold; letter-spacing: 0.04em; }
   </style>
 </head>
 <body>
@@ -288,6 +333,7 @@
 
       <div class="actions">
         <button type="submit">Guardar Registro</button>
+        <button type="button" id="btnImprimirEtiqueta" class="secondary-btn">Imprimir etiqueta</button>
       </div>
     </form>
   </div>
@@ -301,6 +347,24 @@
       <table id="tablaHistorial">
         <thead></thead>
         <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="etiquetaImprimir">
+    <div class="etiq-marco">
+      <div class="etiq-titulo">NO CONFORME</div>
+      <div class="etiq-id" id="etiqId">—</div>
+      <table class="etiq-tabla">
+        <tr><th>Fecha</th><td id="etiqFecha"></td></tr>
+        <tr><th>Orden</th><td id="etiqOrden"></td></tr>
+        <tr><th>SKU</th><td id="etiqSku" class="etiq-sku"></td></tr>
+        <tr><th>Producto</th><td id="etiqProducto"></td></tr>
+        <tr><th>Cliente</th><td id="etiqCliente"></td></tr>
+        <tr><th>Defecto</th><td id="etiqDefecto"></td></tr>
+        <tr><th>Cantidad</th><td id="etiqCantidad"></td></tr>
+        <tr><th>Origen</th><td id="etiqOrigen"></td></tr>
+        <tr><th>Autoriza</th><td id="etiqAutoriza"></td></tr>
       </table>
     </div>
   </div>
@@ -822,6 +886,101 @@
       });
     }
 
+    function textoEtiqueta(v) {
+      const s = String(v == null ? "" : v).trim();
+      return s || "—";
+    }
+
+    function unirCantidad(kg, um, pzas, umPzas) {
+      const partes = [];
+      const kilos = String(kg == null ? "" : kg).trim();
+      const pzasTxt = String(pzas == null ? "" : pzas).trim();
+      if (kilos) partes.push(kilos + " " + (String(um || "KG").trim() || "KG"));
+      if (pzasTxt) partes.push(pzasTxt + (String(umPzas || "").trim() ? " " + String(umPzas).trim() : ""));
+      return partes.length ? partes.join(" / ") : "—";
+    }
+
+    function unirOrigen(proceso, maquina) {
+      const partes = [proceso, maquina].map(function (v) { return String(v == null ? "" : v).trim(); }).filter(Boolean);
+      return partes.length ? partes.join(" · ") : "—";
+    }
+
+    function datosEtiquetaDesdeFormulario() {
+      return {
+        id: document.getElementById("id").value,
+        fecha: document.getElementById("fecha").value,
+        orden: document.getElementById("orden").value,
+        sku: document.getElementById("codigo").value,
+        producto: document.getElementById("producto").value,
+        cliente: document.getElementById("cliente").value,
+        defecto: document.getElementById("defecto").value,
+        cantidad: unirCantidad(
+          document.getElementById("cantidad").value,
+          document.getElementById("um").value,
+          document.getElementById("cantidad_pzas").value,
+          document.getElementById("um_pzas").value
+        ),
+        origen: unirOrigen(document.getElementById("proceso_origina").value, document.getElementById("maquina").value),
+        autoriza: document.getElementById("se_autoriza").value
+      };
+    }
+
+    function datosEtiquetaDesdePayload(data) {
+      return {
+        id: data.id,
+        fecha: data.fecha,
+        orden: data.orden,
+        sku: data.codigo,
+        producto: data.producto,
+        cliente: data.cliente,
+        defecto: data.defecto,
+        cantidad: unirCantidad(data.cantidad, data.um, data.cantidad_pzas, data.um_pzas),
+        origen: unirOrigen(data.proceso_origina, data.maquina),
+        autoriza: data.se_autoriza
+      };
+    }
+
+    function datosEtiquetaDesdeHistorial(fila) {
+      return {
+        id: fila["ID"],
+        fecha: fila["Fecha"],
+        orden: fila["Orden"],
+        sku: fila["SKU"],
+        producto: fila["Producto"],
+        cliente: fila["Cliente"],
+        defecto: fila["Defecto"],
+        cantidad: unirCantidad(fila["Cantidad KG"], fila["UM"], fila["Cantidad Pzas/ML"], fila["Unidad"]),
+        origen: unirOrigen(fila["Proceso que origina"], fila["Máquina que origina"]),
+        autoriza: fila["Se autoriza"]
+      };
+    }
+
+    function llenarEtiqueta(datos) {
+      document.getElementById("etiqId").textContent = "ID " + textoEtiqueta(datos.id);
+      document.getElementById("etiqFecha").textContent = textoEtiqueta(datos.fecha);
+      document.getElementById("etiqOrden").textContent = textoEtiqueta(datos.orden);
+      document.getElementById("etiqSku").textContent = textoEtiqueta(datos.sku);
+      document.getElementById("etiqProducto").textContent = textoEtiqueta(datos.producto);
+      document.getElementById("etiqCliente").textContent = textoEtiqueta(datos.cliente);
+      document.getElementById("etiqDefecto").textContent = textoEtiqueta(datos.defecto);
+      document.getElementById("etiqCantidad").textContent = textoEtiqueta(datos.cantidad);
+      document.getElementById("etiqOrigen").textContent = textoEtiqueta(datos.origen);
+      document.getElementById("etiqAutoriza").textContent = textoEtiqueta(datos.autoriza);
+    }
+
+    function etiquetaTieneDatos(datos) {
+      return String(datos.orden || "").trim() !== "" || String(datos.sku || "").trim() !== "";
+    }
+
+    function imprimirEtiqueta(datos) {
+      if (!etiquetaTieneDatos(datos)) {
+        alert("Completa al menos la orden o el SKU para imprimir la etiqueta.");
+        return;
+      }
+      llenarEtiqueta(datos);
+      window.print();
+    }
+
     function mostrarPestana(nombre) {
       const captura = nombre === "captura";
       document.getElementById("tabCaptura").classList.toggle("activa", captura);
@@ -835,14 +994,14 @@
       const tabla = document.getElementById("tablaHistorial");
       const thead = tabla.querySelector("thead");
       const tbody = tabla.querySelector("tbody");
-      thead.innerHTML = "<tr>" + HISTORIAL_COLUMNAS.map(function (h) {
+      thead.innerHTML = "<tr><th>Etiqueta</th>" + HISTORIAL_COLUMNAS.map(function (h) {
         return "<th>" + escaparHtml(h) + "</th>";
       }).join("") + "</tr>";
       tbody.innerHTML = "";
       if (!registros.length) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = HISTORIAL_COLUMNAS.length;
+        td.colSpan = HISTORIAL_COLUMNAS.length + 1;
         td.textContent = "No hay registros para mostrar.";
         tr.appendChild(td);
         tbody.appendChild(tr);
@@ -850,6 +1009,16 @@
       }
       registros.forEach(function (fila) {
         const tr = document.createElement("tr");
+        const tdBtn = document.createElement("td");
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "etiq-btn";
+        btn.textContent = "Imprimir";
+        btn.addEventListener("click", function () {
+          imprimirEtiqueta(datosEtiquetaDesdeHistorial(fila));
+        });
+        tdBtn.appendChild(btn);
+        tr.appendChild(tdBtn);
         HISTORIAL_COLUMNAS.forEach(function (h) {
           const td = document.createElement("td");
           td.textContent = fila[h] == null ? "" : fila[h];
@@ -896,6 +1065,9 @@
     document.getElementById("tabCaptura").addEventListener("click", function () { mostrarPestana("captura"); });
     document.getElementById("tabHistorial").addEventListener("click", function () { mostrarPestana("historial"); });
     document.getElementById("btnActualizarHistorial").addEventListener("click", cargarHistorial);
+    document.getElementById("btnImprimirEtiqueta").addEventListener("click", function () {
+      imprimirEtiqueta(datosEtiquetaDesdeFormulario());
+    });
 
     document.getElementById("formNoConforme").addEventListener("submit", async function(e) {
       e.preventDefault();
@@ -909,7 +1081,8 @@
       try {
         await guardarEnGoogleSheets(data);
         const idEnviado = Number(data.id) || 1;
-        alert("Registro enviado a Google Sheets. El ID definitivo lo asigna la hoja.");
+        const imprimir = confirm("Registro enviado a Google Sheets. ¿Imprimir etiqueta?");
+        if (imprimir) imprimirEtiqueta(datosEtiquetaDesdePayload(data));
         limpiarFormulario(this);
         await aplicarIdDesdeSheets({ minEsperado: idEnviado + 1, intentos: 6, espera: 700 });
         if (document.getElementById("historial").classList.contains("panel-visible")) {
