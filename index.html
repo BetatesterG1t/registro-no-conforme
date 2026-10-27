@@ -103,44 +103,45 @@
     #tablaHistorial .etiq-btn:hover { background: #45505c; }
     #etiquetaImprimir { display: none; }
     @media print {
-      @page { margin: 8mm; }
-      body { background: #fff; margin: 0; }
+      @page { size: 4in 2in; margin: 0; }
+      html, body { background: #fff; margin: 0; width: 4in; height: 2in; }
       body.bloqueado #pinAcceso,
       body > h1,
       #fuentesStatus, #tabs, #registro, #historial { display: none !important; }
       #etiquetaImprimir { display: block !important; }
     }
     .etiq-marco {
-      width: 100mm;
-      min-height: 70mm;
-      border: 3px solid #111;
-      padding: 8px 10px;
+      width: 4in;
+      height: 2in;
+      border: 2px solid #111;
+      padding: 4px 6px;
       box-sizing: border-box;
       font-family: Arial, sans-serif;
       color: #111;
       background: #fff;
+      overflow: hidden;
     }
     .etiq-titulo {
       text-align: center;
-      font-size: 18px;
+      font-size: 13px;
       font-weight: bold;
       letter-spacing: 0.08em;
       border-bottom: 2px solid #111;
-      padding-bottom: 6px;
-      margin-bottom: 8px;
+      padding-bottom: 2px;
+      margin-bottom: 3px;
     }
     .etiq-id {
       text-align: center;
-      font-size: 28px;
+      font-size: 18px;
       font-weight: bold;
-      margin: 4px 0 8px;
+      margin: 0 0 3px;
     }
-    .etiq-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .etiq-tabla { width: 100%; border-collapse: collapse; font-size: 9px; }
     .etiq-tabla th {
-      text-align: left; width: 28mm; padding: 2px 4px 2px 0; vertical-align: top; font-weight: bold;
+      text-align: left; width: 18mm; padding: 0 4px 0 0; vertical-align: top; font-weight: bold;
     }
-    .etiq-tabla td { padding: 2px 0; vertical-align: top; word-break: break-word; }
-    .etiq-sku { font-size: 16px; font-weight: bold; letter-spacing: 0.04em; }
+    .etiq-tabla td { padding: 0; vertical-align: top; word-break: break-word; }
+    .etiq-sku { font-size: 11px; font-weight: bold; letter-spacing: 0.03em; }
   </style>
 </head>
 <body>
@@ -335,7 +336,7 @@
         <button type="submit">Guardar Registro</button>
         <button type="button" id="btnImprimirEtiqueta" class="secondary-btn">Imprimir etiqueta</button>
       </div>
-      <p class="hint">La etiqueta sale con ID, orden, SKU, producto, defecto y cantidad. En Historial también puedes imprimir un registro ya guardado.</p>
+      <p class="hint">Etiqueta Zebra 4 x 2 pulgadas. Elige la impresora Zebra, papel 4x2 y quita encabezados. En Historial también puedes reimprimir.</p>
     </form>
   </div>
 
@@ -973,12 +974,91 @@
       return String(datos.orden || "").trim() !== "" || String(datos.sku || "").trim() !== "";
     }
 
-    function imprimirEtiqueta(datos) {
+    function zplTexto(v) {
+      return String(v == null ? "" : v)
+        .replace(/[\^~\\]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function zplLinea(v) {
+      return zplTexto(v) || "-";
+    }
+
+    function codigoBarrasEtiqueta(datos) {
+      const sku = zplTexto(datos.sku).replace(/\s+/g, "");
+      if (/^[A-Za-z0-9\-\.\/\+]+$/.test(sku) && sku.length >= 3) return sku;
+      const orden = zplTexto(datos.orden).replace(/\s+/g, "");
+      if (/^[A-Za-z0-9\-\.\/\+]+$/.test(orden) && orden.length >= 3) return orden;
+      return "";
+    }
+
+    function armarZpl(datos) {
+      const id = zplLinea(datos.id);
+      const fecha = zplLinea(datos.fecha);
+      const orden = zplLinea(datos.orden);
+      const sku = zplLinea(datos.sku);
+      const producto = zplLinea(datos.producto);
+      const cliente = zplLinea(datos.cliente);
+      const defecto = zplLinea(datos.defecto);
+      const cantidad = zplLinea(datos.cantidad);
+      const origen = zplLinea(datos.origen);
+      const autoriza = zplLinea(datos.autoriza);
+      const barras = codigoBarrasEtiqueta(datos);
+      const lineas = [
+        "^XA",
+        "^CI28",
+        "^PW812",
+        "^LL406",
+        "^LH0,0",
+        "^FO20,10^A0N,32,32^FDNO CONFORME^FS",
+        "^FO520,10^A0N,32,32^FDID " + id + "^FS",
+        "^FO20,46^GB772,2,2^FS",
+        "^FO20,56^A0N,24,24^FD" + fecha + "^FS",
+        "^FO20,86^A0N,26,26^FDOT " + orden + "^FS",
+        "^FO20,118^A0N,28,28^FDSKU " + sku + "^FS",
+        "^FO20,152^A0N,22,22^FB770,2,0,L,0^FD" + producto + "^FS",
+        "^FO20,204^A0N,20,20^FB770,1,0,L,0^FD" + cliente + "^FS",
+        "^FO20,230^A0N,22,22^FDDefecto: " + defecto + "^FS",
+        "^FO20,258^A0N,20,20^FDCant: " + cantidad + "^FS",
+        "^FO420,258^A0N,20,20^FDAutoriza: " + autoriza + "^FS",
+        "^FO20,284^A0N,18,18^FB770,1,0,L,0^FDOrigen: " + origen + "^FS"
+      ];
+      if (barras) {
+        lineas.push("^FO20,312^BY2,2,50^BCN,48,N,N,N^FD" + barras + "^FS");
+      }
+      lineas.push("^XZ");
+      return lineas.join("\n");
+    }
+
+    function enviarZplZebra(zpl) {
+      return new Promise(function (resolve) {
+        if (!window.BrowserPrint || typeof window.BrowserPrint.getDefaultDevice !== "function") {
+          resolve(false);
+          return;
+        }
+        try {
+          window.BrowserPrint.getDefaultDevice("printer", function (device) {
+            if (!device || typeof device.send !== "function") {
+              resolve(false);
+              return;
+            }
+            device.send(zpl, function () { resolve(true); }, function () { resolve(false); });
+          }, function () { resolve(false); });
+        } catch (err) {
+          resolve(false);
+        }
+      });
+    }
+
+    async function imprimirEtiqueta(datos) {
       if (!etiquetaTieneDatos(datos)) {
         alert("Completa al menos la orden o el SKU para imprimir la etiqueta.");
         return;
       }
       llenarEtiqueta(datos);
+      const enviada = await enviarZplZebra(armarZpl(datos));
+      if (enviada) return;
       window.print();
     }
 
@@ -1082,7 +1162,7 @@
       try {
         await guardarEnGoogleSheets(data);
         const idEnviado = Number(data.id) || 1;
-        const imprimir = confirm("Registro enviado a Google Sheets. ¿Imprimir etiqueta?");
+        const imprimir = confirm("Registro enviado a Google Sheets. ¿Imprimir etiqueta en Zebra?");
         if (imprimir) imprimirEtiqueta(datosEtiquetaDesdePayload(data));
         limpiarFormulario(this);
         await aplicarIdDesdeSheets({ minEsperado: idEnviado + 1, intentos: 6, espera: 700 });
