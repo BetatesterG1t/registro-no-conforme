@@ -95,15 +95,66 @@
     .corte { text-align: left; }
     .bar-row { grid-template-columns: 72px 1fr 108px; }
   }
+  #pinAcceso {
+    display: none;
+    max-width: 420px;
+    margin: 72px auto;
+    padding: 28px 24px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+  }
+  #pinAcceso h1 { font-size: 28px; }
+  #pinAcceso p { color: var(--muted); margin: 8px 0 16px; }
+  #pinAcceso label { display: block; font-weight: 650; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  #pin {
+    width: 100%;
+    margin-top: 6px;
+    padding: 10px 12px;
+    font-size: 1.6em;
+    letter-spacing: 0.45em;
+    text-align: center;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    box-sizing: border-box;
+  }
+  #pinAcceso button {
+    margin-top: 16px;
+    width: 100%;
+    padding: 10px 15px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 650;
+  }
+  .pin-error { color: var(--accent); margin-top: 8px; min-height: 1.2em; }
+  body.bloqueado #pinAcceso { display: block; }
+  body.bloqueado .wrap { display: none; }
   @media print {
     body { background: white; }
     nav.bar { position: static; }
     .no-print { display: none !important; }
     .card, .kpi, .call, .tabla-wrap { break-inside: avoid; }
+    #pinAcceso { display: none !important; }
   }
 </style>
 </head>
 <body>
+<div id="pinAcceso">
+  <p class="eyebrow">Bolseo</p>
+  <h1>Productividad de bolseo</h1>
+  <p>Ingresa el PIN de 4 dígitos para continuar.</p>
+  <form id="formPin">
+    <label for="pin">PIN</label>
+    <input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="one-time-code" required>
+    <div id="pinError" class="pin-error"></div>
+    <button type="submit">Entrar</button>
+  </form>
+</div>
 <div class="wrap">
   <header class="top">
     <div>
@@ -364,5 +415,42 @@
     <p class="nota"><strong>El letrero de 558,400 no entra en esta página.</strong> No cuadra con la cuadrícula del lunes 26, que suma 690,800 millares. El letrero parte los turnos en 163,000, 146,500 y 248,900; la cuadrícula da 184,000, 204,500 y 302,300. Las cifras de arriba salen de esa cuadrícula. En SD-11 la segunda columna de meta quedó en 12,000 por turno y la primera en 23,000 el turno 1 y 17,250 los otros dos; aquí se usa la primera, como meta de 7.5 h.</p>
   </section>
 </div>
+<script>
+  const ACCESO_PIN = "2580";
+  const PIN_KEY = "bolseoPinOk";
+
+  function desbloquearApp() {
+    sessionStorage.setItem(PIN_KEY, "1");
+    document.body.classList.remove("bloqueado");
+  }
+
+  document.getElementById("formPin").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const pin = document.getElementById("pin");
+    const error = document.getElementById("pinError");
+    if (pin.value === ACCESO_PIN) {
+      error.textContent = "";
+      desbloquearApp();
+    } else {
+      error.textContent = "PIN incorrecto.";
+      pin.value = "";
+      pin.focus();
+    }
+  });
+
+  document.getElementById("pin").addEventListener("input", function () {
+    this.value = this.value.replace(/\D/g, "").slice(0, 4);
+    document.getElementById("pinError").textContent = "";
+  });
+
+  window.onload = function () {
+    if (sessionStorage.getItem(PIN_KEY) === "1") {
+      document.body.classList.remove("bloqueado");
+    } else {
+      document.body.classList.add("bloqueado");
+      document.getElementById("pin").focus();
+    }
+  };
+</script>
 </body>
 </html>
