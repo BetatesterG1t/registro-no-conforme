@@ -2,5 +2,6 @@
 Thumbs.db
 *.xlsx
 *.xls
+*.xlsb
 __pycache__/
 .venv/

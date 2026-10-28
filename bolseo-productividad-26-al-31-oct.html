@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bolseo · productividad, corte 26 al 31 de octubre de 2026</title>
+<style>
+  :root {
+    --bg: #efe8dc;
+    --ink: #1c1915;
+    --muted: #5e574c;
+    --card: #fffdf8;
+    --line: #e3d9c8;
+    --accent: #9f1239;
+    --accent-soft: #f8e8ec;
+    --good: #0f6e56;
+    --good-soft: #e5f4ef;
+    --warn: #9a3412;
+    --shadow: 0 1px 0 rgba(28, 25, 21, 0.04);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 400px at 10% -10%, #f7f1e6 0%, transparent 50%),
+      var(--bg);
+    color: var(--ink);
+    font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+    font-size: 15.5px;
+    line-height: 1.45;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 72px; }
+  header.top { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; margin-bottom: 18px; }
+  .eyebrow { letter-spacing: 0.14em; text-transform: uppercase; font-size: 12px; color: var(--accent); font-weight: 700; margin: 0 0 6px; }
+  h1 { font-family: Palatino, "Iowan Old Style", Georgia, serif; font-size: 40px; line-height: 1.02; font-weight: 600; margin: 0; letter-spacing: -0.03em; }
+  .lede { margin: 8px 0 0; max-width: 680px; color: var(--muted); }
+  .corte { text-align: right; font-size: 13px; color: var(--muted); }
+  .corte strong { display: block; color: var(--ink); font-size: 15px; }
+  nav.bar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    background: rgba(239, 232, 220, 0.92); backdrop-filter: blur(8px);
+    padding: 10px 0 12px; margin-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .jump { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 11px; text-decoration: none; color: var(--muted); font-size: 13px; }
+  .jump:hover { color: var(--ink); }
+  .spacer { flex: 1; }
+  section { margin-top: 22px; scroll-margin-top: 72px; }
+  h2 { font-family: Palatino, Georgia, serif; font-size: 28px; margin: 0 0 4px; font-weight: 600; }
+  h2 span { color: var(--muted); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 15px; font-weight: 500; margin-left: 8px; }
+  .sub { color: var(--muted); margin: 0 0 14px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .kpi, .card, .call { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+  .kpi { padding: 14px 14px 12px; }
+  .kpi .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .kpi .num { font-variant-numeric: tabular-nums; font-size: 26px; font-weight: 650; letter-spacing: -0.03em; margin-top: 4px; }
+  .kpi .hint { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .card { padding: 16px; }
+  .card h3, .call h3 { margin: 0 0 8px; font-size: 15px; }
+  .calls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 12px 0; }
+  .call { padding: 14px 16px; }
+  .call .who { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 22px; margin: 2px 0; }
+  .call .num { font-size: 20px; font-variant-numeric: tabular-nums; }
+  .call.alto { border-color: #c9e6dc; background: linear-gradient(180deg, #fff 0%, #f1faf6 100%); }
+  .call.bajo { border-color: #e7c2cb; background: linear-gradient(180deg, #fff 0%, #fdf2f4 100%); }
+  .nota { background: #f7f1e6; border: 1px dashed #d9cdb8; border-radius: 12px; padding: 12px 14px; color: var(--muted); font-size: 14px; }
+  .nota strong { color: var(--ink); }
+  .tabla-wrap { overflow-x: auto; max-width: 100%; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+  table { width: 100%; min-width: 640px; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13.5px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  th { font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 650; background: #fbf7f1; }
+  th.l, td.l { text-align: left; white-space: normal; }
+  tr.total td { font-weight: 700; background: #fbf7f1; border-bottom: 0; }
+  tr.cero td { color: var(--muted); }
+  .tag { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+  .tag.ok { background: var(--good-soft); color: var(--good); }
+  .cols { display: flex; align-items: flex-end; gap: 10px; height: 200px; padding-top: 8px; }
+  .colwrap { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+  .col { width: 100%; max-width: 48px; border-radius: 8px 8px 3px 3px; background: var(--accent); }
+  .col.bajo { background: #c4b6a6; }
+  .colwrap .etiq { padding: 6px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
+  .colwrap .etiq strong { display: block; color: var(--ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+  .bars { display: flex; flex-direction: column; gap: 8px; }
+  .bar-row { display: grid; grid-template-columns: 92px 1fr 150px; gap: 8px; align-items: center; font-size: 14px; }
+  .bar-track { height: 12px; background: #f3eee6; border-radius: 99px; overflow: hidden; }
+  .bar-fill { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+  .bar-fill.bueno { background: var(--good); }
+  .bar-num { text-align: right; font-variant-numeric: tabular-nums; }
+  @media (max-width: 980px) {
+    .kpis { grid-template-columns: 1fr 1fr; }
+    .calls, header.top { display: grid; grid-template-columns: 1fr; }
+    h1 { font-size: 32px; }
+    .corte { text-align: left; }
+    .bar-row { grid-template-columns: 72px 1fr 108px; }
+  }
+  @media print {
+    body { background: white; }
+    nav.bar { position: static; }
+    .no-print { display: none !important; }
+    .card, .kpi, .call, .tabla-wrap { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">Bolseo · semana del 26 al 31</p>
+      <h1>Bolseo · productividad, corte 26 al 31 de octubre de 2026</h1>
+      <p class="lede">Meta 2 = velocidad × 6 h, menos el tiempo muerto registrado. Meta 3 = velocidad × 7.5 h. En esta hoja las dos columnas de meta traen el mismo número: esa cifra es la meta 3, y el tiempo muerto se descuenta a razón de meta ÷ 7.5.</p>
+    </div>
+    <div class="corte">
+      <strong>26 al 31 de octubre de 2026</strong>
+      Solo el lunes trae millares
+    </div>
+  </header>
+
+  <nav class="bar">
+    <a class="jump" href="#dias">Días</a>
+    <a class="jump" href="#turnos">Turnos</a>
+    <a class="jump" href="#lineas">Líneas</a>
+    <span class="spacer"></span>
+    <button class="jump no-print" type="button" onclick="window.print()">Imprimir</button>
+  </nav>
+
+  <section id="kpis">
+    <div class="kpis">
+      <article class="kpi">
+        <div class="lbl">Millares</div>
+        <div class="num">690,800</div>
+        <div class="hint">Solo el lunes 26. Martes a sábado en cero</div>
+      </article>
+      <article class="kpi">
+        <div class="lbl">Meta 2</div>
+        <div class="num">1,297,307</div>
+        <div class="hint">53.2% de cumplimiento el lunes</div>
+      </article>
+      <article class="kpi">
+        <div class="lbl">Meta 3</div>
+        <div class="num">1,638,200</div>
+        <div class="hint">42.2% de cumplimiento el lunes</div>
+      </article>
+      <article class="kpi">
+        <div class="lbl">Tiempo muerto</div>
+        <div class="num">20.0 h</div>
+        <div class="hint">4.0 h el lunes · 16.0 h de martes a jueves, sin millares</div>
+      </article>
+    </div>
+  </section>
+
+  <section id="dias">
+    <h2>Por día <span>26 al 31 de octubre</span></h2>
+    <p class="sub">La cuadrícula trae millares solo el lunes 26. De martes a sábado la meta sigue cargada y la producción está en cero. El % de meta 2 del lunes usa la velocidad de ese día.</p>
+    <article class="card">
+      <h3>Millares por día</h3>
+      <div class="cols" aria-hidden="true">
+        <div class="colwrap">
+          <div class="col" style="height:100%"></div>
+          <div class="etiq">Lun 26<strong>690,800</strong></div>
+        </div>
+        <div class="colwrap">
+          <div class="col bajo" style="height:2%"></div>
+          <div class="etiq">Mar 27<strong>0</strong></div>
+        </div>
+        <div class="colwrap">
+          <div class="col bajo" style="height:2%"></div>
+          <div class="etiq">Mié 28<strong>0</strong></div>
+        </div>
+        <div class="colwrap">
+          <div class="col bajo" style="height:2%"></div>
+          <div class="etiq">Jue 29<strong>0</strong></div>
+        </div>
+        <div class="colwrap">
+          <div class="col bajo" style="height:2%"></div>
+          <div class="etiq">Vie 30<strong>0</strong></div>
+        </div>
+        <div class="colwrap">
+          <div class="col bajo" style="height:2%"></div>
+          <div class="etiq">Sáb 31<strong>0</strong></div>
+        </div>
+      </div>
+    </article>
+    <div class="tabla-wrap" style="margin-top:12px">
+      <table>
+        <thead>
+          <tr>
+            <th class="l">Día</th>
+            <th>Millares</th>
+            <th>% meta 2</th>
+            <th>Tiempo muerto</th>
+            <th class="l">Nota</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="l">Lunes 26</td>
+            <td>690,800</td>
+            <td>53.2%</td>
+            <td>4.0 h</td>
+            <td class="l">Único día con millares</td>
+          </tr>
+          <tr class="cero">
+            <td class="l">Martes 27</td>
+            <td>0</td>
+            <td>—</td>
+            <td>6.0 h</td>
+            <td class="l">Sin millares</td>
+          </tr>
+          <tr class="cero">
+            <td class="l">Miércoles 28</td>
+            <td>0</td>
+            <td>—</td>
+            <td>8.0 h</td>
+            <td class="l">Sin millares</td>
+          </tr>
+          <tr class="cero">
+            <td class="l">Jueves 29</td>
+            <td>0</td>
+            <td>—</td>
+            <td>2.0 h</td>
+            <td class="l">Sin millares</td>
+          </tr>
+          <tr class="cero">
+            <td class="l">Viernes 30</td>
+            <td>0</td>
+            <td>—</td>
+            <td>0 h</td>
+            <td class="l">Sin millares</td>
+          </tr>
+          <tr class="cero">
+            <td class="l">Sábado 31</td>
+            <td>0</td>
+            <td>—</td>
+            <td>0 h</td>
+            <td class="l">Sin millares</td>
+          </tr>
+          <tr class="total">
+            <td class="l">Cuadrícula</td>
+            <td>690,800</td>
+            <td>53.2%</td>
+            <td>20.0 h</td>
+            <td class="l">El % es el del lunes. Meta 3 de ese día: 42.2%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="turnos">
+    <h2>Por turno <span>lunes 26, contra meta 2</span></h2>
+    <p class="sub">El tercer turno suma más millares y cumple mejor la meta 2.</p>
+    <article class="card">
+      <div class="bars">
+        <div class="bar-row">
+          <span>Turno 1</span>
+          <div class="bar-track"><span class="bar-fill" style="width:43.1%"></span></div>
+          <span class="bar-num">184,000 · 43.1%</span>
+        </div>
+        <div class="bar-row">
+          <span>Turno 2</span>
+          <div class="bar-track"><span class="bar-fill" style="width:47%"></span></div>
+          <span class="bar-num">204,500 · 47.0%</span>
+        </div>
+        <div class="bar-row">
+          <span>Turno 3</span>
+          <div class="bar-track"><span class="bar-fill bueno" style="width:69.4%"></span></div>
+          <span class="bar-num">302,300 · 69.4%</span>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section id="lineas">
+    <h2>Por línea <span>lunes 26, ordenadas por % de meta 2</span></h2>
+    <p class="sub">Millares del lunes, cumplimiento de meta 2 y horas de tiempo muerto de ese día. A, B, C, D, Lian Yu-1 e Italiana quedaron en cero.</p>
+    <div class="calls">
+      <article class="call alto">
+        <h3>Por encima de la meta 2</h3>
+        <div class="who">CH-2</div>
+        <div class="num">186.7%</div>
+        <p class="sub" style="margin:6px 0 0">78,400 millares · sin tiempo muerto. También la pasan CH-1 (144.6%) y SD-15 (126.8%).</p>
+      </article>
+      <article class="call alto">
+        <h3>Más volumen</h3>
+        <div class="who">CH-2</div>
+        <div class="num">78,400</div>
+        <p class="sub" style="margin:6px 0 0">186.7% de la meta 2 · sin tiempo muerto</p>
+      </article>
+      <article class="call bajo">
+        <h3>Más baja con producción</h3>
+        <div class="who">G</div>
+        <div class="num">9.1%</div>
+        <p class="sub" style="margin:6px 0 0">3,000 millares · sin tiempo muerto</p>
+      </article>
+    </div>
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="l">Línea</th>
+            <th>Millares</th>
+            <th>% meta 2</th>
+            <th>Tiempo muerto</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="l">CH-2 <span class="tag ok">186.7%</span></td>
+            <td>78,400</td>
+            <td>186.7%</td>
+            <td>0 h</td>
+          </tr>
+          <tr>
+            <td class="l">CH-1 <span class="tag ok">144.6%</span></td>
+            <td>54,000</td>
+            <td>144.6%</td>
+            <td>2.0 h</td>
+          </tr>
+          <tr>
+            <td class="l">SD-15 <span class="tag ok">126.8%</span></td>
+            <td>35,000</td>
+            <td>126.8%</td>
+            <td>0 h</td>
+          </tr>
+          <tr><td class="l">SD-4</td><td>24,500</td><td>88.8%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-5</td><td>24,000</td><td>87.0%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-13</td><td>34,000</td><td>82.1%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-10</td><td>26,800</td><td>80.9%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-12</td><td>21,500</td><td>77.9%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-2</td><td>58,000</td><td>75.1%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-7</td><td>53,000</td><td>68.6%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-6</td><td>18,800</td><td>68.1%</td><td>0 h</td></tr>
+          <tr><td class="l">E</td><td>22,500</td><td>67.9%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-11</td><td>29,400</td><td>63.9%</td><td>0 h</td></tr>
+          <tr><td class="l">Lian Yu-2</td><td>16,500</td><td>59.8%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-3</td><td>43,000</td><td>55.6%</td><td>0 h</td></tr>
+          <tr><td class="l">CONTEC</td><td>43,000</td><td>55.6%</td><td>0 h</td></tr>
+          <tr><td class="l">F</td><td>18,400</td><td>55.6%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-14</td><td>13,200</td><td>47.8%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-1</td><td>36,000</td><td>46.6%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-8</td><td>15,600</td><td>37.7%</td><td>0 h</td></tr>
+          <tr><td class="l">H</td><td>7,500</td><td>27.2%</td><td>0 h</td></tr>
+          <tr><td class="l">SD-9</td><td>14,700</td><td>21.4%</td><td>2.0 h</td></tr>
+          <tr>
+            <td class="l">G <span class="tag">9.1% con producción</span></td>
+            <td>3,000</td>
+            <td>9.1%</td>
+            <td>0 h</td>
+          </tr>
+          <tr class="cero"><td class="l">A <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
+          <tr class="cero"><td class="l">B <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
+          <tr class="cero"><td class="l">C <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
+          <tr class="cero"><td class="l">D <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
+          <tr class="cero"><td class="l">Lian Yu-1 <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
+          <tr class="cero"><td class="l">Italiana <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <p class="nota"><strong>El letrero de 558,400 no entra en esta página.</strong> No cuadra con la cuadrícula del lunes 26, que suma 690,800 millares. El letrero parte los turnos en 163,000, 146,500 y 248,900; la cuadrícula da 184,000, 204,500 y 302,300. Las cifras de arriba salen de esa cuadrícula. En SD-11 la segunda columna de meta quedó en 12,000 por turno y la primera en 23,000 el turno 1 y 17,250 los otros dos; aquí se usa la primera, como meta de 7.5 h.</p>
+  </section>
+</div>
+</body>
+</html>
