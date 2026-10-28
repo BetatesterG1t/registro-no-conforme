@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bolseo · productividad, corte 26 al 31 de octubre de 2026</title>
+<title>Bolseo · captura, 26 al 31 de octubre de 2026</title>
 <style>
   :root {
     --bg: #efe8dc;
@@ -34,7 +34,7 @@
   header.top { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; margin-bottom: 18px; }
   .eyebrow { letter-spacing: 0.14em; text-transform: uppercase; font-size: 12px; color: var(--accent); font-weight: 700; margin: 0 0 6px; }
   h1 { font-family: Palatino, "Iowan Old Style", Georgia, serif; font-size: 40px; line-height: 1.02; font-weight: 600; margin: 0; letter-spacing: -0.03em; }
-  .lede { margin: 8px 0 0; max-width: 680px; color: var(--muted); }
+  .lede { margin: 8px 0 0; max-width: 720px; color: var(--muted); }
   .corte { text-align: right; font-size: 13px; color: var(--muted); }
   .corte strong { display: block; color: var(--ink); font-size: 15px; }
   nav.bar {
@@ -44,8 +44,9 @@
     padding: 10px 0 12px; margin-bottom: 8px;
     border-bottom: 1px solid var(--line);
   }
-  .jump { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 11px; text-decoration: none; color: var(--muted); font-size: 13px; }
+  .jump { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 11px; text-decoration: none; color: var(--muted); font-size: 13px; font-family: inherit; cursor: pointer; }
   .jump:hover { color: var(--ink); }
+  .jump.activa { background: var(--ink); color: #fff; border-color: var(--ink); }
   .spacer { flex: 1; }
   section { margin-top: 22px; scroll-margin-top: 72px; }
   h2 { font-family: Palatino, Georgia, serif; font-size: 28px; margin: 0 0 4px; font-weight: 600; }
@@ -68,17 +69,19 @@
   .nota { background: #f7f1e6; border: 1px dashed #d9cdb8; border-radius: 12px; padding: 12px 14px; color: var(--muted); font-size: 14px; }
   .nota strong { color: var(--ink); }
   .tabla-wrap { overflow-x: auto; max-width: 100%; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
-  table { width: 100%; min-width: 640px; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13.5px; }
-  th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
-  th { font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 650; background: #fbf7f1; }
+  table { width: 100%; min-width: 760px; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13.5px; }
+  th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  th { font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 650; background: #fbf7f1; position: sticky; top: 0; z-index: 1; }
   th.l, td.l { text-align: left; white-space: normal; }
+  td.linea, th.linea { position: sticky; left: 0; z-index: 2; background: var(--card); text-align: left; font-weight: 650; }
+  th.linea { background: #fbf7f1; z-index: 3; }
   tr.total td { font-weight: 700; background: #fbf7f1; border-bottom: 0; }
   tr.cero td { color: var(--muted); }
   .tag { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; background: var(--accent-soft); color: var(--accent); font-weight: 700; }
   .tag.ok { background: var(--good-soft); color: var(--good); }
-  .cols { display: flex; align-items: flex-end; gap: 10px; height: 200px; padding-top: 8px; }
+  .cols { display: flex; align-items: flex-end; gap: 10px; height: 180px; padding-top: 8px; }
   .colwrap { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
-  .col { width: 100%; max-width: 48px; border-radius: 8px 8px 3px 3px; background: var(--accent); }
+  .col { width: 100%; max-width: 48px; border-radius: 8px 8px 3px 3px; background: var(--accent); min-height: 4px; }
   .col.bajo { background: #c4b6a6; }
   .colwrap .etiq { padding: 6px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
   .colwrap .etiq strong { display: block; color: var(--ink); font-weight: 650; font-variant-numeric: tabular-nums; }
@@ -88,13 +91,23 @@
   .bar-fill { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
   .bar-fill.bueno { background: var(--good); }
   .bar-num { text-align: right; font-variant-numeric: tabular-nums; }
-  @media (max-width: 980px) {
-    .kpis { grid-template-columns: 1fr 1fr; }
-    .calls, header.top { display: grid; grid-template-columns: 1fr; }
-    h1 { font-size: 32px; }
-    .corte { text-align: left; }
-    .bar-row { grid-template-columns: 72px 1fr 108px; }
+  .cap input {
+    width: 100%;
+    min-width: 72px;
+    border: 1px solid transparent;
+    background: #fff;
+    font: inherit;
+    font-size: 16px;
+    text-align: right;
+    padding: 7px 8px;
+    border-radius: 8px;
+    color: var(--ink);
   }
+  .cap input.op { text-align: left; min-width: 120px; }
+  .cap input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  td.auto { background: #f7f1e6; color: var(--ink); font-weight: 650; }
+  td.auto.bien { color: var(--good); }
+  .acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
   #pinAcceso {
     display: none;
     max-width: 420px;
@@ -118,7 +131,6 @@
     border: 1px solid var(--line);
     border-radius: 10px;
     background: #fff;
-    box-sizing: border-box;
   }
   #pinAcceso button {
     margin-top: 16px;
@@ -134,12 +146,20 @@
   .pin-error { color: var(--accent); margin-top: 8px; min-height: 1.2em; }
   body.bloqueado #pinAcceso { display: block; }
   body.bloqueado .wrap { display: none; }
+  @media (max-width: 980px) {
+    .kpis { grid-template-columns: 1fr 1fr; }
+    .calls, header.top { display: grid; grid-template-columns: 1fr; }
+    h1 { font-size: 32px; }
+    .corte { text-align: left; }
+    .bar-row { grid-template-columns: 72px 1fr 108px; }
+  }
   @media print {
     body { background: white; }
     nav.bar { position: static; }
     .no-print { display: none !important; }
     .card, .kpi, .call, .tabla-wrap { break-inside: avoid; }
     #pinAcceso { display: none !important; }
+    .cap input { border: 0; background: transparent; }
   }
 </style>
 </head>
@@ -158,80 +178,68 @@
 <div class="wrap">
   <header class="top">
     <div>
-      <p class="eyebrow">Bolseo · semana del 26 al 31</p>
-      <h1>Bolseo · productividad, corte 26 al 31 de octubre de 2026</h1>
-      <p class="lede">Meta 2 = velocidad × 6 h, menos el tiempo muerto registrado. Meta 3 = velocidad × 7.5 h. En esta hoja las dos columnas de meta traen el mismo número: esa cifra es la meta 3, y el tiempo muerto se descuenta a razón de meta ÷ 7.5.</p>
+      <p class="eyebrow">Bolseo · captura</p>
+      <h1>Captura de productividad, 26 al 31 de octubre de 2026</h1>
+      <p class="lede">Escribe el operador, la velocidad, el tiempo muerto y los millares de cada turno. Meta 3 = velocidad × 7.5 h. Meta 2 = velocidad × (6 − tiempo muerto). Si el tiempo muerto pasa de 6 h, la meta 2 queda en cero.</p>
     </div>
     <div class="corte">
       <strong>26 al 31 de octubre de 2026</strong>
-      Solo el lunes trae millares
+      Lunes a sábado · tres turnos
     </div>
   </header>
 
   <nav class="bar">
-    <a class="jump" href="#dias">Días</a>
-    <a class="jump" href="#turnos">Turnos</a>
-    <a class="jump" href="#lineas">Líneas</a>
+    <a class="jump" href="#captura">Captura</a>
+    <a class="jump" href="#semana">Semana</a>
     <span class="spacer"></span>
-    <button class="jump no-print" type="button" onclick="window.print()">Imprimir</button>
+    <button class="jump no-print" type="button" id="btnCsv">Exportar</button>
+    <button class="jump no-print" type="button" id="btnReset">Volver al Excel</button>
   </nav>
 
-  <section id="kpis">
-    <div class="kpis">
-      <article class="kpi">
-        <div class="lbl">Millares</div>
-        <div class="num">690,800</div>
-        <div class="hint">Solo el lunes 26. Martes a sábado en cero</div>
-      </article>
-      <article class="kpi">
-        <div class="lbl">Meta 2</div>
-        <div class="num">1,297,307</div>
-        <div class="hint">53.2% de cumplimiento el lunes</div>
-      </article>
-      <article class="kpi">
-        <div class="lbl">Meta 3</div>
-        <div class="num">1,638,200</div>
-        <div class="hint">42.2% de cumplimiento el lunes</div>
-      </article>
-      <article class="kpi">
-        <div class="lbl">Tiempo muerto</div>
-        <div class="num">20.0 h</div>
-        <div class="hint">4.0 h el lunes · 16.0 h de martes a jueves, sin millares</div>
-      </article>
+  <section id="captura">
+    <h2>Captura <span id="tituloDia">Lunes 26</span></h2>
+    <p class="sub">La velocidad va en millares por hora. El tiempo muerto, en horas. Las dos metas y el % salen solos. Enter baja al siguiente renglón.</p>
+    <div class="kpis" id="kpisDia"></div>
+    <div id="dias" class="acciones"></div>
+    <div id="turnos" class="acciones"></div>
+    <div class="tabla-wrap cap">
+      <table>
+        <thead>
+          <tr>
+            <th class="linea">Línea</th>
+            <th class="l">Operador</th>
+            <th>Velocidad</th>
+            <th>T. muerto</th>
+            <th>Millares</th>
+            <th>Meta 2</th>
+            <th>Meta 3</th>
+            <th>% meta 2</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpo"></tbody>
+        <tfoot>
+          <tr class="total">
+            <td class="linea" id="pieNombre">Turno</td>
+            <td></td>
+            <td></td>
+            <td id="pieTm"></td>
+            <td id="pieMill"></td>
+            <td id="pieM2"></td>
+            <td id="pieM3"></td>
+            <td id="piePct"></td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   </section>
 
-  <section id="dias">
-    <h2>Por día <span>26 al 31 de octubre</span></h2>
-    <p class="sub">La cuadrícula trae millares solo el lunes 26. De martes a sábado la meta sigue cargada y la producción está en cero. El % de meta 2 del lunes usa la velocidad de ese día.</p>
-    <article class="card">
+  <section id="semana">
+    <h2>Semana <span>lo que ya tiene millares</span></h2>
+    <p class="sub" id="semanaSub"></p>
+    <div class="kpis" id="kpisSemana"></div>
+    <article class="card" style="margin-top:12px">
       <h3>Millares por día</h3>
-      <div class="cols" aria-hidden="true">
-        <div class="colwrap">
-          <div class="col" style="height:100%"></div>
-          <div class="etiq">Lun 26<strong>690,800</strong></div>
-        </div>
-        <div class="colwrap">
-          <div class="col bajo" style="height:2%"></div>
-          <div class="etiq">Mar 27<strong>0</strong></div>
-        </div>
-        <div class="colwrap">
-          <div class="col bajo" style="height:2%"></div>
-          <div class="etiq">Mié 28<strong>0</strong></div>
-        </div>
-        <div class="colwrap">
-          <div class="col bajo" style="height:2%"></div>
-          <div class="etiq">Jue 29<strong>0</strong></div>
-        </div>
-        <div class="colwrap">
-          <div class="col bajo" style="height:2%"></div>
-          <div class="etiq">Vie 30<strong>0</strong></div>
-        </div>
-        <div class="colwrap">
-          <div class="col bajo" style="height:2%"></div>
-          <div class="etiq">Sáb 31<strong>0</strong></div>
-        </div>
-      </div>
+      <div class="cols" id="graficaDias"></div>
     </article>
     <div class="tabla-wrap" style="margin-top:12px">
       <table>
@@ -240,112 +248,18 @@
             <th class="l">Día</th>
             <th>Millares</th>
             <th>% meta 2</th>
+            <th>Meta 2</th>
+            <th>Meta 3</th>
             <th>Tiempo muerto</th>
-            <th class="l">Nota</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td class="l">Lunes 26</td>
-            <td>690,800</td>
-            <td>53.2%</td>
-            <td>4.0 h</td>
-            <td class="l">Único día con millares</td>
-          </tr>
-          <tr class="cero">
-            <td class="l">Martes 27</td>
-            <td>0</td>
-            <td>—</td>
-            <td>6.0 h</td>
-            <td class="l">Sin millares</td>
-          </tr>
-          <tr class="cero">
-            <td class="l">Miércoles 28</td>
-            <td>0</td>
-            <td>—</td>
-            <td>8.0 h</td>
-            <td class="l">Sin millares</td>
-          </tr>
-          <tr class="cero">
-            <td class="l">Jueves 29</td>
-            <td>0</td>
-            <td>—</td>
-            <td>2.0 h</td>
-            <td class="l">Sin millares</td>
-          </tr>
-          <tr class="cero">
-            <td class="l">Viernes 30</td>
-            <td>0</td>
-            <td>—</td>
-            <td>0 h</td>
-            <td class="l">Sin millares</td>
-          </tr>
-          <tr class="cero">
-            <td class="l">Sábado 31</td>
-            <td>0</td>
-            <td>—</td>
-            <td>0 h</td>
-            <td class="l">Sin millares</td>
-          </tr>
-          <tr class="total">
-            <td class="l">Cuadrícula</td>
-            <td>690,800</td>
-            <td>53.2%</td>
-            <td>20.0 h</td>
-            <td class="l">El % es el del lunes. Meta 3 de ese día: 42.2%</td>
-          </tr>
-        </tbody>
+        <tbody id="tablaDias"></tbody>
       </table>
     </div>
-  </section>
-
-  <section id="turnos">
-    <h2>Por turno <span>lunes 26, contra meta 2</span></h2>
-    <p class="sub">El tercer turno suma más millares y cumple mejor la meta 2.</p>
-    <article class="card">
-      <div class="bars">
-        <div class="bar-row">
-          <span>Turno 1</span>
-          <div class="bar-track"><span class="bar-fill" style="width:43.1%"></span></div>
-          <span class="bar-num">184,000 · 43.1%</span>
-        </div>
-        <div class="bar-row">
-          <span>Turno 2</span>
-          <div class="bar-track"><span class="bar-fill" style="width:47%"></span></div>
-          <span class="bar-num">204,500 · 47.0%</span>
-        </div>
-        <div class="bar-row">
-          <span>Turno 3</span>
-          <div class="bar-track"><span class="bar-fill bueno" style="width:69.4%"></span></div>
-          <span class="bar-num">302,300 · 69.4%</span>
-        </div>
-      </div>
-    </article>
-  </section>
-
-  <section id="lineas">
-    <h2>Por línea <span>lunes 26, ordenadas por % de meta 2</span></h2>
-    <p class="sub">Millares del lunes, cumplimiento de meta 2 y horas de tiempo muerto de ese día. A, B, C, D, Lian Yu-1 e Italiana quedaron en cero.</p>
-    <div class="calls">
-      <article class="call alto">
-        <h3>Por encima de la meta 2</h3>
-        <div class="who">CH-2</div>
-        <div class="num">186.7%</div>
-        <p class="sub" style="margin:6px 0 0">78,400 millares · sin tiempo muerto. También la pasan CH-1 (144.6%) y SD-15 (126.8%).</p>
-      </article>
-      <article class="call alto">
-        <h3>Más volumen</h3>
-        <div class="who">CH-2</div>
-        <div class="num">78,400</div>
-        <p class="sub" style="margin:6px 0 0">186.7% de la meta 2 · sin tiempo muerto</p>
-      </article>
-      <article class="call bajo">
-        <h3>Más baja con producción</h3>
-        <div class="who">G</div>
-        <div class="num">9.1%</div>
-        <p class="sub" style="margin:6px 0 0">3,000 millares · sin tiempo muerto</p>
-      </article>
-    </div>
+    <h2 style="margin-top:22px">Por turno <span>contra meta 2</span></h2>
+    <article class="card"><div class="bars" id="barrasTurnos"></div></article>
+    <h2 style="margin-top:22px">Por línea <span>ordenadas por % de meta 2</span></h2>
+    <div class="calls" id="llamadas"></div>
     <div class="tabla-wrap">
       <table>
         <thead>
@@ -353,104 +267,404 @@
             <th class="l">Línea</th>
             <th>Millares</th>
             <th>% meta 2</th>
+            <th>Meta 2</th>
             <th>Tiempo muerto</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td class="l">CH-2 <span class="tag ok">186.7%</span></td>
-            <td>78,400</td>
-            <td>186.7%</td>
-            <td>0 h</td>
-          </tr>
-          <tr>
-            <td class="l">CH-1 <span class="tag ok">144.6%</span></td>
-            <td>54,000</td>
-            <td>144.6%</td>
-            <td>2.0 h</td>
-          </tr>
-          <tr>
-            <td class="l">SD-15 <span class="tag ok">126.8%</span></td>
-            <td>35,000</td>
-            <td>126.8%</td>
-            <td>0 h</td>
-          </tr>
-          <tr><td class="l">SD-4</td><td>24,500</td><td>88.8%</td><td>0 h</td></tr>
-          <tr><td class="l">SD-5</td><td>24,000</td><td>87.0%</td><td>0 h</td></tr>
-          <tr><td class="l">SD-13</td><td>34,000</td><td>82.1%</td><td>0 h</td></tr>
-          <tr><td class="l">SD-10</td><td>26,800</td><td>80.9%</td><td>0 h</td></tr>
-          <tr><td class="l">SD-12</td><td>21,500</td><td>77.9%</td><td>0 h</td></tr>
-          <tr><td class="l">SD-2</td><td>58,000</td><td>75.1%</td><td>0 h</td></tr>
-          <tr><td class="l">SD-7</td><td>53,000</td><td>68.6%</td><td>0 h</td></tr>
-          <tr><td class="l">SD-6</td><td>18,800</td><td>68.1%</td><td>0 h</td></tr>
-          <tr><td class="l">E</td><td>22,500</td><td>67.9%</td><td>0 h</td></tr>
-          <tr><td class="l">SD-11</td><td>29,400</td><td>63.9%</td><td>0 h</td></tr>
-          <tr><td class="l">Lian Yu-2</td><td>16,500</td><td>59.8%</td><td>0 h</td></tr>
-          <tr><td class="l">SD-3</td><td>43,000</td><td>55.6%</td><td>0 h</td></tr>
-          <tr><td class="l">CONTEC</td><td>43,000</td><td>55.6%</td><td>0 h</td></tr>
-          <tr><td class="l">F</td><td>18,400</td><td>55.6%</td><td>0 h</td></tr>
-          <tr><td class="l">SD-14</td><td>13,200</td><td>47.8%</td><td>0 h</td></tr>
-          <tr><td class="l">SD-1</td><td>36,000</td><td>46.6%</td><td>0 h</td></tr>
-          <tr><td class="l">SD-8</td><td>15,600</td><td>37.7%</td><td>0 h</td></tr>
-          <tr><td class="l">H</td><td>7,500</td><td>27.2%</td><td>0 h</td></tr>
-          <tr><td class="l">SD-9</td><td>14,700</td><td>21.4%</td><td>2.0 h</td></tr>
-          <tr>
-            <td class="l">G <span class="tag">9.1% con producción</span></td>
-            <td>3,000</td>
-            <td>9.1%</td>
-            <td>0 h</td>
-          </tr>
-          <tr class="cero"><td class="l">A <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
-          <tr class="cero"><td class="l">B <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
-          <tr class="cero"><td class="l">C <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
-          <tr class="cero"><td class="l">D <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
-          <tr class="cero"><td class="l">Lian Yu-1 <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
-          <tr class="cero"><td class="l">Italiana <span class="tag">en cero</span></td><td>0</td><td>—</td><td>0 h</td></tr>
-        </tbody>
+        <tbody id="tablaLineas"></tbody>
       </table>
     </div>
   </section>
 
   <section>
-    <p class="nota"><strong>El letrero de 558,400 no entra en esta página.</strong> No cuadra con la cuadrícula del lunes 26, que suma 690,800 millares. El letrero parte los turnos en 163,000, 146,500 y 248,900; la cuadrícula da 184,000, 204,500 y 302,300. Las cifras de arriba salen de esa cuadrícula. En SD-11 la segunda columna de meta quedó en 12,000 por turno y la primera en 23,000 el turno 1 y 17,250 los otros dos; aquí se usa la primera, como meta de 7.5 h.</p>
+    <p class="nota"><strong>Lo que escribas se queda en este navegador.</strong> La hoja abre con el bolseo del 26 al 31: operador, velocidad y tiempo muerto ya vienen del Excel, y los millares del lunes 26 también. Martes a sábado traen la velocidad para que la meta aparezca; los millares se capturan aquí. Volver al Excel deshace los cambios de esta computadora.</p>
   </section>
 </div>
 <script>
-  const ACCESO_PIN = "2580";
-  const PIN_KEY = "bolseoPinOk";
+const PACK = {"lineas":["A","B","C","D","E","F","G","H","SD-1","SD-2","SD-3","SD-4","SD-5","SD-6","SD-7","SD-8","SD-9","SD-10","SD-11","SD-12","SD-13","SD-14","SD-15","CONTEC","Lian Yu-1","Lian Yu-2","Italiana","CH-1","CH-2"],"seed":{"2026-10-26|A|T1":{"op":"S/OP","vel":2000.0,"tm":0,"mill":null},"2026-10-26|A|T2":{"op":"Heliodoro 415","vel":2000.0,"tm":0,"mill":null},"2026-10-26|A|T3":{"op":"S/OP","vel":2000.0,"tm":0,"mill":null},"2026-10-27|A|T1":{"op":"S/OP","vel":2000.0,"tm":0,"mill":null},"2026-10-27|A|T2":{"op":"Heliodoro 415","vel":2000.0,"tm":0,"mill":null},"2026-10-27|A|T3":{"op":"S/OP","vel":2000.0,"tm":0,"mill":null},"2026-10-28|A|T1":{"op":"S/OP","vel":2000.0,"tm":0,"mill":null},"2026-10-28|A|T2":{"op":"Heliodoro 415","vel":2000.0,"tm":0,"mill":null},"2026-10-28|A|T3":{"op":"S/OP","vel":2000.0,"tm":0,"mill":null},"2026-10-29|A|T1":{"op":"S/OP","vel":2000.0,"tm":0,"mill":null},"2026-10-29|A|T2":{"op":"Heliodoro 415","vel":2000.0,"tm":0,"mill":null},"2026-10-29|A|T3":{"op":"S/OP","vel":2000.0,"tm":0,"mill":null},"2026-10-30|A|T1":{"op":"S/OP","vel":2000.0,"tm":0,"mill":null},"2026-10-30|A|T2":{"op":"Heliodoro 415","vel":2000.0,"tm":0,"mill":null},"2026-10-30|A|T3":{"op":"S/OP","vel":2000.0,"tm":0,"mill":null},"2026-10-31|A|T1":{"op":"S/OP","vel":2000.0,"tm":0,"mill":null},"2026-10-31|A|T2":{"op":"Heliodoro 415","vel":2000.0,"tm":0,"mill":null},"2026-10-31|A|T3":{"op":"S/OP","vel":null,"tm":0,"mill":null},"2026-10-26|B|T1":{"op":"S/OP","vel":3733.33,"tm":0,"mill":null},"2026-10-26|B|T2":{"op":"Karen","vel":3733.33,"tm":0,"mill":null},"2026-10-26|B|T3":{"op":"S/OP","vel":3733.33,"tm":0,"mill":null},"2026-10-27|B|T1":{"op":"S/OP","vel":3733.33,"tm":0,"mill":null},"2026-10-27|B|T2":{"op":"Karen","vel":3733.33,"tm":0,"mill":null},"2026-10-27|B|T3":{"op":"S/OP","vel":3733.33,"tm":0,"mill":null},"2026-10-28|B|T1":{"op":"S/OP","vel":3733.33,"tm":0,"mill":null},"2026-10-28|B|T2":{"op":"Karen","vel":3733.33,"tm":0,"mill":null},"2026-10-28|B|T3":{"op":"S/OP","vel":3733.33,"tm":0,"mill":null},"2026-10-29|B|T1":{"op":"S/OP","vel":3733.33,"tm":0,"mill":null},"2026-10-29|B|T2":{"op":"Karen","vel":3733.33,"tm":0,"mill":null},"2026-10-29|B|T3":{"op":"S/OP","vel":3733.33,"tm":0,"mill":null},"2026-10-30|B|T1":{"op":"S/OP","vel":3733.33,"tm":0,"mill":null},"2026-10-30|B|T2":{"op":"Karen","vel":3733.33,"tm":0,"mill":null},"2026-10-30|B|T3":{"op":"S/OP","vel":3733.33,"tm":0,"mill":null},"2026-10-31|B|T1":{"op":"S/OP","vel":3733.33,"tm":0,"mill":null},"2026-10-31|B|T2":{"op":"Karen","vel":3733.33,"tm":0,"mill":null},"2026-10-31|B|T3":{"op":"S/OP","vel":null,"tm":0,"mill":null},"2026-10-26|C|T1":{"op":"S/OP","vel":3066.67,"tm":0,"mill":null},"2026-10-26|C|T2":{"op":"341","vel":3066.67,"tm":0,"mill":null},"2026-10-26|C|T3":{"op":"415","vel":3066.67,"tm":0,"mill":null},"2026-10-27|C|T1":{"op":"S/OP","vel":3066.67,"tm":0,"mill":null},"2026-10-27|C|T2":{"op":"341","vel":3066.67,"tm":0,"mill":null},"2026-10-27|C|T3":{"op":"415","vel":3066.67,"tm":0,"mill":null},"2026-10-28|C|T1":{"op":"S/OP","vel":3066.67,"tm":0,"mill":null},"2026-10-28|C|T2":{"op":"341","vel":3066.67,"tm":0,"mill":null},"2026-10-28|C|T3":{"op":"415","vel":3066.67,"tm":0,"mill":null},"2026-10-29|C|T1":{"op":"S/OP","vel":3066.67,"tm":0,"mill":null},"2026-10-29|C|T2":{"op":"341","vel":3066.67,"tm":0,"mill":null},"2026-10-29|C|T3":{"op":"415","vel":3066.67,"tm":0,"mill":null},"2026-10-30|C|T1":{"op":"S/OP","vel":3066.67,"tm":0,"mill":null},"2026-10-30|C|T2":{"op":"341","vel":3066.67,"tm":0,"mill":null},"2026-10-30|C|T3":{"op":"415","vel":3066.67,"tm":0,"mill":null},"2026-10-31|C|T1":{"op":"S/OP","vel":3066.67,"tm":0,"mill":null},"2026-10-31|C|T2":{"op":"341","vel":3066.67,"tm":0,"mill":null},"2026-10-31|C|T3":{"op":"415","vel":null,"tm":0,"mill":null},"2026-10-26|D|T1":{"op":"913","vel":1533.33,"tm":0,"mill":null},"2026-10-26|D|T2":{"op":"","vel":1533.33,"tm":0,"mill":null},"2026-10-26|D|T3":{"op":"897","vel":1533.33,"tm":0,"mill":null},"2026-10-27|D|T1":{"op":"913","vel":1533.33,"tm":0,"mill":null},"2026-10-27|D|T2":{"op":"","vel":1533.33,"tm":0,"mill":null},"2026-10-27|D|T3":{"op":"897","vel":1533.33,"tm":0,"mill":null},"2026-10-28|D|T1":{"op":"913","vel":1533.33,"tm":0,"mill":null},"2026-10-28|D|T2":{"op":"","vel":1533.33,"tm":0,"mill":null},"2026-10-28|D|T3":{"op":"897","vel":1533.33,"tm":0,"mill":null},"2026-10-29|D|T1":{"op":"913","vel":1533.33,"tm":0,"mill":null},"2026-10-29|D|T2":{"op":"","vel":1533.33,"tm":0,"mill":null},"2026-10-29|D|T3":{"op":"897","vel":1533.33,"tm":0,"mill":null},"2026-10-30|D|T1":{"op":"913","vel":1533.33,"tm":0,"mill":null},"2026-10-30|D|T2":{"op":"","vel":1533.33,"tm":0,"mill":null},"2026-10-30|D|T3":{"op":"897","vel":1533.33,"tm":0,"mill":null},"2026-10-31|D|T1":{"op":"913","vel":1533.33,"tm":0,"mill":null},"2026-10-31|D|T2":{"op":"","vel":1533.33,"tm":0,"mill":null},"2026-10-31|D|T3":{"op":"897","vel":null,"tm":0,"mill":null},"2026-10-26|E|T1":{"op":"664","vel":1840.0,"tm":0,"mill":3000.0},"2026-10-26|E|T2":{"op":"16","vel":1840.0,"tm":0,"mill":4500.0},"2026-10-26|E|T3":{"op":"933","vel":1840.0,"tm":0,"mill":15000.0},"2026-10-27|E|T1":{"op":"664","vel":1840.0,"tm":0,"mill":null},"2026-10-27|E|T2":{"op":"16","vel":1840.0,"tm":0,"mill":null},"2026-10-27|E|T3":{"op":"933","vel":1840.0,"tm":0,"mill":null},"2026-10-28|E|T1":{"op":"664","vel":1840.0,"tm":0,"mill":null},"2026-10-28|E|T2":{"op":"16","vel":1840.0,"tm":0,"mill":null},"2026-10-28|E|T3":{"op":"933","vel":1840.0,"tm":0,"mill":null},"2026-10-29|E|T1":{"op":"664","vel":1840.0,"tm":0,"mill":null},"2026-10-29|E|T2":{"op":"16","vel":1840.0,"tm":0,"mill":null},"2026-10-29|E|T3":{"op":"933","vel":1840.0,"tm":0,"mill":null},"2026-10-30|E|T1":{"op":"664","vel":1840.0,"tm":0,"mill":null},"2026-10-30|E|T2":{"op":"16","vel":1840.0,"tm":0,"mill":null},"2026-10-30|E|T3":{"op":"933","vel":1840.0,"tm":0,"mill":null},"2026-10-31|E|T1":{"op":"664","vel":1840.0,"tm":0,"mill":null},"2026-10-31|E|T2":{"op":"16","vel":1840.0,"tm":0,"mill":null},"2026-10-31|E|T3":{"op":"933","vel":null,"tm":0,"mill":null},"2026-10-26|F|T1":{"op":"523","vel":1840.0,"tm":0,"mill":4900.0},"2026-10-26|F|T2":{"op":"419","vel":1840.0,"tm":0,"mill":5000.0},"2026-10-26|F|T3":{"op":"311","vel":1840.0,"tm":0,"mill":8500.0},"2026-10-27|F|T1":{"op":"523","vel":1840.0,"tm":0,"mill":null},"2026-10-27|F|T2":{"op":"419","vel":1840.0,"tm":0,"mill":null},"2026-10-27|F|T3":{"op":"311","vel":1840.0,"tm":0,"mill":null},"2026-10-28|F|T1":{"op":"523","vel":1840.0,"tm":0,"mill":null},"2026-10-28|F|T2":{"op":"419","vel":1840.0,"tm":0,"mill":null},"2026-10-28|F|T3":{"op":"311","vel":1840.0,"tm":0,"mill":null},"2026-10-29|F|T1":{"op":"523","vel":1840.0,"tm":0,"mill":null},"2026-10-29|F|T2":{"op":"419","vel":1840.0,"tm":0,"mill":null},"2026-10-29|F|T3":{"op":"311","vel":1840.0,"tm":0,"mill":null},"2026-10-30|F|T1":{"op":"523","vel":1840.0,"tm":0,"mill":null},"2026-10-30|F|T2":{"op":"419","vel":1840.0,"tm":0,"mill":null},"2026-10-30|F|T3":{"op":"311","vel":1840.0,"tm":0,"mill":null},"2026-10-31|F|T1":{"op":"523","vel":1840.0,"tm":0,"mill":null},"2026-10-31|F|T2":{"op":"419","vel":1840.0,"tm":0,"mill":null},"2026-10-31|F|T3":{"op":"311","vel":null,"tm":0,"mill":null},"2026-10-26|G|T1":{"op":"349","vel":1840.0,"tm":0,"mill":2000.0},"2026-10-26|G|T2":{"op":"374","vel":1840.0,"tm":0,"mill":1000.0},"2026-10-26|G|T3":{"op":"842","vel":1840.0,"tm":0,"mill":null},"2026-10-27|G|T1":{"op":"349","vel":1840.0,"tm":0,"mill":null},"2026-10-27|G|T2":{"op":"374","vel":1840.0,"tm":0,"mill":null},"2026-10-27|G|T3":{"op":"842","vel":1840.0,"tm":0,"mill":null},"2026-10-28|G|T1":{"op":"349","vel":1840.0,"tm":0,"mill":null},"2026-10-28|G|T2":{"op":"374","vel":1840.0,"tm":0,"mill":null},"2026-10-28|G|T3":{"op":"842","vel":1840.0,"tm":0,"mill":null},"2026-10-29|G|T1":{"op":"349","vel":1840.0,"tm":0,"mill":null},"2026-10-29|G|T2":{"op":"374","vel":1840.0,"tm":0,"mill":null},"2026-10-29|G|T3":{"op":"842","vel":1840.0,"tm":0,"mill":null},"2026-10-30|G|T1":{"op":"349","vel":1840.0,"tm":0,"mill":null},"2026-10-30|G|T2":{"op":"374","vel":1840.0,"tm":0,"mill":null},"2026-10-30|G|T3":{"op":"842","vel":1840.0,"tm":0,"mill":null},"2026-10-31|G|T1":{"op":"349","vel":1840.0,"tm":0,"mill":null},"2026-10-31|G|T2":{"op":"374","vel":1840.0,"tm":0,"mill":null},"2026-10-31|G|T3":{"op":"842","vel":null,"tm":0,"mill":null},"2026-10-26|H|T1":{"op":"379","vel":1533.33,"tm":0,"mill":3000.0},"2026-10-26|H|T2":{"op":"488","vel":1533.33,"tm":0,"mill":1500.0},"2026-10-26|H|T3":{"op":"536","vel":1533.33,"tm":0,"mill":3000.0},"2026-10-27|H|T1":{"op":"379","vel":1533.33,"tm":0,"mill":null},"2026-10-27|H|T2":{"op":"488","vel":1533.33,"tm":0,"mill":null},"2026-10-27|H|T3":{"op":"536","vel":1533.33,"tm":0,"mill":null},"2026-10-28|H|T1":{"op":"379","vel":1533.33,"tm":0,"mill":null},"2026-10-28|H|T2":{"op":"488","vel":1533.33,"tm":0,"mill":null},"2026-10-28|H|T3":{"op":"536","vel":1533.33,"tm":0,"mill":null},"2026-10-29|H|T1":{"op":"379","vel":1533.33,"tm":0,"mill":null},"2026-10-29|H|T2":{"op":"488","vel":1533.33,"tm":0,"mill":null},"2026-10-29|H|T3":{"op":"536","vel":1533.33,"tm":0,"mill":null},"2026-10-30|H|T1":{"op":"379","vel":1533.33,"tm":0,"mill":null},"2026-10-30|H|T2":{"op":"488","vel":1533.33,"tm":0,"mill":null},"2026-10-30|H|T3":{"op":"536","vel":1533.33,"tm":0,"mill":null},"2026-10-31|H|T1":{"op":"379","vel":1533.33,"tm":0,"mill":null},"2026-10-31|H|T2":{"op":"488","vel":1533.33,"tm":0,"mill":null},"2026-10-31|H|T3":{"op":"536","vel":null,"tm":0,"mill":null},"2026-10-26|SD-1|T1":{"op":"421","vel":4293.33,"tm":0,"mill":8000.0},"2026-10-26|SD-1|T2":{"op":"931","vel":4293.33,"tm":0,"mill":14000.0},"2026-10-26|SD-1|T3":{"op":"410","vel":4293.33,"tm":0,"mill":14000.0},"2026-10-27|SD-1|T1":{"op":"421","vel":4293.33,"tm":0,"mill":null},"2026-10-27|SD-1|T2":{"op":"931","vel":4293.33,"tm":0,"mill":null},"2026-10-27|SD-1|T3":{"op":"410","vel":4293.33,"tm":0,"mill":null},"2026-10-28|SD-1|T1":{"op":"421","vel":4293.33,"tm":0,"mill":null},"2026-10-28|SD-1|T2":{"op":"931","vel":4293.33,"tm":0,"mill":null},"2026-10-28|SD-1|T3":{"op":"410","vel":4293.33,"tm":0,"mill":null},"2026-10-29|SD-1|T1":{"op":"421","vel":4293.33,"tm":0,"mill":null},"2026-10-29|SD-1|T2":{"op":"931","vel":4293.33,"tm":0,"mill":null},"2026-10-29|SD-1|T3":{"op":"410","vel":4293.33,"tm":0,"mill":null},"2026-10-30|SD-1|T1":{"op":"421","vel":4293.33,"tm":0,"mill":null},"2026-10-30|SD-1|T2":{"op":"931","vel":4293.33,"tm":0,"mill":null},"2026-10-30|SD-1|T3":{"op":"410","vel":4293.33,"tm":0,"mill":null},"2026-10-31|SD-1|T1":{"op":"421","vel":4293.33,"tm":0,"mill":null},"2026-10-31|SD-1|T2":{"op":"931","vel":4293.33,"tm":0,"mill":null},"2026-10-31|SD-1|T3":{"op":"410","vel":null,"tm":0,"mill":null},"2026-10-26|SD-2|T1":{"op":"492","vel":4293.33,"tm":0,"mill":23000.0},"2026-10-26|SD-2|T2":{"op":"411","vel":4293.33,"tm":0,"mill":16000.0},"2026-10-26|SD-2|T3":{"op":"495","vel":4293.33,"tm":0,"mill":19000.0},"2026-10-27|SD-2|T1":{"op":"492","vel":4293.33,"tm":0,"mill":null},"2026-10-27|SD-2|T2":{"op":"411","vel":4293.33,"tm":0,"mill":null},"2026-10-27|SD-2|T3":{"op":"495","vel":4293.33,"tm":0,"mill":null},"2026-10-28|SD-2|T1":{"op":"492","vel":4293.33,"tm":0,"mill":null},"2026-10-28|SD-2|T2":{"op":"411","vel":4293.33,"tm":0,"mill":null},"2026-10-28|SD-2|T3":{"op":"495","vel":4293.33,"tm":0,"mill":null},"2026-10-29|SD-2|T1":{"op":"492","vel":4293.33,"tm":0,"mill":null},"2026-10-29|SD-2|T2":{"op":"411","vel":4293.33,"tm":0,"mill":null},"2026-10-29|SD-2|T3":{"op":"495","vel":4293.33,"tm":0,"mill":null},"2026-10-30|SD-2|T1":{"op":"492","vel":4293.33,"tm":0,"mill":null},"2026-10-30|SD-2|T2":{"op":"411","vel":4293.33,"tm":0,"mill":null},"2026-10-30|SD-2|T3":{"op":"495","vel":4293.33,"tm":0,"mill":null},"2026-10-31|SD-2|T1":{"op":"492","vel":4293.33,"tm":0,"mill":null},"2026-10-31|SD-2|T2":{"op":"411","vel":4293.33,"tm":0,"mill":null},"2026-10-31|SD-2|T3":{"op":"495","vel":null,"tm":0,"mill":null},"2026-10-26|SD-3|T1":{"op":"355","vel":4293.33,"tm":0,"mill":12000.0},"2026-10-26|SD-3|T2":{"op":"555","vel":4293.33,"tm":0,"mill":8000.0},"2026-10-26|SD-3|T3":{"op":"427","vel":4293.33,"tm":0,"mill":23000.0},"2026-10-27|SD-3|T1":{"op":"355","vel":4293.33,"tm":0,"mill":null},"2026-10-27|SD-3|T2":{"op":"555","vel":4293.33,"tm":0,"mill":null},"2026-10-27|SD-3|T3":{"op":"427","vel":4293.33,"tm":0,"mill":null},"2026-10-28|SD-3|T1":{"op":"355","vel":4293.33,"tm":0,"mill":null},"2026-10-28|SD-3|T2":{"op":"555","vel":4293.33,"tm":0,"mill":null},"2026-10-28|SD-3|T3":{"op":"427","vel":4293.33,"tm":0,"mill":null},"2026-10-29|SD-3|T1":{"op":"355","vel":4293.33,"tm":0,"mill":null},"2026-10-29|SD-3|T2":{"op":"555","vel":4293.33,"tm":0,"mill":null},"2026-10-29|SD-3|T3":{"op":"427","vel":4293.33,"tm":0,"mill":null},"2026-10-30|SD-3|T1":{"op":"355","vel":4293.33,"tm":0,"mill":null},"2026-10-30|SD-3|T2":{"op":"555","vel":4293.33,"tm":0,"mill":null},"2026-10-30|SD-3|T3":{"op":"427","vel":4293.33,"tm":0,"mill":null},"2026-10-31|SD-3|T1":{"op":"355","vel":4293.33,"tm":0,"mill":null},"2026-10-31|SD-3|T2":{"op":"555","vel":4293.33,"tm":0,"mill":null},"2026-10-31|SD-3|T3":{"op":"427","vel":null,"tm":0,"mill":null},"2026-10-26|SD-4|T1":{"op":"487","vel":1533.33,"tm":0,"mill":8000.0},"2026-10-26|SD-4|T2":{"op":"337","vel":1533.33,"tm":0,"mill":8500.0},"2026-10-26|SD-4|T3":{"op":"323","vel":1533.33,"tm":0,"mill":8000.0},"2026-10-27|SD-4|T1":{"op":"487","vel":1533.33,"tm":0,"mill":null},"2026-10-27|SD-4|T2":{"op":"337","vel":1533.33,"tm":0,"mill":null},"2026-10-27|SD-4|T3":{"op":"323","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-4|T1":{"op":"487","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-4|T2":{"op":"337","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-4|T3":{"op":"323","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-4|T1":{"op":"487","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-4|T2":{"op":"337","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-4|T3":{"op":"323","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-4|T1":{"op":"487","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-4|T2":{"op":"337","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-4|T3":{"op":"323","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-4|T1":{"op":"487","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-4|T2":{"op":"337","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-4|T3":{"op":"323","vel":null,"tm":0,"mill":null},"2026-10-26|SD-5|T1":{"op":"331","vel":1533.33,"tm":0,"mill":8000.0},"2026-10-26|SD-5|T2":{"op":"492","vel":1533.33,"tm":0,"mill":12000.0},"2026-10-26|SD-5|T3":{"op":"559","vel":1533.33,"tm":0,"mill":4000.0},"2026-10-27|SD-5|T1":{"op":"331","vel":1533.33,"tm":0,"mill":null},"2026-10-27|SD-5|T2":{"op":"492","vel":1533.33,"tm":0,"mill":null},"2026-10-27|SD-5|T3":{"op":"559","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-5|T1":{"op":"331","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-5|T2":{"op":"492","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-5|T3":{"op":"559","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-5|T1":{"op":"331","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-5|T2":{"op":"492","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-5|T3":{"op":"559","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-5|T1":{"op":"331","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-5|T2":{"op":"492","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-5|T3":{"op":"559","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-5|T1":{"op":"331","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-5|T2":{"op":"492","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-5|T3":{"op":"559","vel":null,"tm":0,"mill":null},"2026-10-26|SD-6|T1":{"op":"357","vel":1533.33,"tm":0,"mill":5600.0},"2026-10-26|SD-6|T2":{"op":"760","vel":1533.33,"tm":0,"mill":5200.0},"2026-10-26|SD-6|T3":{"op":"346","vel":1533.33,"tm":0,"mill":8000.0},"2026-10-27|SD-6|T1":{"op":"357","vel":1533.33,"tm":0,"mill":null},"2026-10-27|SD-6|T2":{"op":"760","vel":1533.33,"tm":0,"mill":null},"2026-10-27|SD-6|T3":{"op":"346","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-6|T1":{"op":"357","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-6|T2":{"op":"760","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-6|T3":{"op":"346","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-6|T1":{"op":"357","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-6|T2":{"op":"760","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-6|T3":{"op":"346","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-6|T1":{"op":"357","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-6|T2":{"op":"760","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-6|T3":{"op":"346","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-6|T1":{"op":"357","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-6|T2":{"op":"760","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-6|T3":{"op":"346","vel":null,"tm":0,"mill":null},"2026-10-26|SD-7|T1":{"op":"330","vel":4293.33,"tm":0,"mill":13000.0},"2026-10-26|SD-7|T2":{"op":"338","vel":4293.33,"tm":0,"mill":17000.0},"2026-10-26|SD-7|T3":{"op":"316","vel":4293.33,"tm":0,"mill":23000.0},"2026-10-27|SD-7|T1":{"op":"330","vel":4293.33,"tm":0,"mill":null},"2026-10-27|SD-7|T2":{"op":"338","vel":4293.33,"tm":0,"mill":null},"2026-10-27|SD-7|T3":{"op":"316","vel":4293.33,"tm":0,"mill":null},"2026-10-28|SD-7|T1":{"op":"330","vel":4293.33,"tm":0,"mill":null},"2026-10-28|SD-7|T2":{"op":"338","vel":4293.33,"tm":0,"mill":null},"2026-10-28|SD-7|T3":{"op":"316","vel":4293.33,"tm":0,"mill":null},"2026-10-29|SD-7|T1":{"op":"330","vel":4293.33,"tm":0,"mill":null},"2026-10-29|SD-7|T2":{"op":"338","vel":4293.33,"tm":0,"mill":null},"2026-10-29|SD-7|T3":{"op":"316","vel":4293.33,"tm":0,"mill":null},"2026-10-30|SD-7|T1":{"op":"330","vel":4293.33,"tm":0,"mill":null},"2026-10-30|SD-7|T2":{"op":"338","vel":4293.33,"tm":0,"mill":null},"2026-10-30|SD-7|T3":{"op":"316","vel":4293.33,"tm":0,"mill":null},"2026-10-31|SD-7|T1":{"op":"330","vel":4293.33,"tm":0,"mill":null},"2026-10-31|SD-7|T2":{"op":"338","vel":4293.33,"tm":0,"mill":null},"2026-10-31|SD-7|T3":{"op":"316","vel":null,"tm":0,"mill":null},"2026-10-26|SD-8|T1":{"op":"377","vel":2300.0,"tm":0,"mill":9000.0},"2026-10-26|SD-8|T2":{"op":"29","vel":2300.0,"tm":0,"mill":6600.0},"2026-10-26|SD-8|T3":{"op":"867","vel":2300.0,"tm":0,"mill":null},"2026-10-27|SD-8|T1":{"op":"377","vel":2300.0,"tm":0,"mill":null},"2026-10-27|SD-8|T2":{"op":"29","vel":2300.0,"tm":0,"mill":null},"2026-10-27|SD-8|T3":{"op":"867","vel":2300.0,"tm":0,"mill":null},"2026-10-28|SD-8|T1":{"op":"377","vel":2300.0,"tm":0,"mill":null},"2026-10-28|SD-8|T2":{"op":"29","vel":2300.0,"tm":0,"mill":null},"2026-10-28|SD-8|T3":{"op":"867","vel":2300.0,"tm":0,"mill":null},"2026-10-29|SD-8|T1":{"op":"377","vel":2300.0,"tm":0,"mill":null},"2026-10-29|SD-8|T2":{"op":"29","vel":2300.0,"tm":0,"mill":null},"2026-10-29|SD-8|T3":{"op":"867","vel":2300.0,"tm":0,"mill":null},"2026-10-30|SD-8|T1":{"op":"377","vel":2300.0,"tm":0,"mill":null},"2026-10-30|SD-8|T2":{"op":"29","vel":2300.0,"tm":0,"mill":null},"2026-10-30|SD-8|T3":{"op":"867","vel":2300.0,"tm":0,"mill":null},"2026-10-31|SD-8|T1":{"op":"377","vel":2300.0,"tm":0,"mill":null},"2026-10-31|SD-8|T2":{"op":"29","vel":2300.0,"tm":0,"mill":null},"2026-10-31|SD-8|T3":{"op":"867","vel":null,"tm":0,"mill":null},"2026-10-26|SD-9|T1":{"op":"351","vel":4293.33,"tm":2.0,"mill":7700.0},"2026-10-26|SD-9|T2":{"op":"425","vel":4293.33,"tm":0,"mill":null},"2026-10-26|SD-9|T3":{"op":"570","vel":4293.33,"tm":0,"mill":7000.0},"2026-10-27|SD-9|T1":{"op":"351","vel":4293.33,"tm":3.0,"mill":null},"2026-10-27|SD-9|T2":{"op":"425","vel":4293.33,"tm":0,"mill":null},"2026-10-27|SD-9|T3":{"op":"570","vel":4293.33,"tm":0,"mill":null},"2026-10-28|SD-9|T1":{"op":"351","vel":4293.33,"tm":5.0,"mill":null},"2026-10-28|SD-9|T2":{"op":"425","vel":4293.33,"tm":0,"mill":null},"2026-10-28|SD-9|T3":{"op":"570","vel":4293.33,"tm":0,"mill":null},"2026-10-29|SD-9|T1":{"op":"351","vel":4293.33,"tm":0,"mill":null},"2026-10-29|SD-9|T2":{"op":"425","vel":4293.33,"tm":0,"mill":null},"2026-10-29|SD-9|T3":{"op":"570","vel":4293.33,"tm":0,"mill":null},"2026-10-30|SD-9|T1":{"op":"351","vel":4293.33,"tm":0,"mill":null},"2026-10-30|SD-9|T2":{"op":"425","vel":4293.33,"tm":0,"mill":null},"2026-10-30|SD-9|T3":{"op":"570","vel":4293.33,"tm":0,"mill":null},"2026-10-31|SD-9|T1":{"op":"351","vel":4293.33,"tm":0,"mill":null},"2026-10-31|SD-9|T2":{"op":"425","vel":4293.33,"tm":0,"mill":null},"2026-10-31|SD-9|T3":{"op":"570","vel":null,"tm":0,"mill":null},"2026-10-26|SD-10|T1":{"op":"473","vel":1840.0,"tm":0,"mill":9600.0},"2026-10-26|SD-10|T2":{"op":"348","vel":1840.0,"tm":0,"mill":10000.0},"2026-10-26|SD-10|T3":{"op":"389","vel":1840.0,"tm":0,"mill":7200.0},"2026-10-27|SD-10|T1":{"op":"473","vel":1840.0,"tm":0,"mill":null},"2026-10-27|SD-10|T2":{"op":"348","vel":1840.0,"tm":0,"mill":null},"2026-10-27|SD-10|T3":{"op":"389","vel":1840.0,"tm":0,"mill":null},"2026-10-28|SD-10|T1":{"op":"473","vel":1840.0,"tm":0,"mill":null},"2026-10-28|SD-10|T2":{"op":"348","vel":1840.0,"tm":0,"mill":null},"2026-10-28|SD-10|T3":{"op":"389","vel":1840.0,"tm":0,"mill":null},"2026-10-29|SD-10|T1":{"op":"473","vel":1840.0,"tm":0,"mill":null},"2026-10-29|SD-10|T2":{"op":"348","vel":1840.0,"tm":0,"mill":null},"2026-10-29|SD-10|T3":{"op":"389","vel":1840.0,"tm":0,"mill":null},"2026-10-30|SD-10|T1":{"op":"473","vel":1840.0,"tm":0,"mill":null},"2026-10-30|SD-10|T2":{"op":"348","vel":1840.0,"tm":0,"mill":null},"2026-10-30|SD-10|T3":{"op":"389","vel":1840.0,"tm":0,"mill":null},"2026-10-31|SD-10|T1":{"op":"473","vel":1840.0,"tm":0,"mill":null},"2026-10-31|SD-10|T2":{"op":"348","vel":1840.0,"tm":0,"mill":null},"2026-10-31|SD-10|T3":{"op":"389","vel":null,"tm":0,"mill":null},"2026-10-26|SD-11|T1":{"op":"370","vel":3066.67,"tm":0,"mill":5700.0},"2026-10-26|SD-11|T2":{"op":"751","vel":2300.0,"tm":0,"mill":6200.0},"2026-10-26|SD-11|T3":{"op":"400","vel":2300.0,"tm":0,"mill":17500.0},"2026-10-27|SD-11|T1":{"op":"370","vel":3066.67,"tm":0,"mill":null},"2026-10-27|SD-11|T2":{"op":"751","vel":2300.0,"tm":0,"mill":null},"2026-10-27|SD-11|T3":{"op":"400","vel":2300.0,"tm":0,"mill":null},"2026-10-28|SD-11|T1":{"op":"370","vel":3066.67,"tm":0,"mill":null},"2026-10-28|SD-11|T2":{"op":"751","vel":2300.0,"tm":0,"mill":null},"2026-10-28|SD-11|T3":{"op":"400","vel":2300.0,"tm":0,"mill":null},"2026-10-29|SD-11|T1":{"op":"370","vel":3066.67,"tm":0,"mill":null},"2026-10-29|SD-11|T2":{"op":"751","vel":2300.0,"tm":0,"mill":null},"2026-10-29|SD-11|T3":{"op":"400","vel":2300.0,"tm":0,"mill":null},"2026-10-30|SD-11|T1":{"op":"370","vel":3066.67,"tm":0,"mill":null},"2026-10-30|SD-11|T2":{"op":"751","vel":2300.0,"tm":0,"mill":null},"2026-10-30|SD-11|T3":{"op":"400","vel":2300.0,"tm":0,"mill":null},"2026-10-31|SD-11|T1":{"op":"370","vel":3066.67,"tm":0,"mill":null},"2026-10-31|SD-11|T2":{"op":"751","vel":2300.0,"tm":0,"mill":null},"2026-10-31|SD-11|T3":{"op":"400","vel":null,"tm":0,"mill":null},"2026-10-26|SD-12|T1":{"op":"","vel":1533.33,"tm":0,"mill":5000.0},"2026-10-26|SD-12|T2":{"op":"315","vel":1533.33,"tm":0,"mill":6500.0},"2026-10-26|SD-12|T3":{"op":"390","vel":1533.33,"tm":0,"mill":10000.0},"2026-10-27|SD-12|T1":{"op":"","vel":1533.33,"tm":0,"mill":null},"2026-10-27|SD-12|T2":{"op":"315","vel":1533.33,"tm":0,"mill":null},"2026-10-27|SD-12|T3":{"op":"390","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-12|T1":{"op":"","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-12|T2":{"op":"315","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-12|T3":{"op":"390","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-12|T1":{"op":"","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-12|T2":{"op":"315","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-12|T3":{"op":"390","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-12|T1":{"op":"","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-12|T2":{"op":"315","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-12|T3":{"op":"390","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-12|T1":{"op":"","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-12|T2":{"op":"315","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-12|T3":{"op":"390","vel":null,"tm":0,"mill":null},"2026-10-26|SD-13|T1":{"op":"805","vel":2300.0,"tm":0,"mill":10000.0},"2026-10-26|SD-13|T2":{"op":"759","vel":2300.0,"tm":0,"mill":4000.0},"2026-10-26|SD-13|T3":{"op":"380","vel":2300.0,"tm":0,"mill":20000.0},"2026-10-27|SD-13|T1":{"op":"805","vel":2300.0,"tm":0,"mill":null},"2026-10-27|SD-13|T2":{"op":"759","vel":2300.0,"tm":0,"mill":null},"2026-10-27|SD-13|T3":{"op":"380","vel":2300.0,"tm":0,"mill":null},"2026-10-28|SD-13|T1":{"op":"805","vel":2300.0,"tm":0,"mill":null},"2026-10-28|SD-13|T2":{"op":"759","vel":2300.0,"tm":0,"mill":null},"2026-10-28|SD-13|T3":{"op":"380","vel":2300.0,"tm":0,"mill":null},"2026-10-29|SD-13|T1":{"op":"805","vel":2300.0,"tm":0,"mill":null},"2026-10-29|SD-13|T2":{"op":"759","vel":2300.0,"tm":0,"mill":null},"2026-10-29|SD-13|T3":{"op":"380","vel":2300.0,"tm":0,"mill":null},"2026-10-30|SD-13|T1":{"op":"805","vel":2300.0,"tm":0,"mill":null},"2026-10-30|SD-13|T2":{"op":"759","vel":2300.0,"tm":0,"mill":null},"2026-10-30|SD-13|T3":{"op":"380","vel":2300.0,"tm":0,"mill":null},"2026-10-31|SD-13|T1":{"op":"805","vel":2300.0,"tm":0,"mill":null},"2026-10-31|SD-13|T2":{"op":"759","vel":2300.0,"tm":0,"mill":null},"2026-10-31|SD-13|T3":{"op":"380","vel":null,"tm":0,"mill":null},"2026-10-26|SD-14|T1":{"op":"444","vel":1533.33,"tm":0,"mill":6000.0},"2026-10-26|SD-14|T2":{"op":"453","vel":1533.33,"tm":0,"mill":null},"2026-10-26|SD-14|T3":{"op":"547","vel":1533.33,"tm":0,"mill":7200.0},"2026-10-27|SD-14|T1":{"op":"444","vel":1533.33,"tm":0,"mill":null},"2026-10-27|SD-14|T2":{"op":"453","vel":1533.33,"tm":0,"mill":null},"2026-10-27|SD-14|T3":{"op":"547","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-14|T1":{"op":"444","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-14|T2":{"op":"453","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-14|T3":{"op":"547","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-14|T1":{"op":"444","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-14|T2":{"op":"453","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-14|T3":{"op":"547","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-14|T1":{"op":"444","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-14|T2":{"op":"453","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-14|T3":{"op":"547","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-14|T1":{"op":"444","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-14|T2":{"op":"453","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-14|T3":{"op":"547","vel":null,"tm":0,"mill":null},"2026-10-26|SD-15|T1":{"op":"476","vel":1533.33,"tm":0,"mill":7500.0},"2026-10-26|SD-15|T2":{"op":"290","vel":1533.33,"tm":0,"mill":10000.0},"2026-10-26|SD-15|T3":{"op":"409","vel":1533.33,"tm":0,"mill":17500.0},"2026-10-27|SD-15|T1":{"op":"476","vel":1533.33,"tm":0,"mill":null},"2026-10-27|SD-15|T2":{"op":"290","vel":1533.33,"tm":0,"mill":null},"2026-10-27|SD-15|T3":{"op":"409","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-15|T1":{"op":"476","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-15|T2":{"op":"290","vel":1533.33,"tm":0,"mill":null},"2026-10-28|SD-15|T3":{"op":"409","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-15|T1":{"op":"476","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-15|T2":{"op":"290","vel":1533.33,"tm":0,"mill":null},"2026-10-29|SD-15|T3":{"op":"409","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-15|T1":{"op":"476","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-15|T2":{"op":"290","vel":1533.33,"tm":0,"mill":null},"2026-10-30|SD-15|T3":{"op":"409","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-15|T1":{"op":"476","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-15|T2":{"op":"290","vel":1533.33,"tm":0,"mill":null},"2026-10-31|SD-15|T3":{"op":"409","vel":null,"tm":0,"mill":null},"2026-10-26|CONTEC|T1":{"op":"874","vel":4293.33,"tm":0,"mill":10000.0},"2026-10-26|CONTEC|T2":{"op":"480","vel":4293.33,"tm":0,"mill":6000.0},"2026-10-26|CONTEC|T3":{"op":"640","vel":4293.33,"tm":0,"mill":27000.0},"2026-10-27|CONTEC|T1":{"op":"874","vel":4293.33,"tm":0,"mill":null},"2026-10-27|CONTEC|T2":{"op":"480","vel":4293.33,"tm":0,"mill":null},"2026-10-27|CONTEC|T3":{"op":"640","vel":4293.33,"tm":0,"mill":null},"2026-10-28|CONTEC|T1":{"op":"874","vel":4293.33,"tm":0,"mill":null},"2026-10-28|CONTEC|T2":{"op":"480","vel":4293.33,"tm":0,"mill":null},"2026-10-28|CONTEC|T3":{"op":"640","vel":4293.33,"tm":0,"mill":null},"2026-10-29|CONTEC|T1":{"op":"874","vel":4293.33,"tm":0,"mill":null},"2026-10-29|CONTEC|T2":{"op":"480","vel":4293.33,"tm":0,"mill":null},"2026-10-29|CONTEC|T3":{"op":"640","vel":4293.33,"tm":0,"mill":null},"2026-10-30|CONTEC|T1":{"op":"874","vel":4293.33,"tm":0,"mill":null},"2026-10-30|CONTEC|T2":{"op":"480","vel":4293.33,"tm":0,"mill":null},"2026-10-30|CONTEC|T3":{"op":"640","vel":4293.33,"tm":0,"mill":null},"2026-10-31|CONTEC|T1":{"op":"874","vel":4293.33,"tm":0,"mill":null},"2026-10-31|CONTEC|T2":{"op":"480","vel":4293.33,"tm":0,"mill":null},"2026-10-31|CONTEC|T3":{"op":"640","vel":null,"tm":0,"mill":null},"2026-10-26|Lian Yu-1|T1":{"op":"301","vel":1533.33,"tm":0,"mill":null},"2026-10-26|Lian Yu-1|T2":{"op":"641","vel":1533.33,"tm":0,"mill":null},"2026-10-26|Lian Yu-1|T3":{"op":"460","vel":1533.33,"tm":0,"mill":null},"2026-10-27|Lian Yu-1|T1":{"op":"301","vel":1533.33,"tm":0,"mill":null},"2026-10-27|Lian Yu-1|T2":{"op":"641","vel":1533.33,"tm":0,"mill":null},"2026-10-27|Lian Yu-1|T3":{"op":"460","vel":1533.33,"tm":0,"mill":null},"2026-10-28|Lian Yu-1|T1":{"op":"301","vel":1533.33,"tm":0,"mill":null},"2026-10-28|Lian Yu-1|T2":{"op":"641","vel":1533.33,"tm":0,"mill":null},"2026-10-28|Lian Yu-1|T3":{"op":"460","vel":1533.33,"tm":0,"mill":null},"2026-10-29|Lian Yu-1|T1":{"op":"301","vel":1533.33,"tm":0,"mill":null},"2026-10-29|Lian Yu-1|T2":{"op":"641","vel":1533.33,"tm":0,"mill":null},"2026-10-29|Lian Yu-1|T3":{"op":"460","vel":1533.33,"tm":0,"mill":null},"2026-10-30|Lian Yu-1|T1":{"op":"301","vel":1533.33,"tm":0,"mill":null},"2026-10-30|Lian Yu-1|T2":{"op":"641","vel":1533.33,"tm":0,"mill":null},"2026-10-30|Lian Yu-1|T3":{"op":"460","vel":1533.33,"tm":0,"mill":null},"2026-10-31|Lian Yu-1|T1":{"op":"301","vel":1533.33,"tm":0,"mill":null},"2026-10-31|Lian Yu-1|T2":{"op":"641","vel":1533.33,"tm":0,"mill":null},"2026-10-31|Lian Yu-1|T3":{"op":"460","vel":null,"tm":0,"mill":null},"2026-10-26|Lian Yu-2|T1":{"op":"659","vel":1533.33,"tm":0,"mill":2000.0},"2026-10-26|Lian Yu-2|T2":{"op":"543","vel":1533.33,"tm":0,"mill":4500.0},"2026-10-26|Lian Yu-2|T3":{"op":"233","vel":1533.33,"tm":0,"mill":10000.0},"2026-10-27|Lian Yu-2|T1":{"op":"659","vel":1533.33,"tm":0,"mill":null},"2026-10-27|Lian Yu-2|T2":{"op":"543","vel":1533.33,"tm":0,"mill":null},"2026-10-27|Lian Yu-2|T3":{"op":"233","vel":1533.33,"tm":0,"mill":null},"2026-10-28|Lian Yu-2|T1":{"op":"659","vel":1533.33,"tm":0,"mill":null},"2026-10-28|Lian Yu-2|T2":{"op":"543","vel":1533.33,"tm":0,"mill":null},"2026-10-28|Lian Yu-2|T3":{"op":"233","vel":1533.33,"tm":0,"mill":null},"2026-10-29|Lian Yu-2|T1":{"op":"659","vel":1533.33,"tm":0,"mill":null},"2026-10-29|Lian Yu-2|T2":{"op":"543","vel":1533.33,"tm":0,"mill":null},"2026-10-29|Lian Yu-2|T3":{"op":"233","vel":1533.33,"tm":0,"mill":null},"2026-10-30|Lian Yu-2|T1":{"op":"659","vel":1533.33,"tm":0,"mill":null},"2026-10-30|Lian Yu-2|T2":{"op":"543","vel":1533.33,"tm":0,"mill":null},"2026-10-30|Lian Yu-2|T3":{"op":"233","vel":1533.33,"tm":0,"mill":null},"2026-10-31|Lian Yu-2|T1":{"op":"659","vel":1533.33,"tm":0,"mill":null},"2026-10-31|Lian Yu-2|T2":{"op":"543","vel":1533.33,"tm":0,"mill":null},"2026-10-31|Lian Yu-2|T3":{"op":"233","vel":null,"tm":0,"mill":null},"2026-10-26|Italiana|T1":{"op":"Martin 382","vel":3733.33,"tm":0,"mill":null},"2026-10-26|Italiana|T2":{"op":"Roberto","vel":3733.33,"tm":0,"mill":null},"2026-10-26|Italiana|T3":{"op":"Roberto","vel":3733.33,"tm":0,"mill":null},"2026-10-27|Italiana|T1":{"op":"Martin 382","vel":3733.33,"tm":0,"mill":null},"2026-10-27|Italiana|T2":{"op":"Roberto","vel":3733.33,"tm":0,"mill":null},"2026-10-27|Italiana|T3":{"op":"Roberto","vel":3733.33,"tm":0,"mill":null},"2026-10-28|Italiana|T1":{"op":"Martin 382","vel":3733.33,"tm":0,"mill":null},"2026-10-28|Italiana|T2":{"op":"Roberto","vel":3733.33,"tm":0,"mill":null},"2026-10-28|Italiana|T3":{"op":"Roberto","vel":3733.33,"tm":0,"mill":null},"2026-10-29|Italiana|T1":{"op":"Martin 382","vel":3733.33,"tm":0,"mill":null},"2026-10-29|Italiana|T2":{"op":"Roberto","vel":3733.33,"tm":0,"mill":null},"2026-10-29|Italiana|T3":{"op":"Roberto","vel":3733.33,"tm":0,"mill":null},"2026-10-30|Italiana|T1":{"op":"Martin 382","vel":3733.33,"tm":0,"mill":null},"2026-10-30|Italiana|T2":{"op":"Roberto","vel":3733.33,"tm":0,"mill":null},"2026-10-30|Italiana|T3":{"op":"Roberto","vel":3733.33,"tm":0,"mill":null},"2026-10-31|Italiana|T1":{"op":"Martin 382","vel":3733.33,"tm":0,"mill":null},"2026-10-31|Italiana|T2":{"op":"Roberto","vel":3733.33,"tm":0,"mill":null},"2026-10-31|Italiana|T3":{"op":"Roberto","vel":null,"tm":0,"mill":null},"2026-10-26|CH-1|T1":{"op":"265","vel":2333.33,"tm":2.0,"mill":null},"2026-10-26|CH-1|T2":{"op":"382","vel":2333.33,"tm":0,"mill":24000.0},"2026-10-26|CH-1|T3":{"op":"404","vel":2333.33,"tm":0,"mill":30000.0},"2026-10-27|CH-1|T1":{"op":"265","vel":2333.33,"tm":3.0,"mill":null},"2026-10-27|CH-1|T2":{"op":"382","vel":2333.33,"tm":0,"mill":null},"2026-10-27|CH-1|T3":{"op":"404","vel":2333.33,"tm":0,"mill":null},"2026-10-28|CH-1|T1":{"op":"265","vel":2333.33,"tm":0,"mill":null},"2026-10-28|CH-1|T2":{"op":"382","vel":2333.33,"tm":3.0,"mill":null},"2026-10-28|CH-1|T3":{"op":"404","vel":2333.33,"tm":0,"mill":null},"2026-10-29|CH-1|T1":{"op":"265","vel":2333.33,"tm":2.0,"mill":null},"2026-10-29|CH-1|T2":{"op":"382","vel":2333.33,"tm":0,"mill":null},"2026-10-29|CH-1|T3":{"op":"404","vel":2333.33,"tm":0,"mill":null},"2026-10-30|CH-1|T1":{"op":"265","vel":2333.33,"tm":0,"mill":null},"2026-10-30|CH-1|T2":{"op":"382","vel":2333.33,"tm":0,"mill":null},"2026-10-30|CH-1|T3":{"op":"404","vel":2333.33,"tm":0,"mill":null},"2026-10-31|CH-1|T1":{"op":"265","vel":2333.33,"tm":0,"mill":null},"2026-10-31|CH-1|T2":{"op":"382","vel":2333.33,"tm":0,"mill":null},"2026-10-31|CH-1|T3":{"op":"404","vel":null,"tm":0,"mill":null},"2026-10-26|CH-2|T1":{"op":"556","vel":2333.33,"tm":0,"mill":21000.0},"2026-10-26|CH-2|T2":{"op":"547","vel":2333.33,"tm":0,"mill":34000.0},"2026-10-26|CH-2|T3":{"op":"489","vel":2333.33,"tm":0,"mill":23400.0},"2026-10-27|CH-2|T1":{"op":"556","vel":2333.33,"tm":0,"mill":null},"2026-10-27|CH-2|T2":{"op":"547","vel":2333.33,"tm":0,"mill":null},"2026-10-27|CH-2|T3":{"op":"489","vel":2333.33,"tm":0,"mill":null},"2026-10-28|CH-2|T1":{"op":"556","vel":2333.33,"tm":0,"mill":null},"2026-10-28|CH-2|T2":{"op":"547","vel":2333.33,"tm":0,"mill":null},"2026-10-28|CH-2|T3":{"op":"489","vel":2333.33,"tm":0,"mill":null},"2026-10-29|CH-2|T1":{"op":"556","vel":2333.33,"tm":0,"mill":null},"2026-10-29|CH-2|T2":{"op":"547","vel":2333.33,"tm":0,"mill":null},"2026-10-29|CH-2|T3":{"op":"489","vel":2333.33,"tm":0,"mill":null},"2026-10-30|CH-2|T1":{"op":"556","vel":2333.33,"tm":0,"mill":null},"2026-10-30|CH-2|T2":{"op":"547","vel":2333.33,"tm":0,"mill":null},"2026-10-30|CH-2|T3":{"op":"489","vel":2333.33,"tm":0,"mill":null},"2026-10-31|CH-2|T1":{"op":"556","vel":2333.33,"tm":0,"mill":null},"2026-10-31|CH-2|T2":{"op":"547","vel":2333.33,"tm":0,"mill":null},"2026-10-31|CH-2|T3":{"op":"489","vel":null,"tm":0,"mill":null}}};
+const DIAS = [
+  { id: "2026-10-26", corto: "Lun 26", largo: "Lunes 26" },
+  { id: "2026-10-27", corto: "Mar 27", largo: "Martes 27" },
+  { id: "2026-10-28", corto: "Mié 28", largo: "Miércoles 28" },
+  { id: "2026-10-29", corto: "Jue 29", largo: "Jueves 29" },
+  { id: "2026-10-30", corto: "Vie 30", largo: "Viernes 30" },
+  { id: "2026-10-31", corto: "Sáb 31", largo: "Sábado 31" }
+];
+const TURNOS = [
+  { id: "T1", label: "Turno 1" },
+  { id: "T2", label: "Turno 2" },
+  { id: "T3", label: "Turno 3" }
+];
+const LINEAS = PACK.lineas;
+const STORE = "bolseo-captura-2631-v1";
+let dia = DIAS[0].id;
+let turno = "T1";
+let state = cargar();
 
-  function desbloquearApp() {
-    sessionStorage.setItem(PIN_KEY, "1");
-    document.body.classList.remove("bloqueado");
+function cargar() {
+  try {
+    const guardado = localStorage.getItem(STORE);
+    if (guardado) return JSON.parse(guardado);
+  } catch (e) { /* sigue con el Excel */ }
+  return JSON.parse(JSON.stringify(PACK.seed));
+}
+function guardar() {
+  localStorage.setItem(STORE, JSON.stringify(state));
+}
+function clave(day, line, shift) { return day + "|" + line + "|" + shift; }
+function celda(day, line, shift) {
+  const k = clave(day, line, shift);
+  if (!state[k]) state[k] = { op: "", vel: null, tm: 0, mill: null };
+  return state[k];
+}
+function num(v) {
+  if (v == null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+function metas(c) {
+  const vel = num(c.vel);
+  const tm = num(c.tm) || 0;
+  if (vel == null || vel <= 0) return { m2: null, m3: null, tm: tm };
+  return { m2: vel * Math.max(0, 6 - tm), m3: vel * 7.5, tm: tm };
+}
+function fmt(n) {
+  if (n == null || Number.isNaN(n)) return "—";
+  return Math.round(n).toLocaleString("es-MX");
+}
+function fmtH(n) {
+  return (n || 0).toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " h";
+}
+function fmtPct(mill, meta) {
+  if (mill == null || !meta) return "—";
+  return (100 * mill / meta).toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "%";
+}
+function valorInput(n, vacioSiCero) {
+  if (n == null || n === "") return "";
+  if (vacioSiCero && Number(n) === 0) return "";
+  if (Number.isInteger(Number(n))) return String(Number(n));
+  return String(n);
+}
+function diaInfo(id) { return DIAS.find(d => d.id === id); }
+
+function rollupDia(day) {
+  let mill = 0, m2 = 0, m3 = 0, tm = 0, anyMill = false;
+  LINEAS.forEach(line => {
+    TURNOS.forEach(sh => {
+      const c = celda(day, line, sh.id);
+      const m = metas(c);
+      if (c.mill != null && c.mill !== "") { anyMill = true; mill += Number(c.mill) || 0; }
+      if (m.m2 != null) { m2 += m.m2; m3 += m.m3; }
+      tm += m.tm;
+    });
+  });
+  return { mill, m2, m3, tm, anyMill };
+}
+function rollupTurno(day, shift) {
+  let mill = 0, m2 = 0, m3 = 0, tm = 0, anyMill = false;
+  LINEAS.forEach(line => {
+    const c = celda(day, line, shift);
+    const m = metas(c);
+    if (c.mill != null && c.mill !== "") { anyMill = true; mill += Number(c.mill) || 0; }
+    if (m.m2 != null) { m2 += m.m2; m3 += m.m3; }
+    tm += m.tm;
+  });
+  return { mill, m2, m3, tm, anyMill };
+}
+function diasConMillares() {
+  return DIAS.filter(d => rollupDia(d.id).anyMill);
+}
+
+function pintarSelector() {
+  document.getElementById("dias").innerHTML = DIAS.map(d =>
+    '<button type="button" class="jump' + (d.id === dia ? " activa" : "") + '" data-dia="' + d.id + '">' + d.corto + "</button>"
+  ).join("");
+  document.getElementById("turnos").innerHTML = TURNOS.map(t =>
+    '<button type="button" class="jump' + (t.id === turno ? " activa" : "") + '" data-turno="' + t.id + '">' + t.label + "</button>"
+  ).join("");
+  document.getElementById("tituloDia").textContent = diaInfo(dia).largo + " · " + TURNOS.find(t => t.id === turno).label;
+}
+
+function pintarTabla() {
+  const cuerpo = document.getElementById("cuerpo");
+  cuerpo.innerHTML = LINEAS.map(line => {
+    const c = celda(dia, line, turno);
+    const m = metas(c);
+    const pct = fmtPct(c.mill == null || c.mill === "" ? null : Number(c.mill), m.m2);
+    const bien = m.m2 && c.mill != null && Number(c.mill) >= m.m2 ? " bien" : "";
+    return '<tr data-line="' + line + '">' +
+      '<td class="linea">' + line + "</td>" +
+      '<td class="l"><input class="op" data-field="op" aria-label="Operador ' + line + '" value="' + esc(c.op || "") + '"></td>' +
+      '<td><input data-field="vel" inputmode="decimal" aria-label="Velocidad ' + line + '" value="' + valorInput(c.vel) + '"></td>' +
+      '<td><input data-field="tm" inputmode="decimal" aria-label="Tiempo muerto ' + line + '" value="' + valorInput(c.tm, true) + '"></td>' +
+      '<td><input data-field="mill" inputmode="decimal" aria-label="Millares ' + line + '" value="' + valorInput(c.mill) + '"></td>' +
+      '<td class="auto" data-out="m2">' + fmt(m.m2) + "</td>" +
+      '<td class="auto" data-out="m3">' + fmt(m.m3) + "</td>" +
+      '<td class="auto' + bien + '" data-out="pct">' + pct + "</td>" +
+      "</tr>";
+  }).join("");
+  pintarPie();
+}
+
+function pintarPie() {
+  const r = rollupTurno(dia, turno);
+  const nombre = TURNOS.find(t => t.id === turno).label;
+  document.getElementById("pieNombre").textContent = nombre;
+  document.getElementById("pieTm").textContent = fmtH(r.tm);
+  document.getElementById("pieMill").textContent = r.anyMill ? fmt(r.mill) : "—";
+  document.getElementById("pieM2").textContent = fmt(r.m2);
+  document.getElementById("pieM3").textContent = fmt(r.m3);
+  document.getElementById("piePct").textContent = r.anyMill ? fmtPct(r.mill, r.m2) : "—";
+}
+
+function kpi(lbl, num, hint) {
+  return '<article class="kpi"><div class="lbl">' + lbl + '</div><div class="num">' + num + '</div><div class="hint">' + hint + "</div></article>";
+}
+
+function pintarDia() {
+  const r = rollupDia(dia);
+  const largo = diaInfo(dia).largo;
+  document.getElementById("kpisDia").innerHTML =
+    kpi("Millares", r.anyMill ? fmt(r.mill) : "—", r.anyMill ? largo + ", tres turnos" : "Aún sin millares") +
+    kpi("Meta 2", fmt(r.m2), r.anyMill ? fmtPct(r.mill, r.m2) + " de cumplimiento" : "Sale de la velocidad y el tiempo muerto") +
+    kpi("Meta 3", fmt(r.m3), r.anyMill ? fmtPct(r.mill, r.m3) + " de cumplimiento" : "Velocidad × 7.5 h") +
+    kpi("Tiempo muerto", fmtH(r.tm), largo);
+}
+
+function pintarSemana() {
+  const con = diasConMillares();
+  let mill = 0, m2 = 0, m3 = 0, tm = 0;
+  const porTurno = { T1: { mill: 0, m2: 0 }, T2: { mill: 0, m2: 0 }, T3: { mill: 0, m2: 0 } };
+  const porLinea = {};
+  LINEAS.forEach(line => { porLinea[line] = { mill: 0, m2: 0, tm: 0, any: false }; });
+  con.forEach(d => {
+    const r = rollupDia(d.id);
+    mill += r.mill; m2 += r.m2; m3 += r.m3; tm += r.tm;
+    TURNOS.forEach(sh => {
+      let sm = 0, s2 = 0;
+      LINEAS.forEach(line => {
+        const c = celda(d.id, line, sh.id);
+        const m = metas(c);
+        if (c.mill != null && c.mill !== "") {
+          sm += Number(c.mill) || 0;
+          porLinea[line].mill += Number(c.mill) || 0;
+          porLinea[line].any = true;
+        }
+        if (m.m2 != null) {
+          s2 += m.m2;
+          porLinea[line].m2 += m.m2;
+        }
+        porLinea[line].tm += m.tm;
+      });
+      porTurno[sh.id].mill += sm;
+      porTurno[sh.id].m2 += s2;
+    });
+  });
+  document.getElementById("semanaSub").textContent = con.length
+    ? "Entran los días que ya tienen millares: " + con.map(d => d.largo.toLowerCase()).join(", ") + "."
+    : "Todavía no hay millares capturados.";
+  document.getElementById("kpisSemana").innerHTML =
+    kpi("Millares", con.length ? fmt(mill) : "—", con.length + (con.length === 1 ? " día" : " días")) +
+    kpi("Meta 2", fmt(m2), con.length ? fmtPct(mill, m2) + " de cumplimiento" : "—") +
+    kpi("Meta 3", fmt(m3), con.length ? fmtPct(mill, m3) + " de cumplimiento" : "—") +
+    kpi("Tiempo muerto", fmtH(tm), "En los días con millares");
+
+  const maxMill = Math.max(1, ...DIAS.map(d => rollupDia(d.id).anyMill ? rollupDia(d.id).mill : 0));
+  document.getElementById("graficaDias").innerHTML = DIAS.map(d => {
+    const r = rollupDia(d.id);
+    const h = r.anyMill ? Math.max(4, Math.round(100 * r.mill / maxMill)) : 4;
+    return '<div class="colwrap"><div class="col' + (r.anyMill ? "" : " bajo") + '" style="height:' + h + '%"></div><div class="etiq">' + d.corto + "<strong>" + (r.anyMill ? fmt(r.mill) : "0") + "</strong></div></div>";
+  }).join("");
+
+  const filas = DIAS.map(d => {
+    const r = rollupDia(d.id);
+    return "<tr" + (r.anyMill ? "" : ' class="cero"') + "><td class=\"l\">" + d.largo + "</td><td>" +
+      (r.anyMill ? fmt(r.mill) : "—") + "</td><td>" + (r.anyMill ? fmtPct(r.mill, r.m2) : "—") +
+      "</td><td>" + fmt(r.m2) + "</td><td>" + fmt(r.m3) + "</td><td>" + fmtH(r.tm) + "</td></tr>";
+  }).join("");
+  const total = "<tr class=\"total\"><td class=\"l\">Con millares</td><td>" + fmt(mill) + "</td><td>" +
+    fmtPct(mill, m2) + "</td><td>" + fmt(m2) + "</td><td>" + fmt(m3) + "</td><td>" + fmtH(tm) + "</td></tr>";
+  document.getElementById("tablaDias").innerHTML = filas + total;
+
+  document.getElementById("barrasTurnos").innerHTML = TURNOS.map(sh => {
+    const t = porTurno[sh.id];
+    const pct = t.m2 ? 100 * t.mill / t.m2 : 0;
+    const ancho = Math.max(0, Math.min(100, pct));
+    return '<div class="bar-row"><span>' + sh.label + '</span><div class="bar-track"><span class="bar-fill' +
+      (pct >= 70 ? " bueno" : "") + '" style="width:' + ancho + '%"></span></div><span class="bar-num">' +
+      fmt(t.mill) + " · " + fmtPct(t.mill, t.m2) + "</span></div>";
+  }).join("");
+
+  const lineas = LINEAS.map(line => ({ line, ...porLinea[line], pct: porLinea[line].m2 ? porLinea[line].mill / porLinea[line].m2 : null }))
+    .sort((a, b) => {
+      if (a.any !== b.any) return a.any ? -1 : 1;
+      return (b.pct || 0) - (a.pct || 0);
+    });
+  const conProd = lineas.filter(x => x.any && x.mill > 0);
+  const mejor = conProd[0];
+  const volumen = conProd.slice().sort((a, b) => b.mill - a.mill)[0];
+  const baja = conProd[conProd.length - 1];
+  document.getElementById("llamadas").innerHTML = [
+    mejor ? llamada("alto", "Por encima de la meta 2", mejor.line, fmtPct(mejor.mill, mejor.m2), fmt(mejor.mill) + " millares · " + fmtH(mejor.tm)) : "",
+    volumen ? llamada("alto", "Más volumen", volumen.line, fmt(volumen.mill), fmtPct(volumen.mill, volumen.m2) + " de la meta 2") : "",
+    baja ? llamada("bajo", "Más baja con producción", baja.line, fmtPct(baja.mill, baja.m2), fmt(baja.mill) + " millares · " + fmtH(baja.tm)) : ""
+  ].join("");
+  document.getElementById("tablaLineas").innerHTML = lineas.map(x => {
+    const etiqueta = !x.any || x.mill === 0
+      ? ' <span class="tag">en cero</span>'
+      : (x.pct >= 1 ? ' <span class="tag ok">' + fmtPct(x.mill, x.m2) + "</span>" : "");
+    return '<tr' + (!x.any || x.mill === 0 ? ' class="cero"' : "") + '><td class="l">' + x.line + etiqueta +
+      "</td><td>" + (x.any ? fmt(x.mill) : "0") + "</td><td>" + (x.any && x.mill > 0 ? fmtPct(x.mill, x.m2) : "—") +
+      "</td><td>" + fmt(x.m2) + "</td><td>" + fmtH(x.tm) + "</td></tr>";
+  }).join("");
+}
+
+function llamada(clase, titulo, quien, num, detalle) {
+  return '<article class="call ' + clase + '"><h3>' + titulo + '</h3><div class="who">' + quien +
+    '</div><div class="num">' + num + '</div><p class="sub" style="margin:6px 0 0">' + detalle + "</p></article>";
+}
+
+function pintar() {
+  pintarSelector();
+  pintarTabla();
+  pintarDia();
+  pintarSemana();
+}
+
+function parseCaptura(raw, field) {
+  let t = String(raw).trim().replace(/\s+/g, "");
+  if (t === "") return field === "tm" ? 0 : null;
+  if (field === "mill") t = t.replace(/,/g, "");
+  else if (t.includes(",") && !t.includes(".")) {
+    if (/^\d+,\d{1,2}$/.test(t)) t = t.replace(",", ".");
+    else t = t.replace(/,/g, "");
+  } else if (t.includes(",") && t.includes(".")) {
+    if (t.lastIndexOf(",") > t.lastIndexOf(".")) t = t.replace(/\./g, "").replace(",", ".");
+    else t = t.replace(/,/g, "");
   }
+  if (!/^-?\d+(\.\d+)?$/.test(t)) return NaN;
+  const n = Number(t);
+  return Number.isFinite(n) ? n : NaN;
+}
+function leerInput(input) {
+  const line = input.closest("tr").dataset.line;
+  const c = celda(dia, line, turno);
+  const field = input.dataset.field;
+  if (field === "op") c.op = input.value;
+  else {
+    const n = parseCaptura(input.value, field);
+    if (Number.isNaN(n)) return;
+    c[field] = n;
+  }
+  guardar();
+  const m = metas(c);
+  const tr = input.closest("tr");
+  tr.querySelector('[data-out="m2"]').textContent = fmt(m.m2);
+  tr.querySelector('[data-out="m3"]').textContent = fmt(m.m3);
+  const mill = c.mill == null || c.mill === "" ? null : Number(c.mill);
+  const pctCell = tr.querySelector('[data-out="pct"]');
+  pctCell.textContent = fmtPct(mill, m.m2);
+  pctCell.classList.toggle("bien", !!(m.m2 && mill != null && mill >= m.m2));
+  pintarPie();
+  pintarDia();
+  pintarSemana();
+}
 
-  document.getElementById("formPin").addEventListener("submit", function (e) {
-    e.preventDefault();
-    const pin = document.getElementById("pin");
-    const error = document.getElementById("pinError");
-    if (pin.value === ACCESO_PIN) {
-      error.textContent = "";
-      desbloquearApp();
-    } else {
-      error.textContent = "PIN incorrecto.";
-      pin.value = "";
-      pin.focus();
-    }
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+}
+
+document.getElementById("cuerpo").addEventListener("input", e => {
+  if (e.target.matches("input")) leerInput(e.target);
+});
+document.getElementById("cuerpo").addEventListener("focusout", e => {
+  const input = e.target;
+  if (!input.matches("input") || input.dataset.field === "op") return;
+  const c = celda(dia, input.closest("tr").dataset.line, turno);
+  const field = input.dataset.field;
+  const parsed = parseCaptura(input.value, field);
+  if (!Number.isNaN(parsed)) c[field] = parsed;
+  input.value = valorInput(c[field], field === "tm");
+  guardar();
+});
+document.getElementById("cuerpo").addEventListener("keydown", e => {
+  if (e.key !== "Enter" || !e.target.matches("input")) return;
+  e.preventDefault();
+  const field = e.target.dataset.field;
+  const inputs = [...document.querySelectorAll('#cuerpo input[data-field="' + field + '"]')];
+  const i = inputs.indexOf(e.target);
+  if (inputs[i + 1]) inputs[i + 1].focus();
+});
+document.getElementById("dias").addEventListener("click", e => {
+  const b = e.target.closest("[data-dia]");
+  if (!b) return;
+  dia = b.dataset.dia;
+  pintar();
+});
+document.getElementById("turnos").addEventListener("click", e => {
+  const b = e.target.closest("[data-turno]");
+  if (!b) return;
+  turno = b.dataset.turno;
+  pintar();
+});
+document.getElementById("btnReset").addEventListener("click", () => {
+  if (!confirm("Se borran los cambios de este navegador y vuelve la captura del Excel.")) return;
+  localStorage.removeItem(STORE);
+  state = JSON.parse(JSON.stringify(PACK.seed));
+  pintar();
+});
+document.getElementById("btnCsv").addEventListener("click", () => {
+  const filas = [["Fecha", "Linea", "Turno", "Operador", "Velocidad", "Tiempo muerto", "Millares", "Meta 2", "Meta 3", "% meta 2"]];
+  DIAS.forEach(d => {
+    LINEAS.forEach(line => {
+      TURNOS.forEach(sh => {
+        const c = celda(d.id, line, sh.id);
+        const m = metas(c);
+        const mill = c.mill == null || c.mill === "" ? "" : c.mill;
+        filas.push([d.id, line, sh.label, c.op || "", c.vel == null ? "" : c.vel, c.tm || 0, mill, m.m2 == null ? "" : Math.round(m.m2), m.m3 == null ? "" : Math.round(m.m3), mill === "" ? "" : fmtPct(Number(mill), m.m2)]);
+      });
+    });
   });
+  const csv = "\uFEFF" + filas.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(";")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = "bolseo-26-al-31.csv";
+  a.click();
+});
 
-  document.getElementById("pin").addEventListener("input", function () {
-    this.value = this.value.replace(/\D/g, "").slice(0, 4);
-    document.getElementById("pinError").textContent = "";
-  });
+function arrancarCaptura() { pintar(); }
 
-  window.onload = function () {
-    if (sessionStorage.getItem(PIN_KEY) === "1") {
-      document.body.classList.remove("bloqueado");
-    } else {
-      document.body.classList.add("bloqueado");
-      document.getElementById("pin").focus();
-    }
-  };
+const ACCESO_PIN = "2580";
+const PIN_KEY = "bolseoPinOk";
+function desbloquearApp() {
+  sessionStorage.setItem(PIN_KEY, "1");
+  document.body.classList.remove("bloqueado");
+}
+document.getElementById("formPin").addEventListener("submit", function (e) {
+  e.preventDefault();
+  const pin = document.getElementById("pin");
+  const error = document.getElementById("pinError");
+  if (pin.value === ACCESO_PIN) {
+    error.textContent = "";
+    desbloquearApp();
+  } else {
+    error.textContent = "PIN incorrecto.";
+    pin.value = "";
+    pin.focus();
+  }
+});
+document.getElementById("pin").addEventListener("input", function () {
+  this.value = this.value.replace(/\D/g, "").slice(0, 4);
+  document.getElementById("pinError").textContent = "";
+});
+window.onload = function () {
+  arrancarCaptura();
+  if (sessionStorage.getItem(PIN_KEY) === "1") document.body.classList.remove("bloqueado");
+  else {
+    document.body.classList.add("bloqueado");
+    document.getElementById("pin").focus();
+  }
+};
 </script>
 </body>
 </html>
