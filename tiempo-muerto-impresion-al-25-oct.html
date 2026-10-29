@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiempo muerto · Área de impresión 2026</title>
+<style>
+  :root {
+    --bg: #efe8dc;
+    --ink: #1c1915;
+    --muted: #5e574c;
+    --card: #fffdf8;
+    --line: #e3d9c8;
+    --accent: #9f1239;
+    --accent-soft: #f8e8ec;
+    --good: #0f6e56;
+    --good-soft: #e5f4ef;
+    --warn: #9a3412;
+    --shadow: 0 1px 0 rgba(28, 25, 21, 0.04);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 400px at 10% -10%, #f7f1e6 0%, transparent 50%),
+      var(--bg);
+    color: var(--ink);
+    font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+    font-size: 15.5px;
+    line-height: 1.45;
+  }
+  button, select { font: inherit; color: inherit; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 72px; }
+  header.top { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; margin-bottom: 18px; }
+  .eyebrow { letter-spacing: 0.14em; text-transform: uppercase; font-size: 12px; color: var(--accent); font-weight: 700; margin: 0 0 6px; }
+  h1 { font-family: Palatino, "Iowan Old Style", Georgia, serif; font-size: 46px; line-height: 0.95; font-weight: 600; margin: 0; letter-spacing: -0.03em; }
+  .lede { margin: 8px 0 0; max-width: 640px; color: var(--muted); }
+  .corte { text-align: right; font-size: 13px; color: var(--muted); }
+  .corte strong { display: block; color: var(--ink); font-size: 15px; }
+  nav.bar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    background: rgba(239, 232, 220, 0.92); backdrop-filter: blur(8px);
+    padding: 10px 0 12px; margin-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pills button, .jump { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 11px; cursor: pointer; }
+  .pills button[aria-pressed="true"] { background: var(--ink); color: #fffdf8; border-color: var(--ink); }
+  .jump { text-decoration: none; color: var(--muted); font-size: 13px; }
+  .jump:hover { color: var(--ink); }
+  .spacer { flex: 1; }
+  section { margin-top: 22px; }
+  h2 { font-family: Palatino, Georgia, serif; font-size: 28px; margin: 0 0 4px; font-weight: 600; }
+  h2 span { color: var(--muted); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 15px; font-weight: 500; margin-left: 8px; }
+  .sub { color: var(--muted); margin: 0 0 14px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+  section { scroll-margin-top: 72px; }
+  .kpi, .card, .call { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+  .kpi { padding: 14px 14px 12px; }
+  .kpi .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .kpi .num { font-variant-numeric: tabular-nums; font-size: 26px; font-weight: 650; letter-spacing: -0.03em; margin-top: 4px; }
+  .kpi .hint { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .grid-2 { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: 1.4fr 0.8fr; gap: 12px; margin-top: 12px; }
+  .card { padding: 16px; }
+  .card h3, .call h3 { margin: 0 0 8px; font-size: 15px; }
+  .grupos { display: flex; flex-direction: column; gap: 8px; }
+  .grupo { display: grid; grid-template-columns: 118px 1fr auto; gap: 8px; align-items: center; font-size: 14px; }
+  .track { height: 10px; background: #f3eee6; border-radius: 99px; overflow: hidden; }
+  .track span { display: block; height: 100%; border-radius: 99px; }
+  .cols { display: flex; align-items: flex-end; gap: 10px; height: 220px; padding-top: 8px; }
+  .colwrap { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+  .col { width: 100%; max-width: 48px; display: flex; flex-direction: column-reverse; border-radius: 8px 8px 3px 3px; overflow: hidden; background: #f3eee6; }
+  .seg { width: 100%; }
+  .colwrap button { border: 0; background: transparent; cursor: pointer; padding: 6px 0 0; color: var(--muted); font-size: 12px; }
+  .colwrap button strong { display: block; color: var(--ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+  .leyenda { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+  .dot { width: 9px; height: 9px; border-radius: 99px; display: inline-block; margin-right: 5px; }
+  .tabla-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13.5px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  th { font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 650; background: #fbf7f1; position: sticky; top: 0; z-index: 1; }
+  th.l, td.l { text-align: left; white-space: normal; }
+  th button { border: 0; background: transparent; cursor: pointer; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; }
+  tr.total td { font-weight: 700; background: #fbf7f1; border-bottom: 0; }
+  tr.click td { cursor: pointer; }
+  tr.click:hover td { background: #fbf7f1; }
+  tr.on td { background: var(--accent-soft); }
+  td.dim, th.dim { opacity: 0.45; }
+  td.on, th.on { opacity: 1; background: #f8e8ec; }
+  .panel { margin-top: 12px; }
+  .bars { display: flex; flex-direction: column; gap: 6px; }
+  .bar-row { display: grid; grid-template-columns: 150px 1fr 92px; gap: 8px; align-items: center; font-size: 13.5px; }
+  .bar-row button { border: 0; background: transparent; text-align: left; cursor: pointer; padding: 0; }
+  .bar-track { height: 12px; background: #f3eee6; border-radius: 99px; overflow: hidden; }
+  .bar-fill { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+  .calls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 12px 0; }
+  .pestanas { display: flex; gap: 6px; }
+  .pestanas button { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 7px 14px; cursor: pointer; font-weight: 650; }
+  .pestanas button[aria-pressed="true"] { background: var(--ink); color: #fffdf8; border-color: var(--ink); }
+  .ficha-par { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  body[data-pantalla="resumen"] #detalle { display: none; }
+  body[data-pantalla="detalle"] #ficha { display: none; }
+  .call { padding: 14px 16px; }
+  .call .who { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 22px; margin: 2px 0; }
+  .call .num { font-size: 20px; font-variant-numeric: tabular-nums; }
+  .call.alto { border-color: #e7c2cb; background: linear-gradient(180deg, #fff 0%, #fdf2f4 100%); }
+  .call.bajo { border-color: #c9e6dc; background: linear-gradient(180deg, #fff 0%, #f1faf6 100%); }
+  .nota { background: #f7f1e6; border: 1px dashed #d9cdb8; border-radius: 12px; padding: 12px 14px; color: var(--muted); font-size: 14px; }
+  .nota strong { color: var(--ink); }
+  .heat { border-radius: 6px; padding: 4px 6px; display: inline-block; min-width: 52px; }
+  select.maq {
+    border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 8px 10px;
+  }
+  .fila-titulo { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 8px; }
+  .modo { display: flex; gap: 6px; }
+  .modo button[aria-pressed="true"] { background: var(--ink); color: white; border-color: var(--ink); }
+  @media (max-width: 980px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .grid-2, .grid-3, .calls, .ficha-par, header.top { grid-template-columns: 1fr; display: grid; }
+    h1 { font-size: 36px; }
+    .corte { text-align: left; }
+    .bar-row { grid-template-columns: 110px 1fr 72px; }
+  }
+  @media print {
+    body { background: white; }
+    nav.bar { position: static; }
+    .no-print { display: none !important; }
+    #detalle, #ficha { display: block !important; }
+    .card, .kpi, .call, .tabla-wrap { break-inside: avoid; }
+    section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body data-pantalla="resumen">
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow" id="eyebrow">Área de impresión · 2026</p>
+      <h1>Tiempo muerto</h1>
+      <p class="lede" id="lede"></p>
+    </div>
+    <div class="corte">
+      <strong id="corte"></strong>
+      <span id="periodo"></span>
+    </div>
+  </header>
+
+  <nav class="bar">
+    <div class="pestanas" id="anios" role="tablist" aria-label="Año"></div>
+    <div class="pestanas" role="tablist" aria-label="Vista">
+      <button type="button" data-vista="resumen" aria-pressed="true">Resumen</button>
+      <button type="button" data-vista="detalle">Detalle</button>
+    </div>
+    <div class="pills" id="meses" role="group" aria-label="Mes"></div>
+    <div class="spacer"></div>
+    <a class="jump" href="#conceptos">Conceptos</a>
+    <a class="jump" href="#maquinas">Máquinas</a>
+    <a class="jump" href="#semanas">Semanas</a>
+    <button class="jump no-print" type="button" id="imprimir">Imprimir</button>
+  </nav>
+
+  <section id="ficha">
+    <h2>Resumen <span>mejor y peor máquina, y el dato grueso del periodo</span></h2>
+    <div class="ficha-par" id="ficha-maquinas"></div>
+    <div class="kpis" id="ficha-datos" style="margin-top:12px"></div>
+    <p class="nota" id="ficha-nota" style="margin-top:12px"></p>
+  </section>
+
+  <div id="detalle">
+  <section id="resumen">
+    <div class="kpis" id="kpis"></div>
+    <article class="card" style="margin-top:12px">
+      <h3>Horas por tipo de paro</h3>
+      <div class="grupos" id="grupos"></div>
+    </article>
+    <article class="card" style="margin-top:12px">
+      <div class="fila-titulo">
+        <h3 id="titulo-tendencia" style="margin:0">Horas por mes</h3>
+      </div>
+      <div class="cols" id="tendencia"></div>
+      <div class="leyenda" id="leyenda"></div>
+    </article>
+  </section>
+
+  <section id="conceptos">
+    <h2>Conceptos <span>por mes y acumulado del año</span></h2>
+    <p class="sub">Cada cifra sale de la columna Total Hrs del gráfico mensual. La fila final es el total oficial de esa hoja.</p>
+    <div class="fila-titulo">
+      <div class="modo no-print" role="group" aria-label="Unidad">
+        <button type="button" id="modo-horas" aria-pressed="true">Horas</button>
+        <button type="button" id="modo-pct" aria-pressed="false">% del mes</button>
+      </div>
+    </div>
+    <div class="tabla-wrap" id="tabla-conceptos"></div>
+    <article class="card panel" id="foco-concepto"></article>
+  </section>
+
+  <section id="maquinas">
+    <h2>Máquinas <span id="subtitulo-maquinas">detalle disponible</span></h2>
+    <p class="nota" id="nota-maquinas"></p>
+    <div class="calls" id="calls"></div>
+    <article class="card">
+      <h3 id="titulo-barras">Horas en las semanas con detalle</h3>
+      <div class="bars" id="barras-maq"></div>
+    </article>
+    <div class="tabla-wrap" style="margin-top:12px" id="matriz-mes"></div>
+    <article class="card panel">
+      <div class="fila-titulo">
+        <h3 style="margin:0">Concepto por mes, de una máquina</h3>
+        <select class="maq" id="elige-maq" aria-label="Máquina"></select>
+      </div>
+      <p class="sub" id="sub-maq"></p>
+      <div class="tabla-wrap" id="tabla-maq" style="border:0"></div>
+    </article>
+  </section>
+
+  <section id="semanas">
+    <h2>Semanas <span>ritmo dentro de cada mes</span></h2>
+    <p class="sub" id="nota-semanas">El punto (·) es una semana que el archivo no trae. Septiembre cierra con la semana del 21 al 26. Octubre va al 25, en cuatro semanas.</p>
+    <div class="tabla-wrap" id="tabla-semanas"></div>
+  </section>
+  </div>
+
+</div>
+
+<script id="tm-data" type="application/json">
+{"anios":[{"meta":{"titulo":"Tiempo muerto","area":"Área de impresión","anio":2026,"corte":"25 de octubre de 2026","periodo":"Enero al 25 de octubre de 2026","advertencias":["Enero: El 4 ene suma 12.00 h en las hojas (F2-3 10.00 h y F2-2 2.00 h) y el gráfico de la semana 1 no las trae. Ese día hay además 3.50 h de máquina alarmada, que el gráfico no suma.","Enero: La semana 3 (12–18 ene) no cuadra con el gráfico: Tintas 13.50 h en las hojas y 13.02 h en el gráfico.","Febrero: El 15 feb, F2-1 trae 2.00 h de Máquina descompuesta, en reparación en la hoja y el gráfico de la semana 2 no las trae.","Marzo: El 9 mar, F2-3 trae 1.00 h de Máquina descompuesta, en reparación en la hoja y el gráfico de la semana 2 no las trae.","Marzo: El 20 mar suma 7.50 h en las hojas (F2-2 5.50 h y F2-3 2.00 h) y el gráfico de la semana 3 no las trae.","Agosto: La semana 1 (3–9 ago) no cuadra con el gráfico: Grabados 2.50 h en las hojas y 2.30 h en el gráfico.","Agosto: La semana 2 (10–16 ago) no cuadra con el gráfico: Montaje por mismas mangas 1.83 h en las hojas y 1.50 h en el gráfico.","Agosto: El 22 ago (2.00 h) y el 23 ago (3.00 h), F2-2 suma 5.00 h de Máquina descompuesta, en reparación y el gráfico de la semana 3 no las trae."]},"grupos":[{"id":"aprobacion","nombre":"Aprobación","texto":"Visto bueno y liberación de calidad."},{"id":"materiales","nombre":"Materiales","texto":"Tintas, sustrato, mangas y anilox."},{"id":"maquina","nombre":"Máquina","texto":"Equipo detenido, alarma o falta de luz."},{"id":"montaje","nombre":"Montaje","texto":"Preprensa, grabados y montaje."},{"id":"programa","nombre":"Programa","texto":"Cambios de orden y órdenes suspendidas."}],"conceptos":[{"id":"vobo","nombre":"Visto bueno (VoBo)","grupo":"aprobacion","en_grafico":true},{"id":"tintas","nombre":"Tintas","grupo":"materiales","en_grafico":true},{"id":"maquina","nombre":"Máquina descompuesta, en reparación","grupo":"maquina","en_grafico":true},{"id":"calidad","nombre":"Autorización de calidad","grupo":"aprobacion","en_grafico":true},{"id":"mangas","nombre":"Mangas y/o anilox en mal estado","grupo":"materiales","en_grafico":true},{"id":"secuencia","nombre":"Cambio de secuencia","grupo":"programa","en_grafico":true},{"id":"espera_montaje","nombre":"Espera de montaje de grabados","grupo":"montaje","en_grafico":true},{"id":"grabados","nombre":"Grabados","grupo":"montaje","en_grafico":true},{"id":"falta_material","nombre":"Falta de materiales","grupo":"materiales","en_grafico":true},{"id":"preprensa","nombre":"Preprensa","grupo":"montaje","en_grafico":true},{"id":"montaje_mangas","nombre":"Montaje por mismas mangas","grupo":"montaje","en_grafico":true},{"id":"orden_corta","nombre":"Cambios excesivos por orden corta","grupo":"programa","en_grafico":true},{"id":"material_mal","nombre":"Material en mal estado","grupo":"materiales","en_grafico":true},{"id":"programacion","nombre":"Cambio de programación","grupo":"programa","en_grafico":true},{"id":"luz","nombre":"Luz","grupo":"maquina","en_grafico":true},{"id":"error_montaje","nombre":"Error en montaje","grupo":"montaje","en_grafico":true},{"id":"orden_suspendida","nombre":"Orden suspendida","grupo":"programa","en_grafico":true},{"id":"alarmada","nombre":"Máquina alarmada","grupo":"maquina","en_grafico":true}],"maquinas":["F4-1","F4-2","F4-3","F2-1","F2-2","F2-3","FJ-2","FLEXO"],"meses":[{"id":"2026-01","nombre":"Enero","corto":"Ene","parcial":false,"archivo":"1._TIEMPO_MUERTO_AREA_IMPRESION__2026_S1-CON_MACROS_ENERO_ba69.xlsm","semanas":[52.0,44.67,95.02,67.5,104.25],"semanas_activas":5,"total_horas":363.44,"conceptos":{"vobo":111.0,"tintas":61.85,"maquina":54.67,"mangas":17.0,"secuencia":22.42,"espera_montaje":18.0,"grabados":14.0,"falta_material":12.5,"preprensa":10.0,"montaje_mangas":8.5,"orden_corta":9.0,"calidad":7.5,"material_mal":4.5,"programacion":6.5,"luz":4.0,"error_montaje":1.0,"orden_suspendida":1.0},"semanas_concepto":{"vobo":[11.5,15.67,21.0,8.5,54.33],"tintas":[4.0,7.83,13.02,22.0,15.0],"maquina":[13.5,2.17,25.0,3.0,11.0],"mangas":[0.0,1.0,11.0,5.0,0.0],"secuencia":[2.0,5.0,2.0,5.0,8.42],"espera_montaje":[6.0,3.0,1.0,3.0,5.0],"grabados":[1.0,6.0,2.0,3.0,2.0],"falta_material":[5.5,0.0,3.0,2.0,2.0],"preprensa":[4.0,0.0,3.0,2.0,1.0],"montaje_mangas":[3.5,0.0,1.0,4.0,0.0],"orden_corta":[0.0,0.0,6.0,2.0,1.0],"calidad":[0.0,0.0,2.0,4.0,1.5],"material_mal":[0.0,1.0,2.0,1.5,0.0],"programacion":[0.0,0.0,3.0,1.5,2.0],"luz":[0.0,3.0,0.0,1.0,0.0],"error_montaje":[1.0,0.0,0.0,0.0,0.0],"orden_suspendida":[0.0,0.0,0.0,0.0,1.0]},"detalle":{"completo":true,"semana_num":null,"etiqueta":"Mes completo","rango":"29 dic – 1 feb","fechas_confiables":true,"horas_oficiales_semana":363.44,"horas_detalle":381.4167,"horas_sin_alarmada":375.9167,"diferencia":12.4767,"alarmada":5.5,"brechas":[{"semana":1,"rango":"29 dic – 4 ene","horas":12.0,"dia":"4 ene","texto":"El 4 ene suma 12.00 h en las hojas (F2-3 10.00 h y F2-2 2.00 h) y el gráfico de la semana 1 no las trae. Ese día hay además 3.50 h de máquina alarmada, que el gráfico no suma."},{"semana":3,"rango":"12–18 ene","horas":0.48,"dia":null,"texto":"La semana 3 (12–18 ene) no cuadra con el gráfico: Tintas 13.50 h en las hojas y 13.02 h en el gráfico."}],"nota_fechas":"","por_maquina":{"F2-1":68.8333,"F2-2":128.3333,"F4-3":2.5,"F4-1":22.0,"F2-3":118.3333,"F4-2":4.0,"FJ-2":37.4167},"por_maquina_concepto":{"F2-1":{"maquina":8.0,"vobo":21.5,"tintas":4.3333,"secuencia":2.0,"falta_material":7.0,"espera_montaje":5.0,"orden_corta":5.0,"montaje_mangas":1.0,"mangas":5.5,"programacion":5.0,"material_mal":3.5,"grabados":1.0},"F2-2":{"maquina":30.1667,"vobo":41.1667,"espera_montaje":8.0,"error_montaje":1.0,"montaje_mangas":3.5,"tintas":25.5,"alarmada":4.5,"grabados":7.0,"luz":4.0,"calidad":2.5,"orden_suspendida":1.0},"F4-3":{"maquina":0.5,"grabados":1.0,"falta_material":1.0},"F4-1":{"preprensa":10.0,"vobo":6.0,"falta_material":1.0,"tintas":3.0,"grabados":2.0},"F2-3":{"vobo":42.3333,"falta_material":4.0,"mangas":10.0,"programacion":3.0,"calidad":4.0,"tintas":16.0,"secuencia":13.0,"material_mal":1.0,"grabados":3.0,"alarmada":1.0,"orden_corta":4.0,"maquina":8.0,"montaje_mangas":4.0,"espera_montaje":5.0},"F4-2":{"secuencia":4.0},"FJ-2":{"maquina":8.0,"tintas":17.5,"mangas":3.5,"falta_material":1.0,"calidad":4.0,"secuencia":3.4167}}}},{"id":"2026-02","nombre":"Febrero","corto":"Feb","parcial":false,"archivo":"2._TIEMPO_MUERTO_AREA_IMPRESION__2026_S2-CON_MACROS_FEBRERO_eb85.xlsm","semanas":[72.75,110.83,65.0,76.5,null],"semanas_activas":4,"total_horas":325.08,"conceptos":{"vobo":129.75,"maquina":46.0,"tintas":35.0,"falta_material":20.0,"calidad":17.33,"espera_montaje":15.5,"grabados":15.0,"secuencia":12.5,"mangas":9.0,"preprensa":5.0,"material_mal":5.0,"montaje_mangas":4.0,"error_montaje":4.0,"orden_corta":3.0,"orden_suspendida":3.0,"luz":1.0,"programacion":0.0},"semanas_concepto":{"vobo":[21.25,62.5,28.0,18.0,null],"maquina":[16.5,7.5,14.0,8.0,null],"tintas":[11.0,14.5,4.5,5.0,null],"falta_material":[7.0,4.0,0.0,9.0,null],"calidad":[3.0,3.33,2.0,9.0,null],"espera_montaje":[7.0,3.5,1.0,4.0,null],"grabados":[0.0,0.5,4.5,10.0,null],"secuencia":[0.0,5.0,4.0,3.5,null],"mangas":[2.0,3.0,1.0,3.0,null],"preprensa":[4.0,0.0,1.0,0.0,null],"material_mal":[1.0,4.0,0.0,0.0,null],"montaje_mangas":[0.0,1.0,1.0,2.0,null],"error_montaje":[0.0,0.0,3.0,1.0,null],"orden_corta":[0.0,2.0,1.0,0.0,null],"orden_suspendida":[0.0,0.0,0.0,3.0,null],"luz":[0.0,0.0,0.0,1.0,null],"programacion":[0.0,0.0,0.0,0.0,null]},"detalle":{"completo":true,"semana_num":null,"etiqueta":"Mes completo","rango":"2 feb – 1 mar","fechas_confiables":true,"horas_oficiales_semana":325.08,"horas_detalle":336.0833,"horas_sin_alarmada":327.0833,"diferencia":2.0033,"alarmada":9.0,"brechas":[{"semana":2,"rango":"9–15 feb","horas":2.0033,"dia":"15 feb","texto":"El 15 feb, F2-1 trae 2.00 h de Máquina descompuesta, en reparación en la hoja y el gráfico de la semana 2 no las trae."}],"nota_fechas":"","por_maquina":{"F2-1":99.0,"FJ-2":23.5,"F2-3":62.25,"F4-1":11.0,"F2-2":130.3333,"F4-3":10.0},"por_maquina_concepto":{"F2-1":{"vobo":61.5,"espera_montaje":8.0,"maquina":11.5,"secuencia":2.0,"falta_material":3.0,"mangas":1.0,"grabados":6.0,"montaje_mangas":2.0,"alarmada":1.0,"preprensa":1.0,"tintas":1.0,"orden_corta":1.0},"FJ-2":{"calidad":5.5,"tintas":11.5,"mangas":5.0,"vobo":1.5},"F2-3":{"maquina":9.5,"tintas":6.5,"vobo":27.25,"falta_material":4.0,"espera_montaje":3.5,"orden_corta":2.0,"secuencia":3.5,"calidad":4.0,"grabados":2.0},"F4-1":{"preprensa":4.0,"vobo":3.0,"alarmada":4.0},"F2-2":{"vobo":36.5,"maquina":27.0,"falta_material":13.0,"material_mal":5.0,"alarmada":4.0,"tintas":16.0,"calidad":7.8333,"secuencia":5.0,"error_montaje":4.0,"luz":1.0,"espera_montaje":4.0,"montaje_mangas":2.0,"orden_suspendida":3.0,"mangas":1.0,"grabados":1.0},"F4-3":{"secuencia":2.0,"mangas":2.0,"grabados":6.0}}}},{"id":"2026-03","nombre":"Marzo","corto":"Mar","parcial":false,"archivo":"3._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_MARZO_1874.xlsm","semanas":[73.0,36.0,24.5,41.5,30.0],"semanas_activas":5,"total_horas":205.0,"conceptos":{"tintas":71.5,"vobo":33.67,"maquina":27.5,"calidad":18.5,"grabados":16.5,"secuencia":12.0,"mangas":5.5,"espera_montaje":5.0,"montaje_mangas":4.33,"falta_material":3.0,"luz":2.5,"preprensa":2.0,"orden_corta":2.0,"error_montaje":1.0,"material_mal":0.0,"programacion":0.0,"orden_suspendida":0.0},"semanas_concepto":{"tintas":[25.5,11.0,6.0,23.5,5.5],"vobo":[5.0,13.67,1.0,4.0,10.0],"maquina":[9.5,4.0,1.0,5.0,8.0],"calidad":[9.0,3.0,5.0,1.0,0.5],"grabados":[4.5,3.0,5.0,4.0,0.0],"secuencia":[11.0,0.0,0.0,0.0,1.0],"mangas":[2.5,0.0,0.0,2.0,1.0],"espera_montaje":[0.0,0.0,2.0,0.0,3.0],"montaje_mangas":[1.0,1.33,2.0,0.0,0.0],"falta_material":[3.0,0.0,0.0,0.0,0.0],"luz":[0.0,0.0,0.5,1.0,1.0],"preprensa":[1.0,0.0,0.0,1.0,0.0],"orden_corta":[0.0,0.0,2.0,0.0,0.0],"error_montaje":[1.0,0.0,0.0,0.0,0.0],"material_mal":[0.0,0.0,0.0,0.0,0.0],"programacion":[0.0,0.0,0.0,0.0,0.0],"orden_suspendida":[0.0,0.0,0.0,0.0,0.0]},"detalle":{"completo":true,"semana_num":null,"etiqueta":"Mes completo","rango":"2 mar – 5 abr","fechas_confiables":true,"horas_oficiales_semana":205.0,"horas_detalle":222.5,"horas_sin_alarmada":213.5,"diferencia":8.5,"alarmada":9.0,"brechas":[{"semana":2,"rango":"9–15 mar","horas":1.0,"dia":"9 mar","texto":"El 9 mar, F2-3 trae 1.00 h de Máquina descompuesta, en reparación en la hoja y el gráfico de la semana 2 no las trae."},{"semana":3,"rango":"16–22 mar","horas":7.5,"dia":"20 mar","texto":"El 20 mar suma 7.50 h en las hojas (F2-2 5.50 h y F2-3 2.00 h) y el gráfico de la semana 3 no las trae."}],"nota_fechas":"","por_maquina":{"F2-2":88.0,"F2-3":81.6667,"FJ-2":21.0,"F4-3":7.0,"F4-1":4.0,"F2-1":14.5,"F4-2":6.3333},"por_maquina_concepto":{"F2-2":{"maquina":20.0,"grabados":7.0,"tintas":35.5,"alarmada":2.0,"calidad":8.5,"error_montaje":1.0,"luz":2.5,"vobo":10.5,"secuencia":1.0},"F2-3":{"falta_material":1.0,"mangas":2.5,"tintas":16.6667,"secuencia":4.0,"grabados":7.5,"calidad":10.0,"preprensa":2.0,"alarmada":2.0,"maquina":3.0,"vobo":25.6667,"montaje_mangas":3.3333,"orden_corta":2.0,"espera_montaje":2.0},"FJ-2":{"tintas":17.0,"grabados":1.0,"mangas":3.0},"F4-3":{"secuencia":7.0},"F4-1":{"falta_material":2.0,"maquina":2.0},"F2-1":{"maquina":3.5,"vobo":5.0,"grabados":1.0,"montaje_mangas":1.0,"espera_montaje":3.0,"tintas":1.0},"F4-2":{"alarmada":5.0,"tintas":1.3333}}}},{"id":"2026-04","nombre":"Abril","corto":"Abr","parcial":false,"archivo":"4._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_ABRIL_fd68.xlsm","semanas":[62.0,30.5,38.34,42.17,null],"semanas_activas":4,"total_horas":173.01,"conceptos":{"vobo":84.5,"maquina":35.34,"tintas":28.17,"calidad":8.5,"grabados":4.5,"mangas":4.0,"luz":3.0,"montaje_mangas":3.0,"falta_material":1.0,"secuencia":1.0,"preprensa":0.0,"espera_montaje":0.0,"orden_corta":0.0,"error_montaje":0.0,"material_mal":0.0,"programacion":0.0,"orden_suspendida":0.0},"semanas_concepto":{"vobo":[44.83,17.0,10.67,12.0,null],"maquina":[7.67,7.0,1.67,19.0,null],"tintas":[4.0,2.0,16.0,6.17,null],"calidad":[2.5,0.0,3.0,3.0,null],"grabados":[0.0,2.5,1.0,1.0,null],"mangas":[0.0,0.0,4.0,0.0,null],"luz":[3.0,0.0,0.0,0.0,null],"montaje_mangas":[0.0,2.0,1.0,0.0,null],"falta_material":[0.0,0.0,1.0,0.0,null],"secuencia":[0.0,0.0,0.0,1.0,null],"preprensa":[0.0,0.0,0.0,0.0,null],"espera_montaje":[0.0,0.0,0.0,0.0,null],"orden_corta":[0.0,0.0,0.0,0.0,null],"error_montaje":[0.0,0.0,0.0,0.0,null],"material_mal":[0.0,0.0,0.0,0.0,null],"programacion":[0.0,0.0,0.0,0.0,null],"orden_suspendida":[0.0,0.0,0.0,0.0,null]},"detalle":{"completo":true,"semana_num":null,"etiqueta":"Mes completo","rango":"6 abr – 3 may","fechas_confiables":true,"horas_oficiales_semana":173.01,"horas_detalle":181.0,"horas_sin_alarmada":173.0,"diferencia":-0.01,"alarmada":8.0,"brechas":[],"nota_fechas":"","por_maquina":{"F2-3":83.6667,"F2-2":56.1667,"FJ-2":17.0,"F4-2":4.1667,"F4-1":7.0,"F4-3":4.0,"F2-1":9.0},"por_maquina_concepto":{"F2-3":{"luz":2.0,"maquina":21.0,"vobo":38.8333,"tintas":7.8333,"montaje_mangas":1.0,"alarmada":5.0,"grabados":2.0,"falta_material":1.0,"calidad":4.0,"secuencia":1.0},"F2-2":{"calidad":4.5,"vobo":33.6667,"luz":1.0,"maquina":3.5,"grabados":2.5,"montaje_mangas":1.0,"alarmada":3.0,"tintas":7.0},"FJ-2":{"tintas":10.0,"vobo":5.0,"maquina":2.0},"F4-2":{"maquina":2.8333,"tintas":1.3333},"F4-1":{"vobo":7.0},"F4-3":{"mangas":4.0},"F2-1":{"montaje_mangas":1.0,"tintas":2.0,"maquina":6.0}}}},{"id":"2026-05","nombre":"Mayo","corto":"May","parcial":false,"archivo":"5._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_MAYO_0180.xlsm","semanas":[29.17,54.75,78.5,52.59,null],"semanas_activas":4,"total_horas":215.01,"conceptos":{"vobo":57.3367,"tintas":56.0033,"maquina":31.8333,"calidad":15.5,"montaje_mangas":8.67,"espera_montaje":8.5,"grabados":6.0,"luz":5.1667,"programacion":5.0,"material_mal":5.0,"preprensa":4.0,"mangas":4.0,"secuencia":4.0,"falta_material":2.0,"error_montaje":1.0,"orden_suspendida":1.0,"orden_corta":0.0},"semanas_concepto":{"vobo":[2.0,21.0,26.1667,8.17,null],"tintas":[0.0,20.75,15.3333,19.92,null],"maquina":[13.0,4.0,8.8333,6.0,null],"calidad":[2.5,6.0,5.0,2.0,null],"montaje_mangas":[1.67,0.0,0.0,7.0,null],"espera_montaje":[2.0,0.0,4.0,2.5,null],"grabados":[1.0,1.0,3.0,1.0,null],"luz":[1.0,1.0,2.1667,1.0,null],"programacion":[0.0,0.0,5.0,0.0,null],"material_mal":[0.0,0.0,2.0,3.0,null],"preprensa":[4.0,0.0,0.0,0.0,null],"mangas":[0.0,1.0,3.0,0.0,null],"secuencia":[0.0,0.0,3.0,1.0,null],"falta_material":[2.0,0.0,0.0,0.0,null],"error_montaje":[0.0,0.0,1.0,0.0,null],"orden_suspendida":[0.0,0.0,0.0,1.0,null],"orden_corta":[0.0,0.0,0.0,0.0,null]},"detalle":{"completo":true,"semana_num":null,"etiqueta":"Mes completo","rango":"4–31 may","fechas_confiables":true,"horas_oficiales_semana":215.01,"horas_detalle":218.0,"horas_sin_alarmada":215.0,"diferencia":-0.01,"alarmada":3.0,"brechas":[],"nota_fechas":"","por_maquina":{"F2-3":75.5833,"F2-1":23.1667,"F4-2":2.0,"F2-2":96.25,"FJ-2":19.5,"FLEXO":1.5},"por_maquina_concepto":{"F2-3":{"maquina":20.75,"espera_montaje":5.0,"falta_material":2.0,"preprensa":4.0,"vobo":15.0,"tintas":12.1667,"calidad":13.0,"alarmada":1.0,"mangas":1.0,"montaje_mangas":1.6667},"F2-1":{"grabados":4.0,"luz":2.0,"montaje_mangas":1.6667,"maquina":5.5,"espera_montaje":2.0,"vobo":8.0},"F4-2":{"alarmada":2.0},"F2-2":{"calidad":2.5,"vobo":34.3333,"tintas":31.8333,"mangas":3.0,"maquina":4.0833,"error_montaje":1.0,"luz":3.1667,"secuencia":2.0,"programacion":5.0,"montaje_mangas":5.3333,"orden_suspendida":1.0,"material_mal":3.0},"FJ-2":{"tintas":12.0,"material_mal":2.0,"secuencia":2.0,"grabados":2.0,"maquina":1.5},"FLEXO":{"espera_montaje":1.5}}}},{"id":"2026-06","nombre":"Junio","corto":"Jun","parcial":false,"archivo":"6._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_JUNIO_badd.xlsm","semanas":[54.0,39.66,40.33,45.32,null],"semanas_activas":4,"total_horas":179.31,"conceptos":{"vobo":40.67,"tintas":31.33,"calidad":22.08,"grabados":15.0,"mangas":14.58,"orden_corta":10.0,"maquina":7.58,"secuencia":7.0,"error_montaje":6.83,"falta_material":6.41,"montaje_mangas":5.33,"espera_montaje":5.0,"preprensa":4.5,"luz":3.0,"programacion":0.0,"material_mal":0.0,"orden_suspendida":0.0},"semanas_concepto":{"vobo":[12.5,0.0,11.17,17.0,null],"tintas":[5.0,13.0,7.0,6.33,null],"calidad":[10.5,8.58,3.0,0.0,null],"grabados":[8.0,0.0,1.0,6.0,null],"mangas":[5.5,5.08,4.0,0.0,null],"orden_corta":[7.0,0.0,3.0,0.0,null],"maquina":[2.0,2.0,3.58,0.0,null],"secuencia":[0.0,4.0,0.0,3.0,null],"error_montaje":[0.0,0.0,0.0,6.83,null],"falta_material":[1.0,0.0,4.08,1.33,null],"montaje_mangas":[1.5,3.0,0.0,0.83,null],"espera_montaje":[0.0,4.0,0.0,1.0,null],"preprensa":[0.0,0.0,2.5,2.0,null],"luz":[1.0,0.0,1.0,1.0,null],"programacion":[0.0,0.0,0.0,0.0,null],"material_mal":[0.0,0.0,0.0,0.0,null],"orden_suspendida":[0.0,0.0,0.0,0.0,null]},"detalle":{"completo":true,"semana_num":null,"etiqueta":"Mes completo","rango":"1–28 jun","fechas_confiables":true,"horas_oficiales_semana":179.31,"horas_detalle":181.3333,"horas_sin_alarmada":179.3333,"diferencia":0.0233,"alarmada":2.0,"brechas":[],"nota_fechas":"","por_maquina":{"F2-1":17.0,"F2-3":72.5,"F2-2":54.0,"FJ-2":19.0,"F4-2":2.0,"FLEXO":13.8333,"F4-3":3.0},"por_maquina_concepto":{"F2-1":{"vobo":6.5,"montaje_mangas":2.3333,"mangas":0.5,"tintas":3.3333,"grabados":2.0,"falta_material":1.3333,"espera_montaje":1.0},"F2-3":{"falta_material":3.0,"vobo":18.0,"tintas":18.0,"calidad":14.5,"mangas":4.0,"maquina":2.0,"secuencia":7.0,"alarmada":2.0,"preprensa":2.0,"grabados":2.0},"F2-2":{"vobo":12.1667,"luz":3.0,"grabados":8.0,"mangas":5.0833,"espera_montaje":4.0,"calidad":7.5833,"maquina":1.0833,"falta_material":2.0833,"tintas":2.0,"orden_corta":3.0,"error_montaje":6.0},"FJ-2":{"mangas":1.0,"orden_corta":7.0,"tintas":8.0,"montaje_mangas":3.0},"F4-2":{"maquina":2.0},"FLEXO":{"maquina":2.5,"preprensa":2.5,"mangas":4.0,"vobo":4.0,"error_montaje":0.8333},"F4-3":{"grabados":3.0}}}},{"id":"2026-07","nombre":"Julio","corto":"Jul","parcial":false,"archivo":"7._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS__JULIO_e110.xlsm","semanas":[46.91,91.83,59.18,12.0,35.0],"semanas_activas":5,"total_horas":244.92,"conceptos":{"vobo":76.83,"tintas":43.08,"maquina":26.35,"calidad":24.5,"preprensa":19.0,"grabados":15.0,"falta_material":11.5,"secuencia":7.33,"material_mal":7.33,"mangas":6.0,"montaje_mangas":4.0,"espera_montaje":3.0,"programacion":1.0,"orden_corta":0.0,"error_montaje":0.0,"luz":0.0,"orden_suspendida":0.0},"semanas_concepto":{"vobo":[12.33,32.5,6.0,6.0,20.0],"tintas":[6.08,18.0,7.0,0.0,12.0],"maquina":[8.0,9.5,6.85,0.0,2.0],"calidad":[0.0,7.0,14.5,3.0,0.0],"preprensa":[6.0,9.0,2.0,1.0,1.0],"grabados":[4.0,3.0,8.0,0.0,0.0],"falta_material":[4.5,4.5,2.5,0.0,0.0],"secuencia":[0.0,1.0,6.33,0.0,0.0],"material_mal":[0.0,6.33,1.0,0.0,0.0],"mangas":[3.0,0.0,1.0,2.0,0.0],"montaje_mangas":[0.0,0.0,4.0,0.0,0.0],"espera_montaje":[2.0,1.0,0.0,0.0,0.0],"programacion":[1.0,0.0,0.0,0.0,0.0],"orden_corta":[0.0,0.0,0.0,0.0,0.0],"error_montaje":[0.0,0.0,0.0,0.0,0.0],"luz":[0.0,0.0,0.0,0.0,0.0],"orden_suspendida":[0.0,0.0,0.0,0.0,0.0]},"detalle":{"completo":false,"semana_num":5,"etiqueta":"Semana 5","rango":"27 jul – 2 ago","fechas_confiables":true,"horas_oficiales_semana":35.0,"horas_detalle":36.0,"horas_sin_alarmada":35.0,"diferencia":0.0,"alarmada":1.0,"brechas":[],"por_maquina":{"FJ-2":2.0,"F2-3":23.0,"F2-2":11.0},"por_maquina_concepto":{"FJ-2":{"tintas":2.0},"F2-3":{"vobo":12.0,"tintas":10.0,"alarmada":1.0},"F2-2":{"maquina":2.0,"preprensa":1.0,"vobo":8.0}}}},{"id":"2026-08","nombre":"Agosto","corto":"Ago","parcial":false,"archivo":"8._TIEMPO_MUERTO_AREA_IMPRESION__2026-CON_MACROS_AGOSTO_bab0.xlsm","semanas":[52.8,18.5,17.5,42.0,null],"semanas_activas":4,"total_horas":130.8,"conceptos":{"vobo":25.0,"tintas":35.0,"maquina":24.0,"mangas":10.0,"calidad":16.0,"montaje_mangas":3.5,"grabados":7.3,"preprensa":6.0,"secuencia":1.0,"falta_material":0.0,"material_mal":0.0,"espera_montaje":1.0,"programacion":0.0,"orden_corta":0.0,"error_montaje":0.0,"luz":0.0,"orden_suspendida":2.0},"semanas_concepto":{"vobo":[7.0,9.0,9.0,0.0,null],"tintas":[20.0,4.0,0.0,11.0,null],"maquina":[17.5,0.0,2.5,4.0,null],"mangas":[0.0,0.0,6.0,4.0,null],"calidad":[3.0,2.0,0.0,11.0,null],"montaje_mangas":[2.0,1.5,0.0,0.0,null],"grabados":[2.3,0.0,0.0,5.0,null],"preprensa":[0.0,2.0,0.0,4.0,null],"secuencia":[1.0,0.0,0.0,0.0,null],"falta_material":[0.0,0.0,0.0,0.0,null],"material_mal":[0.0,0.0,0.0,0.0,null],"espera_montaje":[0.0,0.0,0.0,1.0,null],"programacion":[0.0,0.0,0.0,0.0,null],"orden_corta":[0.0,0.0,0.0,0.0,null],"error_montaje":[0.0,0.0,0.0,0.0,null],"luz":[0.0,0.0,0.0,0.0,null],"orden_suspendida":[0.0,0.0,0.0,2.0,null]},"detalle":{"completo":true,"semana_num":null,"etiqueta":"Mes completo","rango":"3–30 ago","fechas_confiables":true,"horas_oficiales_semana":130.8,"horas_detalle":136.3333,"horas_sin_alarmada":136.3333,"diferencia":5.5333,"alarmada":0.0,"brechas":[{"semana":1,"rango":"3–9 ago","horas":0.2,"dia":null,"texto":"La semana 1 (3–9 ago) no cuadra con el gráfico: Grabados 2.50 h en las hojas y 2.30 h en el gráfico."},{"semana":2,"rango":"10–16 ago","horas":0.3333,"dia":null,"texto":"La semana 2 (10–16 ago) no cuadra con el gráfico: Montaje por mismas mangas 1.83 h en las hojas y 1.50 h en el gráfico."},{"semana":3,"rango":"17–23 ago","horas":5.0,"dia":"22 ago","texto":"El 22 ago (2.00 h) y el 23 ago (3.00 h), F2-2 suma 5.00 h de Máquina descompuesta, en reparación y el gráfico de la semana 3 no las trae."}],"nota_fechas":"","por_maquina":{"F2-3":57.5,"FJ-2":20.5,"F2-2":48.0,"F2-1":2.5,"FLEXO":1.8333,"F4-3":6.0},"por_maquina_concepto":{"F2-3":{"maquina":14.5,"vobo":9.0,"tintas":9.0,"calidad":10.0,"preprensa":6.0,"mangas":4.0,"grabados":5.0},"FJ-2":{"vobo":4.0,"tintas":12.5,"maquina":2.0,"orden_suspendida":2.0},"F2-2":{"montaje_mangas":2.0,"tintas":13.5,"maquina":12.5,"secuencia":1.0,"vobo":12.0,"calidad":6.0,"espera_montaje":1.0},"F2-1":{"grabados":2.5},"FLEXO":{"montaje_mangas":1.8333},"F4-3":{"mangas":6.0}}}},{"id":"2026-09","nombre":"Septiembre","corto":"Sep","parcial":false,"archivo":"31 al 06 SEPTIEMBRE.xlsm + 07 al 13 SEPTIEMBRE.xlsm + 14 al 20 SEPTIEMBRE.xlsm + 21 al 26 SEPTIEMBRE.xlsm","semanas":[15.5,19.5,39.0,35.5],"semanas_activas":4,"total_horas":109.5,"conceptos":{"vobo":43.0,"tintas":8.5,"preprensa":7.5,"grabados":6.67,"secuencia":5.0,"maquina":10.0,"mangas":3.83,"calidad":8.5,"luz":2.0,"montaje_mangas":2.0,"falta_material":9.5,"material_mal":0.0,"espera_montaje":3.0,"programacion":0.0,"orden_corta":0.0,"error_montaje":0.0,"orden_suspendida":0.0},"semanas_concepto":{"vobo":[7.0,11.0,13.0,12.0],"tintas":[0.0,2.0,6.5,0.0],"preprensa":[1.0,1.5,5.0,0.0],"grabados":[0.67,5.0,1.0,0.0],"secuencia":[0.0,0.0,5.0,0.0],"maquina":[0.0,0.0,4.5,5.5],"mangas":[1.83,0.0,2.0,0.0],"calidad":[3.0,0.0,0.0,5.5],"luz":[2.0,0.0,0.0,0.0],"montaje_mangas":[0.0,0.0,2.0,0.0],"falta_material":[0.0,0.0,0.0,9.5],"material_mal":[0.0,0.0,0.0,0.0],"espera_montaje":[0.0,0.0,0.0,3.0],"programacion":[0.0,0.0,0.0,0.0],"orden_corta":[0.0,0.0,0.0,0.0],"error_montaje":[0.0,0.0,0.0,0.0],"orden_suspendida":[0.0,0.0,0.0,0.0]},"detalle":{"completo":true,"semana_num":null,"etiqueta":"Mes completo","rango":"31 ago – 26 sep","fechas_confiables":true,"horas_oficiales_semana":109.5,"horas_detalle":113.5,"horas_sin_alarmada":109.5,"diferencia":0.0,"alarmada":4.0,"brechas":[],"nota_fechas":"Las semanas 2, 3 y 4 traen agosto en la fecha (7–13, 14–20 y 21–27). El nombre de cada archivo y el gráfico mensual las ubican como septiembre, semanas 2 a 4, y así se tomaron. La semana 1 va del 31 de agosto al 6 de septiembre.","por_maquina":{"F2-3":71.0,"FJ-2":20.0,"F2-2":12.5,"FLEXO":5.0,"F2-1":3.0,"F4-3":2.0},"por_maquina_concepto":{"F2-3":{"preprensa":5.5,"grabados":3.0,"vobo":31.0,"alarmada":4.0,"secuencia":3.0,"tintas":1.5,"maquina":1.0,"montaje_mangas":2.0,"luz":2.0,"calidad":8.5,"falta_material":9.5},"FJ-2":{"grabados":3.0,"tintas":5.0,"maquina":2.0,"secuencia":1.0,"mangas":2.0,"vobo":7.0},"F2-2":{"tintas":2.0,"preprensa":2.0,"secuencia":1.0,"vobo":5.0,"mangas":1.8333,"grabados":0.6667},"FLEXO":{"maquina":5.0},"F2-1":{"espera_montaje":3.0},"F4-3":{"maquina":2.0}}}},{"id":"2026-10","nombre":"Octubre","corto":"Oct","parcial":true,"archivo":"28 al 04 OCTUBRE.xlsm + 05 al 11 OCTUBRE.xlsm + 12 al 18 OCTUBRE.xlsm + 19 al 25 OCTUBRE.xlsm","semanas":[29.5,43.5,76.5,140.32,null],"semanas_activas":4,"total_horas":289.82,"conceptos":{"vobo":21.42,"tintas":73.75,"preprensa":2.0,"grabados":8.0,"secuencia":6.0,"maquina":50.65,"mangas":64.0,"calidad":2.0,"luz":0.0,"montaje_mangas":5.0,"falta_material":5.67,"material_mal":0.0,"espera_montaje":15.0,"programacion":5.0,"orden_corta":4.17,"error_montaje":6.83,"orden_suspendida":0.0,"alarmada":20.33},"semanas_concepto":{"vobo":[2.0,0.0,4.0,15.42,null],"tintas":[9.0,16.0,15.0,33.75,null],"preprensa":[0.0,0.0,0.0,2.0,null],"grabados":[0.0,2.5,0.0,5.5,null],"secuencia":[0.0,1.5,0.0,4.5,null],"maquina":[6.0,6.5,21.5,16.65,null],"mangas":[2.0,3.0,27.0,32.0,null],"calidad":[0.0,2.0,0.0,0.0,null],"luz":[0.0,0.0,0.0,0.0,null],"montaje_mangas":[1.0,2.0,0.0,2.0,null],"falta_material":[2.0,0.0,0.0,3.67,null],"material_mal":[0.0,0.0,0.0,0.0,null],"espera_montaje":[4.5,0.5,6.0,4.0,null],"programacion":[0.0,0.0,0.0,5.0,null],"orden_corta":[0.0,0.0,2.0,2.17,null],"error_montaje":[3.0,0.0,0.0,3.83,null],"orden_suspendida":[0.0,0.0,0.0,0.0,null],"alarmada":[0.0,9.5,1.0,9.83,null]},"detalle":{"completo":true,"semana_num":null,"etiqueta":"Cuatro semanas","rango":"28 sep – 25 oct","fechas_confiables":true,"horas_oficiales_semana":289.82,"horas_detalle":289.8167,"horas_sin_alarmada":269.49,"diferencia":-0.0033,"alarmada":20.33,"brechas":[],"nota_fechas":"Las fechas de las hojas coinciden con cada archivo: 28 sep–4 oct, 5–11 oct y 12–18 oct y 19–25 oct.","por_maquina":{"F2-3":92.5,"FJ-2":70.0,"F2-2":66.4,"F2-1":33.25,"F4-2":11.6667,"F4-3":9.8333,"FLEXO":6.1667},"por_maquina_concepto":{"F2-3":{"maquina":23.5,"tintas":25.0,"mangas":13.5,"vobo":18.0,"montaje_mangas":2.0,"falta_material":2.0,"secuencia":1.5,"espera_montaje":1.5,"preprensa":2.0,"grabados":0.5,"alarmada":3.0},"FJ-2":{"tintas":21.3333,"alarmada":9.5,"mangas":21.5,"maquina":5.9167,"grabados":2.5,"espera_montaje":3.0,"error_montaje":3.8333,"vobo":1.4167,"orden_corta":1.0},"F2-2":{"mangas":12.0,"maquina":14.7333,"tintas":20.0,"espera_montaje":6.0,"error_montaje":3.0,"calidad":2.0,"orden_corta":3.1667,"montaje_mangas":1.0,"grabados":1.0,"secuencia":3.5},"F2-1":{"espera_montaje":4.5,"mangas":10.5,"alarmada":5.0,"programacion":5.0,"vobo":2.0,"tintas":1.25,"montaje_mangas":2.0,"grabados":3.0},"FLEXO":{"tintas":4.5,"falta_material":1.6667},"F4-2":{"maquina":6.5,"grabados":0.5,"tintas":0.6667,"mangas":2.0,"falta_material":2.0},"F4-3":{"secuencia":1.0,"mangas":4.5,"grabados":0.5,"alarmada":2.8333,"tintas":1.0}}}}]},{"meta":{"titulo":"Tiempo muerto","area":"Área de impresión","anio":2025,"corte":"28 de diciembre de 2025","periodo":"Enero a diciembre de 2025","advertencias":["Enero: El 5 ene suma 2.00 h en las hojas (F2-1 2.00 h) y el gráfico de la semana 1 no las trae.","Enero: La semana 2 (6–12 ene) no cuadra con el gráfico: Máquina descompuesta, en reparación 12.00 h en las hojas y 18.00 h en el gráfico; Tintas 20.67 h en las hojas y 20.57 h en el gráfico.","Enero: El 16 ene, F2-3 trae 2.00 h de Máquina descompuesta, en reparación en la hoja y el gráfico de la semana 3 no las trae.","Febrero: La semana 3 (17–23 feb) no cuadra con el gráfico: Tintas 23.92 h en las hojas y 23.25 h en el gráfico.","Febrero: La semana 1 (3–9 feb) no cuadra con el gráfico: Falta de materiales 2.00 h en las hojas y 4.00 h en el gráfico.","Febrero: La semana 24 feb – 2 mar suma 120.08 h en las hojas y el gráfico del mes no la trae.","Marzo: La semana 2 (10–16 mar) no cuadra con el gráfico: Falta de materiales 6.00 h en las hojas y 8.00 h en el gráfico; Mangas y/o anilox en mal estado 4.17 h en las hojas y 6.50 h en el gráfico.","Abril: La semana 2 (7–13 abr) no cuadra con el gráfico: Visto bueno (VoBo) 18.50 h en las hojas y 19.50 h en el gráfico.","Junio: La semana 1 (2–8 jun) no cuadra con el gráfico: Grabados 7.58 h en las hojas y 1.50 h en el gráfico; Tintas 10.83 h en las hojas y 10.50 h en el gráfico.","Mayo: La semana 2 (12–18 may) no cuadra con el gráfico: 72.00 h en las hojas.","Julio: La semana 4 (21–27 jul) no cuadra con el gráfico: Visto bueno (VoBo) 18.00 h en las hojas y 4.50 h en el gráfico.","Julio: La semana 5 (28 jul – 3 ago) no cuadra con el gráfico: Visto bueno (VoBo) 23.00 h en las hojas y 16.00 h en el gráfico; Tintas 20.67 h en las hojas y 19.67 h en el gráfico; Grabados 7.00 h en las hojas y 3.00 h en el gráfico; Mangas y/o anilox en mal estado 6.00 h en las hojas y 2.00 h en el gráfico; Montaje por mismas mangas 4.00 h en las hojas y 3.00 h en el gráfico.","Agosto: La semana 2 (11–17 ago) no cuadra con el gráfico: Cambio de programación 3.00 h en las hojas y 0.00 h en el gráfico; Material en mal estado 4.50 h en las hojas y 0.00 h en el gráfico.","Agosto: El 25 ago, FLEXO trae 0.50 h de Máquina descompuesta, en reparación en la hoja y el gráfico de la semana 4 no las trae.","Septiembre: La semana 3 (15–21 sep) no cuadra con el gráfico: Máquina descompuesta, en reparación 5.50 h en las hojas y 4.00 h en el gráfico; Luz 8.00 h en las hojas y 3.00 h en el gráfico.","Octubre: El 29 oct suma 10.00 h en las hojas (F2-3 5.00 h y F2-1 3.00 h y F2-2 2.00 h) y el gráfico de la semana 5 no las trae.","Noviembre: La semana 1 (3–9 nov) no cuadra con el gráfico: Espera de montaje de grabados 3.00 h en las hojas y 30.00 h en el gráfico."]},"grupos":[{"id":"aprobacion","nombre":"Aprobación","texto":"Visto bueno y liberación de calidad."},{"id":"materiales","nombre":"Materiales","texto":"Tintas, sustrato, mangas y anilox."},{"id":"maquina","nombre":"Máquina","texto":"Equipo detenido, alarma o falta de luz."},{"id":"montaje","nombre":"Montaje","texto":"Preprensa, grabados y montaje."},{"id":"programa","nombre":"Programa","texto":"Cambios de orden y órdenes suspendidas."}],"conceptos":[{"id":"vobo","nombre":"Visto bueno (VoBo)","grupo":"aprobacion","en_grafico":true},{"id":"tintas","nombre":"Tintas","grupo":"materiales","en_grafico":true},{"id":"maquina","nombre":"Máquina descompuesta, en reparación","grupo":"maquina","en_grafico":true},{"id":"calidad","nombre":"Autorización de calidad","grupo":"aprobacion","en_grafico":true},{"id":"mangas","nombre":"Mangas y/o anilox en mal estado","grupo":"materiales","en_grafico":true},{"id":"secuencia","nombre":"Cambio de secuencia","grupo":"programa","en_grafico":true},{"id":"espera_montaje","nombre":"Espera de montaje de grabados","grupo":"montaje","en_grafico":true},{"id":"grabados","nombre":"Grabados","grupo":"montaje","en_grafico":true},{"id":"falta_material","nombre":"Falta de materiales","grupo":"materiales","en_grafico":true},{"id":"preprensa","nombre":"Preprensa","grupo":"montaje","en_grafico":true},{"id":"montaje_mangas","nombre":"Montaje por mismas mangas","grupo":"montaje","en_grafico":true},{"id":"orden_corta","nombre":"Cambios excesivos por orden corta","grupo":"programa","en_grafico":true},{"id":"material_mal","nombre":"Material en mal estado","grupo":"materiales","en_grafico":true},{"id":"programacion","nombre":"Cambio de programación","grupo":"programa","en_grafico":true},{"id":"luz","nombre":"Luz","grupo":"maquina","en_grafico":true},{"id":"error_montaje","nombre":"Error en montaje","grupo":"montaje","en_grafico":true},{"id":"orden_suspendida","nombre":"Orden suspendida","grupo":"programa","en_grafico":true},{"id":"alarmada","nombre":"Máquina alarmada","grupo":"maquina","en_grafico":false}],"maquinas":["F4-1","F4-2","F4-3","F2-1","F2-2","F2-3","FJ-2","FLEXO"],"meses":[{"id":"2025-01","nombre":"Enero","corto":"Ene","parcial":false,"archivo":"5._TIEMPO_MUERTO_AREA_IMPRESION__2024_S5-CON_MACROS_27ENE-02_FEB_b1c3.xlsm","semanas":[63.42,125.98,100.83,151.27,69.16],"semanas_activas":5,"total_horas":510.66,"conceptos":{"maquina":102.5,"tintas":101.65,"vobo":77.27,"falta_material":43.67,"grabados":38.08,"espera_montaje":30.5,"secuencia":29.0,"mangas":24.5,"calidad":15.91,"montaje_mangas":14.83,"programacion":9.0,"preprensa":8.0,"luz":5.0,"material_mal":4.25,"error_montaje":3.5,"orden_corta":3.0,"orden_suspendida":0.0},"semanas_concepto":{"maquina":[19.0,18.0,23.5,39.0,3.0],"tintas":[10.0,20.57,29.08,22.67,19.33],"vobo":[0.0,17.5,11.0,35.77,13.0],"falta_material":[10.5,11.67,5.0,8.0,8.5],"grabados":[2.0,12.58,5.0,7.5,11.0],"espera_montaje":[3.0,18.5,3.0,2.0,4.0],"secuencia":[5.67,8.0,9.5,3.33,2.5],"mangas":[0.0,4.0,0.0,18.0,2.5],"calidad":[7.5,3.33,1.25,0.5,3.33],"montaje_mangas":[0.0,6.83,3.0,3.0,2.0],"programacion":[4.0,0.0,0.0,5.0,0.0],"preprensa":[0.0,0.0,4.0,4.0,0.0],"luz":[1.0,4.0,0.0,0.0,0.0],"material_mal":[0.75,0.0,2.0,1.5,0.0],"error_montaje":[0.0,1.0,2.5,0.0,0.0],"orden_corta":[0.0,0.0,2.0,1.0,0.0],"orden_suspendida":[0.0,0.0,0.0,0.0,0.0]},"detalle":{"completo":true,"n_archivos":5,"semana_num":null,"etiqueta":"Mes completo","rango":"30 dic – 2 feb","fechas_confiables":true,"horas_oficiales_semana":510.66,"horas_detalle":508.7667,"horas_sin_alarmada":508.7667,"diferencia":-1.8933,"alarmada":0.0,"brechas":[{"semana":1,"rango":"30 dic – 5 ene","horas":1.9967,"dia":"5 ene","texto":"El 5 ene suma 2.00 h en las hojas (F2-1 2.00 h) y el gráfico de la semana 1 no las trae."},{"semana":2,"rango":"6–12 ene","horas":-5.8967,"dia":null,"texto":"La semana 2 (6–12 ene) no cuadra con el gráfico: Máquina descompuesta, en reparación 12.00 h en las hojas y 18.00 h en el gráfico; Tintas 20.67 h en las hojas y 20.57 h en el gráfico."},{"semana":3,"rango":"13–19 ene","horas":2.0033,"dia":"16 ene","texto":"El 16 ene, F2-3 trae 2.00 h de Máquina descompuesta, en reparación en la hoja y el gráfico de la semana 3 no las trae."}],"nota_fechas":"","por_maquina":{"F2-2":101.75,"F2-3":193.85,"F4-3":9.0,"F4-1":42.5,"F2-1":116.8333,"F4-2":12.5,"FJ-2":32.3333},"por_maquina_concepto":{"F2-2":{"maquina":15.5,"espera_montaje":15.5,"tintas":30.4167,"mangas":5.5,"calidad":11.8333,"montaje_mangas":1.0,"falta_material":6.0,"grabados":14.5,"error_montaje":1.5},"F2-3":{"falta_material":13.6667,"programacion":7.0,"grabados":10.0,"luz":5.0,"mangas":2.5,"maquina":46.0,"secuencia":17.0,"material_mal":0.75,"vobo":52.2667,"espera_montaje":2.0,"tintas":27.5,"montaje_mangas":8.3333,"orden_corta":1.0,"calidad":0.8333},"F4-3":{"espera_montaje":2.0,"vobo":3.0,"maquina":4.0},"F4-1":{"maquina":9.0,"montaje_mangas":3.5,"falta_material":8.0,"tintas":2.0,"orden_corta":1.0,"preprensa":8.0,"espera_montaje":6.0,"grabados":3.0,"calidad":2.0},"F2-1":{"maquina":12.5,"secuencia":12.0,"falta_material":14.0,"tintas":24.5833,"calidad":1.25,"grabados":4.0,"vobo":22.0,"espera_montaje":5.0,"error_montaje":2.0,"montaje_mangas":1.0,"mangas":14.0,"programacion":2.0,"orden_corta":1.0,"material_mal":1.5},"F4-2":{"falta_material":2.0,"maquina":10.5},"FJ-2":{"grabados":6.5833,"tintas":17.25,"mangas":4.5,"montaje_mangas":1.0,"material_mal":2.0,"maquina":1.0}}}},{"id":"2025-02","nombre":"Febrero","corto":"Feb","parcial":false,"archivo":"3._TIEMPO_MUERTO_AREA_IMPRESION__2024_S3-CON_MACROS_17-23_FEB_1d7a.xlsm","semanas":[86.09,84.67,85.75,null,null],"semanas_activas":3,"total_horas":256.51,"conceptos":{"vobo":64.5,"tintas":57.25,"maquina":43.09,"espera_montaje":21.67,"grabados":12.5,"montaje_mangas":10.5,"mangas":10.0,"programacion":8.0,"falta_material":7.5,"calidad":6.5,"preprensa":6.0,"material_mal":4.0,"error_montaje":2.0,"secuencia":2.0,"luz":1.0,"orden_corta":0.0,"orden_suspendida":0.0},"semanas_concepto":{"vobo":[19.0,28.0,17.5,null,null],"tintas":[13.75,20.25,23.25,null,null],"maquina":[9.67,17.42,16.0,null,null],"espera_montaje":[11.17,4.5,6.0,null,null],"grabados":[4.0,1.5,7.0,null,null],"montaje_mangas":[9.5,1.0,0.0,null,null],"mangas":[2.0,3.5,4.5,null,null],"programacion":[6.0,2.0,0.0,null,null],"falta_material":[4.0,1.5,2.0,null,null],"calidad":[0.0,0.0,6.5,null,null],"preprensa":[1.0,5.0,0.0,null,null],"material_mal":[3.0,0.0,1.0,null,null],"error_montaje":[2.0,0.0,0.0,null,null],"secuencia":[0.0,0.0,2.0,null,null],"luz":[1.0,0.0,0.0,null,null],"orden_corta":[0.0,0.0,0.0,null,null],"orden_suspendida":[0.0,0.0,0.0,null,null]},"detalle":{"completo":true,"n_archivos":4,"semana_num":null,"etiqueta":"Mes completo","rango":"3 feb – 2 mar","fechas_confiables":true,"horas_oficiales_semana":256.51,"horas_detalle":375.25,"horas_sin_alarmada":375.25,"diferencia":118.74,"alarmada":0.0,"brechas":[{"semana":3,"rango":"17–23 feb","horas":0.6667,"dia":null,"texto":"La semana 3 (17–23 feb) no cuadra con el gráfico: Tintas 23.92 h en las hojas y 23.25 h en el gráfico."},{"semana":1,"rango":"3–9 feb","horas":-2.0067,"dia":null,"texto":"La semana 1 (3–9 feb) no cuadra con el gráfico: Falta de materiales 2.00 h en las hojas y 4.00 h en el gráfico."},{"semana":null,"rango":"24 feb – 2 mar","horas":120.0833,"dia":null,"texto":"La semana 24 feb – 2 mar suma 120.08 h en las hojas y el gráfico del mes no la trae."}],"nota_fechas":"Parte de las hojas traía otra fecha; el día coincide con este mes y así se tomó.","por_maquina":{"F2-3":112.5833,"F4-1":26.5,"F2-1":63.0,"F2-2":116.25,"F4-2":9.4167,"FJ-2":39.25,"F4-3":8.25},"por_maquina_concepto":{"F2-3":{"vobo":50.0,"espera_montaje":4.1667,"maquina":18.1667,"falta_material":4.5,"montaje_mangas":4.5,"tintas":11.25,"material_mal":4.0,"preprensa":5.0,"grabados":3.5,"mangas":6.0,"secuencia":1.5},"F4-1":{"programacion":2.0,"montaje_mangas":3.0,"mangas":2.0,"error_montaje":2.0,"preprensa":8.0,"espera_montaje":5.0,"tintas":1.5,"vobo":3.0},"F2-1":{"programacion":6.0,"espera_montaje":4.0,"tintas":11.0,"falta_material":1.0,"luz":1.0,"montaje_mangas":2.0,"mangas":4.0,"vobo":23.0,"maquina":10.0,"secuencia":1.0},"F2-2":{"grabados":12.0,"tintas":50.0,"vobo":14.5,"espera_montaje":7.5,"maquina":9.75,"mangas":9.0,"falta_material":3.0,"secuencia":1.0,"calidad":6.5,"montaje_mangas":2.0,"error_montaje":1.0},"F4-2":{"tintas":3.75,"maquina":5.6667},"FJ-2":{"tintas":14.75,"montaje_mangas":3.5,"mangas":8.0,"espera_montaje":1.0,"maquina":3.0,"grabados":2.0,"calidad":7.0},"F4-3":{"maquina":7.0,"tintas":1.25}}}},{"id":"2025-03","nombre":"Marzo","corto":"Mar","parcial":false,"archivo":"4._TIEMPO_MUERTO_AREA_IMPRESION__2024_S4-CON_MACROS_24-30_MARZO_be39.xlsm","semanas":[103.1,89.42,77.17,64.5,null],"semanas_activas":4,"total_horas":334.19,"conceptos":{"vobo":65.0,"tintas":53.52,"maquina":48.67,"mangas":39.0,"grabados":31.0,"falta_material":27.5,"calidad":19.0,"espera_montaje":16.0,"montaje_mangas":10.0,"preprensa":9.0,"secuencia":7.5,"material_mal":3.0,"programacion":2.0,"orden_suspendida":1.5,"error_montaje":1.5,"luz":0.0,"orden_corta":0.0},"semanas_concepto":{"vobo":[14.0,27.0,11.0,13.0,null],"tintas":[24.1,9.92,14.5,5.0,null],"maquina":[18.5,16.5,13.67,0.0,null],"mangas":[17.0,6.5,7.5,8.0,null],"grabados":[14.5,6.5,3.0,7.0,null],"falta_material":[5.0,8.0,4.5,10.0,null],"calidad":[4.0,10.5,0.5,4.0,null],"espera_montaje":[0.0,0.0,4.0,12.0,null],"montaje_mangas":[2.0,1.0,4.0,3.0,null],"preprensa":[3.0,1.0,5.0,0.0,null],"secuencia":[1.0,2.5,3.0,1.0,null],"material_mal":[0.0,0.0,3.0,0.0,null],"programacion":[0.0,0.0,2.0,0.0,null],"orden_suspendida":[0.0,0.0,1.5,0.0,null],"error_montaje":[0.0,0.0,0.0,1.5,null],"luz":[0.0,0.0,0.0,0.0,null],"orden_corta":[0.0,0.0,0.0,0.0,null]},"detalle":{"completo":true,"n_archivos":4,"semana_num":null,"etiqueta":"Mes completo","rango":"3–30 mar","fechas_confiables":true,"horas_oficiales_semana":334.19,"horas_detalle":332.25,"horas_sin_alarmada":329.9167,"diferencia":-4.2733,"alarmada":2.3333,"brechas":[{"semana":2,"rango":"10–16 mar","horas":-4.3367,"dia":null,"texto":"La semana 2 (10–16 mar) no cuadra con el gráfico: Falta de materiales 6.00 h en las hojas y 8.00 h en el gráfico; Mangas y/o anilox en mal estado 4.17 h en las hojas y 6.50 h en el gráfico."}],"nota_fechas":"Parte de las hojas traía otra fecha; el día coincide con este mes y así se tomó.","por_maquina":{"FJ-2":32.5,"F2-3":71.6667,"F2-2":91.0833,"F4-1":53.0,"F2-1":66.0,"F4-3":16.0,"F4-2":2.0},"por_maquina_concepto":{"FJ-2":{"maquina":10.0,"tintas":4.0,"preprensa":2.0,"mangas":2.0,"calidad":0.5,"montaje_mangas":4.0,"material_mal":2.0,"grabados":4.0,"falta_material":4.0},"F2-3":{"maquina":4.0,"montaje_mangas":1.0,"tintas":13.1667,"grabados":10.5,"mangas":15.0,"secuencia":3.5,"falta_material":9.0,"vobo":4.0,"calidad":5.5,"espera_montaje":6.0},"F2-2":{"preprensa":1.0,"mangas":10.6667,"montaje_mangas":1.0,"calidad":9.0,"tintas":24.4167,"maquina":15.1667,"grabados":7.5,"falta_material":3.0,"alarmada":2.3333,"vobo":13.0,"material_mal":1.0,"espera_montaje":2.0,"secuencia":1.0},"F4-1":{"vobo":10.0,"tintas":6.0,"calidad":4.0,"grabados":5.0,"maquina":9.0,"preprensa":6.0,"falta_material":5.5,"secuencia":2.0,"orden_suspendida":1.5,"programacion":1.0,"montaje_mangas":3.0},"F2-1":{"maquina":4.5,"tintas":6.0,"vobo":34.0,"grabados":4.0,"montaje_mangas":1.0,"falta_material":4.0,"mangas":5.0,"espera_montaje":6.0,"error_montaje":1.5},"F4-3":{"maquina":4.0,"vobo":4.0,"mangas":4.0,"secuencia":1.0,"programacion":1.0,"espera_montaje":2.0},"F4-2":{"maquina":2.0}}}},{"id":"2025-04","nombre":"Abril","corto":"Abr","parcial":false,"archivo":"5._TIEMPO_MUERTO_AREA_IMPRESION__2024_S2-CON_MACROS_28-04_MAYO_20ef.xlsm","semanas":[87.75,66.83,80.16,52.67,83.26],"semanas_activas":5,"total_horas":370.67,"conceptos":{"vobo":131.17,"tintas":85.17,"maquina":39.33,"mangas":38.42,"espera_montaje":11.83,"falta_material":11.0,"preprensa":11.0,"grabados":11.0,"calidad":8.75,"secuencia":8.58,"montaje_mangas":8.0,"luz":3.0,"error_montaje":2.42,"material_mal":1.0,"programacion":0.0,"orden_suspendida":0.0,"orden_corta":0.0},"semanas_concepto":{"vobo":[68.0,19.5,17.5,8.5,17.67],"tintas":[5.17,17.5,19.08,16.67,26.75],"maquina":[6.0,12.5,13.33,2.0,5.5],"mangas":[3.0,6.5,11.0,6.0,11.92],"espera_montaje":[1.0,3.33,4.0,1.5,2.0],"falta_material":[0.0,0.0,3.0,6.0,2.0],"preprensa":[0.0,1.0,2.0,7.0,1.0],"grabados":[0.0,1.0,3.0,2.0,5.0],"calidad":[3.58,2.5,1.67,0.0,1.0],"secuencia":[0.0,0.0,2.58,1.0,5.0],"montaje_mangas":[1.0,3.0,3.0,0.0,1.0],"luz":[0.0,0.0,0.0,1.0,2.0],"error_montaje":[0.0,0.0,0.0,1.0,1.42],"material_mal":[0.0,0.0,0.0,0.0,1.0],"programacion":[0.0,0.0,0.0,0.0,0.0],"orden_suspendida":[0.0,0.0,0.0,0.0,0.0],"orden_corta":[0.0,0.0,0.0,0.0,0.0]},"detalle":{"completo":true,"n_archivos":5,"semana_num":null,"etiqueta":"Mes completo","rango":"31 mar – 4 may","fechas_confiables":true,"horas_oficiales_semana":370.67,"horas_detalle":375.8333,"horas_sin_alarmada":368.6667,"diferencia":-2.0033,"alarmada":7.1667,"brechas":[{"semana":2,"rango":"7–13 abr","horas":-1.9967,"dia":null,"texto":"La semana 2 (7–13 abr) no cuadra con el gráfico: Visto bueno (VoBo) 18.50 h en las hojas y 19.50 h en el gráfico."}],"nota_fechas":"","por_maquina":{"F2-2":130.0,"F2-1":62.0,"F2-3":104.5,"FJ-2":35.75,"F4-2":7.0833,"F4-1":33.5,"F4-3":3.0},"por_maquina_concepto":{"F2-2":{"maquina":10.0833,"vobo":33.0,"calidad":2.0,"tintas":51.5,"mangas":19.9167,"montaje_mangas":1.0,"alarmada":2.5,"preprensa":1.0,"luz":2.0,"secuencia":5.0,"falta_material":2.0},"F2-1":{"vobo":13.0,"espera_montaje":7.8333,"tintas":7.3333,"maquina":10.25,"alarmada":2.1667,"montaje_mangas":3.0,"calidad":3.0,"mangas":11.0,"secuencia":1.0,"grabados":1.0,"error_montaje":2.4167},"F2-3":{"vobo":76.6667,"mangas":3.5,"maquina":6.0,"espera_montaje":1.0,"tintas":6.8333,"secuencia":2.0,"montaje_mangas":1.0,"falta_material":4.0,"grabados":1.0,"luz":1.0,"alarmada":1.5},"FJ-2":{"calidad":3.75,"tintas":15.5,"maquina":6.0,"mangas":4.0,"material_mal":1.0,"grabados":5.0,"alarmada":0.5},"F4-2":{"maquina":6.0,"secuencia":0.5833,"alarmada":0.5},"F4-1":{"vobo":7.5,"grabados":4.0,"tintas":4.0,"preprensa":9.0,"montaje_mangas":3.0,"espera_montaje":3.0,"maquina":1.0,"falta_material":2.0},"F4-3":{"falta_material":3.0}}}},{"id":"2025-05","nombre":"Mayo","corto":"May","parcial":false,"archivo":"4._TIEMPO_MUERTO_AREA_IMPRESION__2024_S3-CON_MACROS_26-01__MAYO_c755.xlsm","semanas":[90.66,73.5,82.0,56.75,null],"semanas_activas":4,"total_horas":302.91,"conceptos":{"vobo":75.33,"mangas":59.75,"tintas":55.25,"maquina":39.5,"montaje_mangas":13.5,"grabados":12.75,"programacion":11.5,"falta_material":10.0,"secuencia":8.5,"calidad":5.08,"espera_montaje":4.75,"preprensa":3.0,"luz":2.0,"material_mal":2.0,"error_montaje":0.0,"orden_suspendida":0.0,"orden_corta":0.0},"semanas_concepto":{"vobo":[23.83,19.5,19.0,13.0,null],"mangas":[13.58,8.17,20.5,17.5,null],"tintas":[19.75,18.0,13.5,4.0,null],"maquina":[18.5,12.0,3.0,6.0,null],"montaje_mangas":[2.0,4.0,6.5,1.0,null],"grabados":[2.0,4.75,5.0,1.0,null],"programacion":[0.0,1.5,7.0,3.0,null],"falta_material":[3.0,0.0,1.0,6.0,null],"secuencia":[3.0,1.5,3.0,1.0,null],"calidad":[0.0,2.08,1.5,1.5,null],"espera_montaje":[1.0,2.0,0.0,1.75,null],"preprensa":[0.0,0.0,2.0,1.0,null],"luz":[2.0,0.0,0.0,0.0,null],"material_mal":[2.0,0.0,0.0,0.0,null],"error_montaje":[0.0,0.0,0.0,0.0,null],"orden_suspendida":[0.0,0.0,0.0,0.0,null],"orden_corta":[0.0,0.0,0.0,0.0,null]},"detalle":{"completo":true,"n_archivos":4,"semana_num":null,"etiqueta":"Mes completo","rango":"5 may – 1 jun","fechas_confiables":true,"horas_oficiales_semana":302.91,"horas_detalle":303.5833,"horas_sin_alarmada":301.4167,"diferencia":-1.4933,"alarmada":2.1667,"brechas":[{"semana":2,"rango":"12–18 may","horas":-1.5,"dia":null,"texto":"La semana 2 (12–18 may) no cuadra con el gráfico: 72.00 h en las hojas."}],"nota_fechas":"","por_maquina":{"F2-1":55.25,"F2-2":115.1667,"FJ-2":14.5,"F2-3":96.5,"F4-1":22.0,"F4-2":0.1667},"por_maquina_concepto":{"F2-1":{"vobo":14.0,"espera_montaje":2.75,"montaje_mangas":3.0,"luz":2.0,"mangas":21.5,"maquina":3.0,"tintas":2.0,"falta_material":1.0,"programacion":4.0,"grabados":2.0},"F2-2":{"vobo":29.8333,"maquina":16.0,"mangas":16.25,"material_mal":2.0,"tintas":24.25,"falta_material":8.0,"grabados":7.75,"calidad":5.0833,"montaje_mangas":4.0,"programacion":2.0},"FJ-2":{"tintas":13.0,"maquina":1.5},"F2-3":{"maquina":16.0,"secuencia":8.5,"tintas":16.0,"mangas":17.0,"falta_material":1.0,"vobo":24.5,"espera_montaje":1.0,"montaje_mangas":5.5,"programacion":4.0,"grabados":1.0,"alarmada":2.0},"F4-1":{"mangas":5.0,"vobo":7.0,"montaje_mangas":1.0,"maquina":3.0,"espera_montaje":1.0,"grabados":2.0,"preprensa":3.0},"F4-2":{"alarmada":0.1667}}}},{"id":"2025-06","nombre":"Junio","corto":"Jun","parcial":false,"archivo":"4._TIEMPO_MUERTO_AREA_IMPRESION__2024_S2-CON_MACROS_23-29__JUNIO_ac89.xlsm","semanas":[75.0,90.17,80.25,52.67,null],"semanas_activas":4,"total_horas":298.09,"conceptos":{"mangas":62.75,"tintas":52.25,"grabados":37.92,"vobo":37.0,"maquina":29.67,"falta_material":16.08,"secuencia":12.5,"montaje_mangas":8.0,"espera_montaje":7.67,"calidad":7.5,"preprensa":6.75,"error_montaje":6.0,"programacion":4.5,"luz":4.0,"material_mal":3.5,"orden_suspendida":2.0,"orden_corta":0.0},"semanas_concepto":{"mangas":[15.0,21.25,16.5,10.0,null],"tintas":[10.5,12.0,16.83,12.92,null],"grabados":[1.5,12.75,7.0,16.67,null],"vobo":[15.0,11.0,11.0,0.0,null],"maquina":[10.0,9.67,8.0,2.0,null],"falta_material":[0.0,5.0,2.0,9.08,null],"secuencia":[12.5,0.0,0.0,0.0,null],"montaje_mangas":[5.0,0.0,3.0,0.0,null],"espera_montaje":[0.0,2.0,5.17,0.5,null],"calidad":[3.0,1.0,2.0,1.5,null],"preprensa":[1.0,4.0,1.75,0.0,null],"error_montaje":[0.0,0.0,6.0,0.0,null],"programacion":[1.5,3.0,0.0,0.0,null],"luz":[0.0,4.0,0.0,0.0,null],"material_mal":[0.0,2.5,1.0,0.0,null],"orden_suspendida":[0.0,2.0,0.0,0.0,null],"orden_corta":[0.0,0.0,0.0,0.0,null]},"detalle":{"completo":true,"n_archivos":4,"semana_num":null,"etiqueta":"Mes completo","rango":"2–29 jun","fechas_confiables":true,"horas_oficiales_semana":298.09,"horas_detalle":318.1,"horas_sin_alarmada":304.5,"diferencia":6.41,"alarmada":13.6,"brechas":[{"semana":1,"rango":"2–8 jun","horas":6.4167,"dia":null,"texto":"La semana 1 (2–8 jun) no cuadra con el gráfico: Grabados 7.58 h en las hojas y 1.50 h en el gráfico; Tintas 10.83 h en las hojas y 10.50 h en el gráfico."}],"nota_fechas":"","por_maquina":{"F2-3":96.4167,"F2-2":79.0833,"F4-2":10.6,"F2-1":69.5,"F4-1":45.0,"FJ-2":13.5,"F4-3":4.0},"por_maquina_concepto":{"F2-3":{"maquina":8.0,"grabados":30.4167,"secuencia":9.5,"programacion":1.5,"vobo":10.0,"mangas":18.0,"material_mal":3.5,"luz":4.0,"orden_suspendida":2.0,"falta_material":5.0,"error_montaje":3.0,"tintas":1.0,"espera_montaje":0.5},"F2-2":{"vobo":6.0,"montaje_mangas":4.0,"calidad":7.5,"maquina":6.0,"tintas":27.0833,"mangas":11.25,"grabados":5.0,"alarmada":5.5,"falta_material":4.0,"espera_montaje":1.0,"preprensa":1.75},"F4-2":{"mangas":4.0,"alarmada":6.6},"F2-1":{"mangas":27.5,"secuencia":3.0,"vobo":6.0,"grabados":1.5833,"programacion":3.0,"tintas":5.5,"maquina":9.6667,"espera_montaje":3.1667,"montaje_mangas":1.0,"falta_material":6.0833,"error_montaje":3.0},"F4-1":{"montaje_mangas":3.0,"alarmada":1.0,"vobo":15.0,"preprensa":5.0,"tintas":5.0,"maquina":6.0,"falta_material":1.0,"mangas":2.0,"grabados":7.0},"FJ-2":{"tintas":10.5,"espera_montaje":3.0},"F4-3":{"alarmada":0.5,"tintas":3.5}}}},{"id":"2025-07","nombre":"Julio","corto":"Jul","parcial":false,"archivo":"5._TIEMPO_MUERTO_AREA_IMPRESION__2024_S5-CON_MACROS_28-03_AGOSTO_902d.xlsm","semanas":[42.16,58.08,69.83,66.52,50.17],"semanas_activas":5,"total_horas":286.76,"conceptos":{"tintas":71.08,"vobo":56.0,"mangas":43.18,"maquina":40.0,"calidad":17.0,"grabados":15.0,"montaje_mangas":14.0,"secuencia":9.5,"falta_material":7.0,"espera_montaje":5.5,"error_montaje":2.5,"preprensa":2.0,"material_mal":2.0,"orden_suspendida":2.0,"programacion":0.0,"luz":0.0,"orden_corta":0.0},"semanas_concepto":{"tintas":[11.33,8.0,16.33,15.75,19.67],"vobo":[5.5,17.0,13.0,4.5,16.0],"mangas":[14.33,4.58,2.0,20.27,2.0],"maquina":[5.5,11.5,7.0,14.0,2.0],"calidad":[0.0,4.5,4.0,6.0,2.5],"grabados":[2.0,4.0,1.5,4.5,3.0],"montaje_mangas":[1.5,4.0,4.5,1.0,3.0],"secuencia":[0.0,1.5,8.0,0.0,0.0],"falta_material":[0.0,0.0,7.0,0.0,0.0],"espera_montaje":[0.0,2.0,1.0,0.5,2.0],"error_montaje":[0.0,0.0,2.5,0.0,0.0],"preprensa":[2.0,0.0,0.0,0.0,0.0],"material_mal":[0.0,1.0,1.0,0.0,0.0],"orden_suspendida":[0.0,0.0,2.0,0.0,0.0],"programacion":[0.0,0.0,0.0,0.0,0.0],"luz":[0.0,0.0,0.0,0.0,0.0],"orden_corta":[0.0,0.0,0.0,0.0,0.0]},"detalle":{"completo":true,"n_archivos":5,"semana_num":null,"etiqueta":"Mes completo","rango":"30 jun – 3 ago","fechas_confiables":true,"horas_oficiales_semana":286.76,"horas_detalle":327.2667,"horas_sin_alarmada":317.2667,"diferencia":30.5067,"alarmada":10.0,"brechas":[{"semana":4,"rango":"21–27 jul","horas":13.4967,"dia":null,"texto":"La semana 4 (21–27 jul) no cuadra con el gráfico: Visto bueno (VoBo) 18.00 h en las hojas y 4.50 h en el gráfico."},{"semana":5,"rango":"28 jul – 3 ago","horas":16.9967,"dia":null,"texto":"La semana 5 (28 jul – 3 ago) no cuadra con el gráfico: Visto bueno (VoBo) 23.00 h en las hojas y 16.00 h en el gráfico; Tintas 20.67 h en las hojas y 19.67 h en el gráfico; Grabados 7.00 h en las hojas y 3.00 h en el gráfico; Mangas y/o anilox en mal estado 6.00 h en las hojas y 2.00 h en el gráfico; Montaje por mismas mangas 4.00 h en las hojas y 3.00 h en el gráfico."}],"nota_fechas":"","por_maquina":{"F2-2":93.5167,"F4-1":19.5,"F2-3":115.5,"FJ-2":29.25,"F2-1":54.5,"F4-2":1.5,"FLEXO":12.5,"F4-3":1.0},"por_maquina_concepto":{"F2-2":{"maquina":8.0,"tintas":25.0,"mangas":14.5167,"vobo":22.5,"montaje_mangas":2.5,"alarmada":3.5,"calidad":7.5,"grabados":9.0,"espera_montaje":1.0},"F4-1":{"preprensa":2.0,"mangas":3.0,"alarmada":2.5,"grabados":5.0,"material_mal":1.0,"vobo":5.0,"montaje_mangas":1.0},"F2-3":{"mangas":8.0,"maquina":20.5,"tintas":24.5,"montaje_mangas":7.0,"calidad":7.0,"vobo":32.0,"espera_montaje":2.5,"grabados":5.0,"alarmada":4.0,"secuencia":5.0},"FJ-2":{"mangas":9.6667,"tintas":15.5833,"maquina":3.0,"material_mal":1.0},"F2-1":{"montaje_mangas":3.5,"vobo":17.0,"espera_montaje":2.0,"maquina":8.5,"mangas":12.0,"calidad":2.5,"tintas":7.0,"orden_suspendida":2.0},"F4-2":{"secuencia":1.5},"FLEXO":{"falta_material":7.0,"secuencia":3.0,"error_montaje":2.5},"F4-3":{"montaje_mangas":1.0}}}},{"id":"2025-08","nombre":"Agosto","corto":"Ago","parcial":false,"archivo":"4._TIEMPO_MUERTO_AREA_IMPRESION__2024_S5-CON_MACROS_25-31_AGOSTO_aecb.xlsm","semanas":[63.58,47.34,63.34,64.0,null],"semanas_activas":4,"total_horas":238.26,"conceptos":{"vobo":111.34,"tintas":39.75,"falta_material":26.5,"grabados":15.0,"maquina":11.0,"espera_montaje":10.0,"mangas":9.0,"calidad":6.17,"secuencia":4.0,"preprensa":3.0,"montaje_mangas":2.5,"error_montaje":0.0,"material_mal":0.0,"orden_suspendida":0.0,"programacion":0.0,"luz":0.0,"orden_corta":0.0},"semanas_concepto":{"vobo":[14.5,18.67,41.17,37.0,null],"tintas":[11.75,5.5,11.5,11.0,null],"falta_material":[12.83,9.0,2.67,2.0,null],"grabados":[9.0,1.0,3.0,2.0,null],"maquina":[1.0,7.0,2.0,1.0,null],"espera_montaje":[5.0,2.0,0.0,3.0,null],"mangas":[2.0,1.0,3.0,3.0,null],"calidad":[3.0,2.17,0.0,1.0,null],"secuencia":[2.0,1.0,0.0,1.0,null],"preprensa":[0.0,0.0,0.0,3.0,null],"montaje_mangas":[2.5,0.0,0.0,0.0,null],"error_montaje":[0.0,0.0,0.0,0.0,null],"material_mal":[0.0,0.0,0.0,0.0,null],"orden_suspendida":[0.0,0.0,0.0,0.0,null],"programacion":[0.0,0.0,0.0,0.0,null],"luz":[0.0,0.0,0.0,0.0,null],"orden_corta":[0.0,0.0,0.0,0.0,null]},"detalle":{"completo":true,"n_archivos":4,"semana_num":null,"etiqueta":"Mes completo","rango":"4–31 ago","fechas_confiables":true,"horas_oficiales_semana":238.26,"horas_detalle":261.9167,"horas_sin_alarmada":246.25,"diferencia":7.99,"alarmada":15.6667,"brechas":[{"semana":2,"rango":"11–17 ago","horas":7.4933,"dia":null,"texto":"La semana 2 (11–17 ago) no cuadra con el gráfico: Cambio de programación 3.00 h en las hojas y 0.00 h en el gráfico; Material en mal estado 4.50 h en las hojas y 0.00 h en el gráfico."},{"semana":4,"rango":"25–31 ago","horas":0.5,"dia":"25 ago","texto":"El 25 ago, FLEXO trae 0.50 h de Máquina descompuesta, en reparación en la hoja y el gráfico de la semana 4 no las trae."}],"nota_fechas":"","por_maquina":{"F2-2":107.9167,"F2-3":65.8333,"F2-1":44.5,"FLEXO":3.0,"F4-2":6.6667,"F4-3":14.5,"FJ-2":16.5,"F4-1":3.0},"por_maquina_concepto":{"F2-2":{"maquina":9.0,"espera_montaje":2.0,"vobo":40.3333,"mangas":5.0,"calidad":4.1667,"tintas":22.75,"falta_material":13.6667,"secuencia":2.0,"alarmada":9.0},"F2-3":{"espera_montaje":3.0,"grabados":2.0,"calidad":2.0,"vobo":46.5,"falta_material":2.8333,"secuencia":2.0,"programacion":3.0,"material_mal":4.5},"F2-1":{"falta_material":10.0,"grabados":5.0,"tintas":1.0,"maquina":1.0,"espera_montaje":5.0,"vobo":22.5},"FLEXO":{"montaje_mangas":2.5,"maquina":0.5},"F4-2":{"alarmada":6.6667},"F4-3":{"grabados":8.0,"vobo":2.0,"tintas":1.5,"mangas":3.0},"FJ-2":{"tintas":14.5,"maquina":1.0,"mangas":1.0},"F4-1":{"preprensa":3.0}}}},{"id":"2025-09","nombre":"Septiembre","corto":"Sep","parcial":false,"archivo":"4._TIEMPO_MUERTO_AREA_IMPRESION__2024_S1-CON_MACROS_22-28_SEPTIEMBRE_3f23.xlsm","semanas":[88.34,66.5,72.58,77.58,null],"semanas_activas":4,"total_horas":305.0,"conceptos":{"vobo":108.91,"tintas":55.0,"maquina":32.17,"preprensa":12.0,"secuencia":16.0,"calidad":9.17,"espera_montaje":13.0,"programacion":8.0,"mangas":4.5,"orden_suspendida":3.0,"grabados":14.0,"montaje_mangas":6.25,"luz":10.0,"falta_material":11.0,"error_montaje":2.0,"material_mal":0.0,"orden_corta":0.0},"semanas_concepto":{"vobo":[46.5,28.0,15.58,18.83,null],"tintas":[12.0,5.0,18.5,19.5,null],"maquina":[5.67,10.0,4.0,12.5,null],"preprensa":[8.0,0.0,4.0,0.0,null],"secuencia":[5.0,3.0,4.0,4.0,null],"calidad":[4.17,2.0,1.0,2.0,null],"espera_montaje":[0.0,6.0,3.0,4.0,null],"programacion":[0.0,6.0,0.0,2.0,null],"mangas":[2.0,1.0,1.5,0.0,null],"orden_suspendida":[2.0,1.0,0.0,0.0,null],"grabados":[1.0,2.0,10.0,1.0,null],"montaje_mangas":[0.0,2.5,1.0,2.75,null],"luz":[2.0,0.0,3.0,5.0,null],"falta_material":[0.0,0.0,5.0,6.0,null],"error_montaje":[0.0,0.0,2.0,0.0,null],"material_mal":[0.0,0.0,0.0,0.0,null],"orden_corta":[0.0,0.0,0.0,0.0,null]},"detalle":{"completo":true,"n_archivos":4,"semana_num":null,"etiqueta":"Mes completo","rango":"1–28 sep","fechas_confiables":true,"horas_oficiales_semana":305.0,"horas_detalle":312.5,"horas_sin_alarmada":311.5,"diferencia":6.5,"alarmada":1.0,"brechas":[{"semana":3,"rango":"15–21 sep","horas":6.5033,"dia":null,"texto":"La semana 3 (15–21 sep) no cuadra con el gráfico: Máquina descompuesta, en reparación 5.50 h en las hojas y 4.00 h en el gráfico; Luz 8.00 h en las hojas y 3.00 h en el gráfico."}],"nota_fechas":"","por_maquina":{"F2-2":140.1667,"F2-3":101.5,"FJ-2":18.6667,"F2-1":27.5,"F4-1":8.6667,"FLEXO":1.0,"F4-3":15.0},"por_maquina_concepto":{"F2-2":{"luz":7.0,"vobo":59.4167,"mangas":4.5,"tintas":28.5,"maquina":7.0,"secuencia":7.0,"grabados":5.0,"calidad":4.0,"orden_suspendida":1.0,"alarmada":1.0,"espera_montaje":11.0,"falta_material":4.0,"montaje_mangas":0.75},"F2-3":{"preprensa":8.0,"vobo":32.5,"maquina":22.0,"montaje_mangas":2.5,"secuencia":7.0,"calidad":2.0,"tintas":13.5,"luz":7.0,"grabados":3.0,"falta_material":2.0,"programacion":2.0},"FJ-2":{"calidad":3.1667,"vobo":2.0,"tintas":10.5,"grabados":3.0},"F2-1":{"vobo":5.0,"orden_suspendida":2.0,"tintas":2.5,"secuencia":2.0,"maquina":3.0,"programacion":6.0,"espera_montaje":2.0,"error_montaje":2.0,"montaje_mangas":2.0,"grabados":1.0},"F4-1":{"vobo":3.0,"maquina":1.6667,"preprensa":4.0},"FLEXO":{"montaje_mangas":1.0},"F4-3":{"falta_material":5.0,"luz":1.0,"grabados":2.0,"vobo":7.0}}}},{"id":"2025-10","nombre":"Octubre","corto":"Oct","parcial":false,"archivo":"5._TIEMPO_MUERTO_AREA_IMPRESION__2024_S1-CON_MACROS_27-02_NOVIEMBRE_3db2.xlsm","semanas":[100.58,108.0,80.67,62.5,57.0],"semanas_activas":5,"total_horas":408.75,"conceptos":{"vobo":125.5,"tintas":89.41,"maquina":30.0,"secuencia":24.0,"calidad":21.59,"espera_montaje":20.5,"mangas":20.0,"grabados":15.83,"programacion":12.5,"error_montaje":10.0,"falta_material":9.0,"montaje_mangas":6.42,"orden_corta":6.0,"luz":6.0,"material_mal":5.0,"preprensa":4.0,"orden_suspendida":3.0},"semanas_concepto":{"vobo":[11.0,52.0,26.0,23.0,13.5],"tintas":[43.08,11.5,19.25,10.08,5.5],"maquina":[2.0,14.0,7.0,0.0,7.0],"secuencia":[9.0,6.0,1.5,1.0,6.5],"calidad":[5.0,3.5,6.42,5.67,1.0],"espera_montaje":[4.0,2.0,2.5,9.0,3.0],"mangas":[8.0,3.0,1.0,3.0,5.0],"grabados":[3.5,6.0,3.0,2.33,1.0],"programacion":[4.0,0.0,0.0,0.0,8.5],"error_montaje":[0.0,5.0,3.0,0.0,2.0],"falta_material":[3.0,0.0,2.0,2.0,2.0],"montaje_mangas":[0.0,0.0,3.0,1.42,2.0],"orden_corta":[0.0,3.0,3.0,0.0,0.0],"luz":[2.0,2.0,1.0,1.0,0.0],"material_mal":[3.0,0.0,2.0,0.0,0.0],"preprensa":[0.0,0.0,0.0,4.0,0.0],"orden_suspendida":[3.0,0.0,0.0,0.0,0.0]},"detalle":{"completo":true,"n_archivos":5,"semana_num":null,"etiqueta":"Mes completo","rango":"29 sep – 2 nov","fechas_confiables":true,"horas_oficiales_semana":408.75,"horas_detalle":424.75,"horas_sin_alarmada":418.75,"diferencia":10.0,"alarmada":6.0,"brechas":[{"semana":5,"rango":"27 oct – 2 nov","horas":10.0,"dia":"29 oct","texto":"El 29 oct suma 10.00 h en las hojas (F2-3 5.00 h y F2-1 3.00 h y F2-2 2.00 h) y el gráfico de la semana 5 no las trae."}],"nota_fechas":"","por_maquina":{"F2-2":142.0833,"FJ-2":18.0,"F2-1":81.0,"F2-3":150.6667,"F4-3":23.0,"F4-2":1.0,"F4-1":9.0},"por_maquina_concepto":{"F2-2":{"luz":7.0,"espera_montaje":12.0,"programacion":5.0,"orden_suspendida":3.0,"tintas":35.25,"secuencia":10.5,"calidad":15.5833,"vobo":34.0,"maquina":9.0,"alarmada":1.0,"mangas":2.0,"orden_corta":6.0,"grabados":0.3333,"montaje_mangas":1.4167},"FJ-2":{"vobo":8.0,"alarmada":4.0,"tintas":6.0},"F2-1":{"vobo":31.5,"espera_montaje":7.5,"grabados":11.0,"material_mal":5.0,"tintas":4.0,"maquina":3.0,"mangas":4.0,"error_montaje":10.0,"montaje_mangas":3.0,"alarmada":1.0,"calidad":1.0},"F2-3":{"tintas":38.1667,"grabados":4.5,"secuencia":13.5,"falta_material":9.0,"calidad":3.0,"vobo":53.0,"maquina":18.0,"mangas":3.0,"luz":1.0,"programacion":7.5},"F4-3":{"mangas":11.0,"tintas":4.0,"vobo":7.0,"espera_montaje":1.0},"F4-2":{"tintas":1.0},"F4-1":{"montaje_mangas":2.0,"calidad":2.0,"tintas":1.0,"preprensa":4.0}}}},{"id":"2025-11","nombre":"Noviembre","corto":"Nov","parcial":false,"archivo":"4._TIEMPO_MUERTO_AREA_IMPRESION__2024_S3-CON_MACROS_24-30_NOVIEMBRE_48aa.xlsm","semanas":[116.5,70.17,69.05,112.55,null],"semanas_activas":4,"total_horas":368.27,"conceptos":{"vobo":116.67,"tintas":48.42,"maquina":46.35,"espera_montaje":39.5,"calidad":22.08,"mangas":22.0,"secuencia":19.5,"grabados":13.0,"error_montaje":9.25,"material_mal":7.5,"orden_corta":5.0,"falta_material":5.0,"preprensa":5.0,"montaje_mangas":4.0,"orden_suspendida":3.0,"luz":2.0,"programacion":0.0},"semanas_concepto":{"vobo":[18.0,19.0,29.17,50.5,null],"tintas":[8.0,13.17,11.92,15.33,null],"maquina":[8.5,6.0,7.13,24.72,null],"espera_montaje":[30.0,5.5,2.0,2.0,null],"calidad":[10.0,7.5,4.58,0.0,null],"mangas":[8.0,7.0,3.0,4.0,null],"secuencia":[13.5,1.0,0.0,5.0,null],"grabados":[6.0,2.0,0.0,5.0,null],"error_montaje":[4.0,4.0,1.25,0.0,null],"material_mal":[2.5,0.0,4.0,1.0,null],"orden_corta":[0.0,5.0,0.0,0.0,null],"falta_material":[4.0,0.0,0.0,1.0,null],"preprensa":[0.0,0.0,1.0,4.0,null],"montaje_mangas":[1.0,0.0,3.0,0.0,null],"orden_suspendida":[3.0,0.0,0.0,0.0,null],"luz":[0.0,0.0,2.0,0.0,null],"programacion":[0.0,0.0,0.0,0.0,null]},"detalle":{"completo":true,"n_archivos":4,"semana_num":null,"etiqueta":"Mes completo","rango":"3–30 nov","fechas_confiables":true,"horas_oficiales_semana":368.27,"horas_detalle":351.2667,"horas_sin_alarmada":341.2667,"diferencia":-27.0033,"alarmada":10.0,"brechas":[{"semana":1,"rango":"3–9 nov","horas":-27.0,"dia":null,"texto":"La semana 1 (3–9 nov) no cuadra con el gráfico: Espera de montaje de grabados 3.00 h en las hojas y 30.00 h en el gráfico."}],"nota_fechas":"","por_maquina":{"F2-1":64.25,"F2-2":138.75,"F2-3":49.1667,"FJ-2":20.5,"F4-3":30.8333,"F4-1":36.5,"F4-2":9.2667,"FLEXO":2.0},"por_maquina_concepto":{"F2-1":{"secuencia":4.0,"grabados":2.0,"montaje_mangas":1.0,"calidad":6.0,"error_montaje":7.0,"maquina":5.5,"vobo":22.0,"material_mal":2.5,"tintas":3.75,"espera_montaje":7.5,"mangas":3.0},"F2-2":{"vobo":44.0,"falta_material":4.0,"espera_montaje":3.0,"calidad":13.25,"tintas":28.1667,"grabados":1.0,"orden_suspendida":3.0,"alarmada":8.0,"maquina":22.0833,"orden_corta":1.0,"secuencia":3.0,"error_montaje":2.25,"montaje_mangas":1.0,"material_mal":5.0},"F2-3":{"maquina":5.5,"calidad":2.0,"secuencia":10.5,"tintas":6.0,"vobo":20.1667,"alarmada":2.0,"falta_material":1.0,"grabados":2.0},"FJ-2":{"grabados":2.0,"tintas":10.5,"vobo":4.0,"orden_corta":4.0},"F4-3":{"maquina":4.0,"mangas":17.0,"secuencia":2.0,"grabados":3.0,"espera_montaje":2.0,"montaje_mangas":2.0,"calidad":0.8333},"F4-1":{"vobo":26.5,"luz":2.0,"preprensa":5.0,"mangas":2.0,"grabados":1.0},"F4-2":{"maquina":9.2667},"FLEXO":{"grabados":2.0}}}},{"id":"2025-12","nombre":"Diciembre","corto":"Dic","parcial":false,"archivo":"4._TIEMPO_MUERTO_AREA_IMPRESION__2024_S3-CON_MACROS_22_AL_28_DICIEMBRE_c2a1.xlsm","semanas":[88.47,68.28,67.0,54.0,null],"semanas_activas":4,"total_horas":277.75,"conceptos":{"vobo":94.92,"tintas":48.5,"maquina":34.83,"grabados":27.5,"calidad":15.33,"error_montaje":10.0,"falta_material":10.0,"espera_montaje":9.5,"secuencia":8.67,"montaje_mangas":6.0,"preprensa":5.0,"mangas":4.0,"orden_corta":2.0,"luz":1.0,"material_mal":0.5,"orden_suspendida":0.0,"programacion":0.0},"semanas_concepto":{"vobo":[20.0,26.92,31.0,17.0,null],"tintas":[21.0,6.5,9.0,12.0,null],"maquina":[17.8,11.03,5.0,1.0,null],"grabados":[9.0,3.5,8.0,7.0,null],"calidad":[8.0,2.33,0.0,5.0,null],"error_montaje":[4.0,0.0,6.0,0.0,null],"falta_material":[2.0,7.0,0.0,1.0,null],"espera_montaje":[0.0,8.0,1.5,0.0,null],"secuencia":[4.67,1.0,1.5,1.5,null],"montaje_mangas":[0.0,2.0,1.0,3.0,null],"preprensa":[2.0,0.0,3.0,0.0,null],"mangas":[0.0,0.0,1.0,3.0,null],"orden_corta":[0.0,0.0,0.0,2.0,null],"luz":[0.0,0.0,0.0,1.0,null],"material_mal":[0.0,0.0,0.0,0.5,null],"orden_suspendida":[0.0,0.0,0.0,0.0,null],"programacion":[0.0,0.0,0.0,0.0,null]},"detalle":{"completo":true,"n_archivos":4,"semana_num":null,"etiqueta":"Mes completo","rango":"1–28 dic","fechas_confiables":true,"horas_oficiales_semana":277.75,"horas_detalle":285.4167,"horas_sin_alarmada":277.75,"diferencia":0.0,"alarmada":7.6667,"brechas":[],"nota_fechas":"","por_maquina":{"F4-1":12.0,"FJ-2":34.3833,"F2-3":91.8333,"F2-1":50.8333,"F2-2":84.0833,"F4-2":5.2833,"FLEXO":7.0},"por_maquina_concepto":{"F4-1":{"preprensa":5.0,"vobo":2.0,"espera_montaje":3.0,"montaje_mangas":2.0},"FJ-2":{"calidad":4.0,"tintas":15.0,"maquina":3.8833,"secuencia":1.5,"grabados":1.0,"vobo":7.0,"error_montaje":2.0},"F2-3":{"maquina":10.0,"secuencia":6.5,"grabados":15.5,"falta_material":4.0,"calidad":6.3333,"error_montaje":3.0,"tintas":13.0,"vobo":26.0,"mangas":3.0,"espera_montaje":1.5,"montaje_mangas":3.0},"F2-1":{"secuencia":0.6667,"vobo":32.0,"tintas":1.0,"falta_material":5.0,"alarmada":2.6667,"maquina":1.0,"error_montaje":4.0,"mangas":1.0,"material_mal":0.5,"orden_corta":2.0,"grabados":1.0},"F2-2":{"error_montaje":1.0,"tintas":18.5,"maquina":15.6667,"vobo":27.9167,"alarmada":5.0,"espera_montaje":5.0,"grabados":4.0,"luz":1.0,"calidad":5.0,"montaje_mangas":1.0},"F4-2":{"maquina":4.2833,"falta_material":1.0},"FLEXO":{"grabados":6.0,"tintas":1.0}}}}]}]}
+</script>
+<script>
+const GCOLOR = {
+  aprobacion: "#9f1239",
+  materiales: "#1d4e89",
+  maquina: "#c2410c",
+  montaje: "#6d28d9",
+  programa: "#0f6e56"
+};
+const PALETA = ["#9f1239", "#c2410c", "#b45309", "#1d4e89", "#0f6e56", "#6d28d9"];
+
+const state = { anio: 2026, mes: "all", concepto: null, maquina: null, modo: "horas", sort: "total", vista: "resumen" };
+
+function cargar() {
+  const raw = document.getElementById("tm-data").textContent.trim();
+  const data = JSON.parse(raw);
+  const anios = Array.isArray(data.anios) ? data.anios : (data.meses ? [data] : []);
+  if (!anios.length || anios.some((anio) => !anio.meses || !anio.meses.length)) {
+    document.body.innerHTML = "<p style='padding:24px'>No hay datos. Ejecuta <code>python scripts/tiempo-muerto.py</code> con la carpeta de los archivos.</p>";
+    return null;
+  }
+  return anios.sort((a, b) => b.meta.anio - a.meta.anio);
+}
+
+const ANIOS = cargar();
+let D = ANIOS ? ANIOS[0] : null;
+if (D) iniciar();
+
+function aplicarAnio() {
+  D = ANIOS.find((anio) => anio.meta.anio === state.anio) || ANIOS[0];
+  state.anio = D.meta.anio;
+  if (state.mes !== "all" && !D.meses.some((mes) => mes.id === state.mes)) state.mes = "all";
+  document.getElementById("eyebrow").textContent = "Área de impresión · " + D.meta.anio;
+  document.getElementById("corte").textContent = D.meta.anio === 2026
+    ? "Al " + D.meta.corte
+    : "Corte " + D.meta.corte;
+  document.getElementById("periodo").textContent = D.meta.periodo;
+  document.title = "Tiempo muerto · Área de impresión " + D.meta.anio;
+  document.getElementById("lede").textContent = D.meta.anio === 2026
+    ? "Horas de paro del área, de enero al 25 de octubre. Septiembre cierra con la semana del 21 al 26. Octubre va en cuatro semanas, al 25. Los conceptos cubren todas las semanas del gráfico mensual. Las máquinas salen de la semana que cada archivo todavía conserva."
+    : "Horas de paro del área en " + D.meta.periodo.toLowerCase() + ". Los conceptos salen del gráfico mensual. Las máquinas salen de las semanas del mes.";
+  const parcial = D.meses.find((mes) => mes.parcial);
+  document.getElementById("nota-semanas").textContent = D.meta.anio === 2026
+    ? "El punto (·) es una semana que el archivo no trae. Septiembre cierra con la semana del 21 al 26. Octubre va al 25, en cuatro semanas."
+    : (parcial
+      ? "Una celda vacía es una semana que el archivo no trae. " + parcial.nombre + " está cortado en la semana " + parcial.semanas_activas + "."
+      : "Una celda vacía es una semana que el archivo no trae.");
+}
+
+function pintarAnios() {
+  document.getElementById("anios").innerHTML = ANIOS.map((anio) =>
+    `<button type="button" data-anio="${anio.meta.anio}">${anio.meta.anio}</button>`
+  ).join("");
+}
+
+function iniciar() {
+  state.anio = D.meta.anio;
+  const ytd = rankingConceptos(D.meses);
+  state.concepto = ytd[0].id;
+  state.maquina = rankingMaquinas(D.meses)[0].nombre;
+  pintarAnios();
+  document.getElementById("imprimir").addEventListener("click", () => window.print());
+  document.getElementById("modo-horas").addEventListener("click", () => { state.modo = "horas"; render(); });
+  document.getElementById("modo-pct").addEventListener("click", () => { state.modo = "pct"; render(); });
+  document.getElementById("elige-maq").addEventListener("change", (ev) => {
+    state.maquina = ev.target.value;
+    render();
+  });
+  document.body.addEventListener("click", (ev) => {
+    const anioBtn = ev.target.closest("[data-anio]");
+    if (anioBtn) {
+      state.anio = Number(anioBtn.dataset.anio);
+      state.mes = "all";
+      aplicarAnio();
+      state.concepto = rankingConceptos(D.meses)[0].id;
+      state.maquina = rankingMaquinas(D.meses)[0].nombre;
+      render();
+      return;
+    }
+    const vista = ev.target.closest("[data-vista]");
+    if (vista) { state.vista = vista.dataset.vista; render(); return; }
+    const salto = ev.target.closest("a.jump");
+    if (salto) {
+      state.vista = "detalle";
+      document.body.dataset.pantalla = "detalle";
+      document.querySelectorAll("[data-vista]").forEach((btn) => {
+        btn.setAttribute("aria-pressed", String(btn.dataset.vista === "detalle"));
+      });
+    }
+    const mes = ev.target.closest("[data-mes]");
+    if (mes) { state.mes = mes.dataset.mes; render(); return; }
+    const concepto = ev.target.closest("[data-concepto]");
+    if (concepto) { state.concepto = concepto.dataset.concepto; render(); return; }
+    const maquina = ev.target.closest("[data-maquina]");
+    if (maquina) { state.maquina = maquina.dataset.maquina; render(); return; }
+    const sort = ev.target.closest("[data-sort]");
+    if (sort) { state.sort = sort.dataset.sort; render(); }
+  });
+  render();
+}
+
+function foco() {
+  return state.mes === "all" ? D.meses : D.meses.filter((m) => m.id === state.mes);
+}
+function nombreConcepto(id) {
+  const item = D.conceptos.find((c) => c.id === id);
+  return item ? item.nombre : id;
+}
+function grupoDe(id) {
+  const item = D.conceptos.find((c) => c.id === id);
+  return item ? item.grupo : "";
+}
+function fmt(n, d) {
+  const digits = d == null ? 2 : d;
+  return (Number(n) || 0).toLocaleString("es-MX", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+function pct(part, total) {
+  if (!total) return "0%";
+  return (part / total * 100).toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "%";
+}
+function esc(value) {
+  return String(value).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+}
+function horasConcepto(meses, id) {
+  return meses.reduce((sum, mes) => sum + (mes.conceptos[id] || 0), 0);
+}
+function horasMaquina(meses, nombre) {
+  return meses.reduce((sum, mes) => sum + ((mes.detalle.por_maquina || {})[nombre] || 0), 0);
+}
+function listaNatural(nombres) {
+  if (nombres.length <= 1) return nombres[0] || "";
+  return nombres.slice(0, -1).join(", ") + " y " + nombres[nombres.length - 1];
+}
+function completo(mes) {
+  return !!(mes.detalle && mes.detalle.completo);
+}
+function semanasHoja(mes) {
+  return (mes.detalle && mes.detalle.n_archivos) || mes.semanas_activas;
+}
+function etiquetaCompletos(lista) {
+  const cerrados = lista.filter((mes) => !mes.parcial);
+  const parciales = lista.filter((mes) => mes.parcial);
+  const partes = [];
+  if (cerrados.length === 1) partes.push(`${cerrados[0].nombre.toLowerCase()} completo`);
+  else if (cerrados.length) partes.push(`${listaNatural(cerrados.map((mes) => mes.nombre.toLowerCase()))} completos`);
+  if (parciales.length) partes.push(`${listaNatural(parciales.map((mes) => mes.nombre.toLowerCase()))} con las semanas que trae el archivo`);
+  return partes.join(" y ");
+}
+function horasMaquinaConcepto(meses, nombre, id) {
+  return meses.reduce((sum, mes) => {
+    const bloque = (mes.detalle.por_maquina_concepto || {})[nombre] || {};
+    return sum + (bloque[id] || 0);
+  }, 0);
+}
+function totalOficial(meses) {
+  return meses.reduce((sum, mes) => sum + mes.total_horas, 0);
+}
+function rankingConceptos(meses) {
+  return D.conceptos
+    .filter((c) => c.en_grafico)
+    .map((c) => ({ id: c.id, nombre: c.nombre, grupo: c.grupo, h: horasConcepto(meses, c.id) }))
+    .sort((a, b) => b.h - a.h);
+}
+function rankingMaquinas(meses) {
+  return D.maquinas
+    .map((nombre) => ({ nombre, h: horasMaquina(meses, nombre) }))
+    .sort((a, b) => b.h - a.h);
+}
+function conceptosTop(meses) {
+  const ranking = rankingConceptos(meses).filter((c) => c.h > 0);
+  const top = ranking.slice(0, 5);
+  const ids = new Set(top.map((c) => c.id));
+  return { top, ids };
+}
+function horasGrupo(meses, gid) {
+  return D.conceptos
+    .filter((c) => c.grupo === gid && c.en_grafico)
+    .reduce((sum, c) => sum + horasConcepto(meses, c.id), 0);
+}
+
+function pintarMeses() {
+  const botones = ['<button type="button" data-mes="all" aria-pressed="true">Año</button>']
+    .concat(D.meses.map((m) => `<button type="button" data-mes="${m.id}">${esc(m.corto)}${m.parcial ? " · parcial" : ""}</button>`));
+  document.getElementById("meses").innerHTML = botones.join("");
+}
+
+function conceptosDeMaquina(meses, nombre) {
+  const map = {};
+  meses.forEach((mes) => {
+    const bloque = (mes.detalle.por_maquina_concepto || {})[nombre] || {};
+    Object.entries(bloque).forEach(([cid, horas]) => { map[cid] = (map[cid] || 0) + horas; });
+  });
+  return Object.entries(map).sort((a, b) => b[1] - a[1]);
+}
+
+function render() {
+  aplicarAnio();
+  pintarMeses();
+  document.body.dataset.pantalla = state.vista;
+  document.querySelectorAll("[data-anio]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(Number(btn.dataset.anio) === state.anio));
+  });
+  document.querySelectorAll("[data-vista]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(btn.dataset.vista === state.vista));
+  });
+  document.querySelectorAll("[data-mes]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(btn.dataset.mes === state.mes));
+  });
+  document.getElementById("modo-horas").setAttribute("aria-pressed", String(state.modo === "horas"));
+  document.getElementById("modo-pct").setAttribute("aria-pressed", String(state.modo === "pct"));
+  pintarFicha();
+  pintarKpis();
+  pintarGrupos();
+  pintarTendencia();
+  pintarConceptos();
+  pintarFoco();
+  pintarMaquinas();
+  pintarSemanas();
+}
+
+function pintarFicha() {
+  const meses = foco();
+  const total = totalOficial(meses);
+  const maquinas = rankingMaquinas(meses);
+  const peorH = maquinas[0].h;
+  const mejorH = maquinas[maquinas.length - 1].h;
+  const peores = maquinas.filter((m) => Math.abs(m.h - peorH) < 0.05);
+  const mejores = maquinas.filter((m) => Math.abs(m.h - mejorH) < 0.05);
+  const muestra = maquinas.reduce((s, m) => s + m.h, 0);
+  const textoConceptos = (nombre) => conceptosDeMaquina(meses, nombre).slice(0, 3)
+    .map(([cid, h]) => `${nombreConcepto(cid)} ${fmt(h)} h`).join(" · ");
+  const tarjeta = (clase, titulo, grupo) => {
+    const conceptos = grupo.length === 1 ? textoConceptos(grupo[0].nombre) : "Empate en horas.";
+    const parte = muestra ? pct(grupo[0].h, muestra) : "0%";
+    return `<article class="call ${clase}"><div class="lbl" style="color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase">${titulo}</div><div class="who">${grupo.map((m) => esc(m.nombre)).join("<br>")}</div><div class="num">${fmt(grupo[0].h)} h</div><div class="hint" style="color:var(--muted);font-size:13px">${esc(parte)} de las horas con detalle de máquina${conceptos ? ". " + esc(conceptos) : ""}</div></article>`;
+  };
+  document.getElementById("ficha-maquinas").innerHTML = [
+    tarjeta("alto", "Peor en tiempo muerto", peores),
+    tarjeta("bajo", "Mejor en tiempo muerto", mejores)
+  ].join("");
+
+  const ranking = rankingConceptos(meses);
+  const top = ranking[0];
+  const veces = mejorH > 0.05 ? fmt(peorH / mejorH, 1) : "";
+  let datos;
+  if (state.mes === "all") {
+    const mayorMes = D.meses.slice().sort((a, b) => b.total_horas - a.total_horas)[0];
+    const menorMes = D.meses.filter((m) => !m.parcial).slice().sort((a, b) => a.total_horas - b.total_horas)[0];
+    const semanaAltaAnio = D.meses.length === 1
+      ? D.meses[0].semanas.map((v, i) => ({ v, i })).filter((s) => s.v != null).sort((a, b) => b.v - a.v)[0]
+      : null;
+    datos = D.meses.length === 1
+      ? [
+        ["Horas del año", fmt(total), `${fmt(total / 8, 1)} jornadas de 8 h`],
+        ["Concepto que más pesa", top.nombre, `${fmt(top.h)} h · ${pct(top.h, total)}`],
+        ["Semana más alta", "Semana " + (semanaAltaAnio.i + 1), `${fmt(semanaAltaAnio.v)} h`],
+        ["Hojas de máquina", `${semanasHoja(D.meses[0])} semanas`, `${fmt(D.meses[0].detalle.horas_detalle)} h en las hojas`],
+        ["Brecha peor y mejor", veces ? `${veces} veces` : fmt(peorH - mejorH) + " h", `${listaNatural(peores.map((m) => m.nombre))} frente a ${listaNatural(mejores.map((m) => m.nombre))}${veces ? "" : " en cero"}`]
+      ]
+      : [
+        ["Horas del año", fmt(total), `${fmt(total / 8, 1)} jornadas de 8 h`],
+        ["Concepto que más pesa", top.nombre, `${fmt(top.h)} h · ${pct(top.h, total)}`],
+        ["Mes con más horas", mayorMes.nombre, `${fmt(mayorMes.total_horas)} h`],
+        ["Mes cerrado con menos", menorMes.nombre, `${fmt(menorMes.total_horas)} h`],
+        ["Brecha peor y mejor", veces ? `${veces} veces` : fmt(peorH - mejorH) + " h", `${listaNatural(peores.map((m) => m.nombre))} frente a ${listaNatural(mejores.map((m) => m.nombre))}${veces ? "" : " en cero"}`]
+      ];
+  } else {
+    const mes = meses[0];
+    const semanaAlta = mes.semanas.map((v, i) => ({ v, i })).filter((s) => s.v != null).sort((a, b) => b.v - a.v)[0];
+    datos = [
+      ["Horas del mes", fmt(total), `${fmt(total / mes.semanas_activas, 1)} h por semana`],
+      ["Concepto que más pesa", top.nombre, `${fmt(top.h)} h · ${pct(top.h, total)}`],
+      ["Semana más alta", "Semana " + (semanaAlta.i + 1), `${fmt(semanaAlta.v)} h`],
+      completo(mes)
+        ? ["Hojas de máquina", mes.parcial ? `${semanasHoja(mes)} semanas` : "Mes completo", `${fmt(mes.detalle.horas_detalle)} h en las ${semanasHoja(mes)} semanas`]
+        : ["Semana con máquinas", mes.detalle.etiqueta, `${fmt(mes.detalle.horas_oficiales_semana)} h`],
+      ["Brecha peor y mejor", veces ? `${veces} veces` : fmt(peorH - mejorH) + " h", `${listaNatural(peores.map((m) => m.nombre))} frente a ${listaNatural(mejores.map((m) => m.nombre))}${veces ? "" : " en cero"}`]
+    ];
+  }
+  document.getElementById("ficha-datos").innerHTML = datos.map(([lbl, num, hint]) =>
+    `<article class="kpi"><div class="lbl">${esc(lbl)}</div><div class="num">${esc(num)}</div><div class="hint">${esc(hint)}</div></article>`
+  ).join("");
+  const nota = document.getElementById("ficha-nota");
+  nota.hidden = true;
+  nota.textContent = "";
+}
+
+function pintarKpis() {
+  const meses = foco();
+  const total = totalOficial(meses);
+  const ranking = rankingConceptos(meses);
+  const top = ranking[0];
+  const maquinas = rankingMaquinas(meses);
+  let items;
+  if (state.mes === "all") {
+    const mayorMes = D.meses.slice().sort((a, b) => b.total_horas - a.total_horas)[0];
+    const menorMes = D.meses.filter((m) => !m.parcial).slice().sort((a, b) => a.total_horas - b.total_horas)[0];
+    const semanaAltaAnio = D.meses.length === 1
+      ? D.meses[0].semanas.map((v, i) => ({ v, i })).filter((s) => s.v != null).sort((a, b) => b.v - a.v)[0]
+      : null;
+    items = D.meses.length === 1
+      ? [
+        ["Horas del año", fmt(total), `${fmt(total / 8, 1)} jornadas de 8 h`],
+        ["Concepto principal", top.nombre, `${fmt(top.h)} h · ${pct(top.h, total)}`],
+        ["Semana más alta", "Semana " + (semanaAltaAnio.i + 1), `${fmt(semanaAltaAnio.v)} h`],
+        ["Detalle de máquinas", semanasHoja(D.meses[0]) + " semanas", `${fmt(D.meses[0].detalle.horas_detalle)} h en las hojas`],
+        ["Máquina con más paro", maquinas[0].nombre, `${fmt(maquinas[0].h)} h en el detalle disponible`]
+      ]
+      : [
+        ["Horas del año", fmt(total), `${fmt(total / 8, 1)} jornadas de 8 h`],
+        ["Concepto principal", top.nombre, `${fmt(top.h)} h · ${pct(top.h, total)}`],
+        ["Mes más alto", mayorMes.nombre, `${fmt(mayorMes.total_horas)} h`],
+        ["Mes cerrado más bajo", menorMes.nombre, `${fmt(menorMes.total_horas)} h`],
+        ["Máquina con más paro", maquinas[0].nombre, `${fmt(maquinas[0].h)} h en el detalle disponible`]
+      ];
+  } else {
+    const mes = meses[0];
+    const semanaAlta = mes.semanas.map((v, i) => ({ v, i })).filter((s) => s.v != null).sort((a, b) => b.v - a.v)[0];
+    items = [
+      ["Horas del mes", fmt(total), `${mes.semanas_activas} semanas · ${fmt(total / mes.semanas_activas, 1)} h/sem`],
+      ["Concepto principal", top.nombre, `${fmt(top.h)} h · ${pct(top.h, total)}`],
+      ["Semana más alta", "Semana " + (semanaAlta.i + 1), `${fmt(semanaAlta.v)} h`],
+      completo(mes)
+        ? ["Detalle de máquinas", semanasHoja(mes) + " semanas", `${fmt(mes.detalle.horas_detalle)} h en las hojas`]
+        : ["Semana con máquinas", mes.detalle.etiqueta, `${fmt(mes.detalle.horas_oficiales_semana)} h · ${pct(mes.detalle.horas_oficiales_semana, total)}`],
+      ["Máquina con más paro", maquinas[0].nombre, completo(mes) ? `${fmt(maquinas[0].h)} h en el mes` : `${fmt(maquinas[0].h)} h en esa semana`]
+    ];
+  }
+  document.getElementById("kpis").innerHTML = items.map(([lbl, num, hint]) =>
+    `<article class="kpi"><div class="lbl">${esc(lbl)}</div><div class="num">${esc(num)}</div><div class="hint">${esc(hint)}</div></article>`
+  ).join("");
+}
+
+function pintarLectura() {
+  const meses = foco();
+  const total = totalOficial(meses);
+  const lineas = [];
+  if (state.mes === "all") {
+    const ranking = rankingConceptos(D.meses);
+    const top = ranking[0];
+    const pico = D.meses.slice().sort((a, b) => (b.conceptos[top.id] || 0) - (a.conceptos[top.id] || 0))[0];
+    const intro = D.meta.anio === 2026
+      ? `De enero al 25 de octubre el gráfico mensual suma ${fmt(total)} horas.`
+      : `${D.meta.periodo}: el gráfico mensual suma ${fmt(total)} horas.`;
+    lineas.push(`${intro} Equivale a ${fmt(total / 8, 1)} jornadas de 8 horas, o a ${fmt(total / 24, 1)} días de 24 horas.`);
+    lineas.push(`${top.nombre} concentra ${fmt(top.h)} horas, ${pct(top.h, total)} del año. El mes más alto de ese concepto es ${pico.nombre.toLowerCase()}, con ${fmt(pico.conceptos[top.id])} h.`);
+    const mayor = D.meses.slice().sort((a, b) => b.total_horas - a.total_horas)[0];
+    const cerrados = D.meses.filter((m) => !m.parcial);
+    const menor = cerrados.slice().sort((a, b) => a.total_horas - b.total_horas)[0];
+    const sep = D.meses.find((m) => m.parcial);
+    let fraseMes = `${mayor.nombre} es el mes con más horas (${fmt(mayor.total_horas)}).`;
+    if (menor && menor.id !== mayor.id) fraseMes += ` ${menor.nombre} es el mes cerrado más bajo (${fmt(menor.total_horas)}).`;
+    if (sep && D.meta.anio === 2026) {
+      const previos = D.meses.filter((m) => m.id < sep.id);
+      const horasPrev = totalOficial(previos);
+      const semanasPrev = previos.reduce((s, m) => s + m.semanas_activas, 0);
+      fraseMes += ` ${sep.nombre} lleva ${fmt(sep.total_horas)} h en ${sep.semanas_activas} semanas, a ${fmt(sep.total_horas / sep.semanas_activas, 1)} h por semana, frente a ${fmt(horasPrev / semanasPrev, 1)} h por semana de enero a septiembre.`;
+    }
+    lineas.push(fraseMes);
+    const distintos = D.meses.filter((m) => {
+      const local = rankingConceptos([m])[0];
+      return local && local.id !== top.id;
+    });
+    if (distintos.length) {
+      const partes = distintos.map((m) => {
+        const local = rankingConceptos([m])[0];
+        return `${m.nombre.toLowerCase()} (${local.nombre}, ${fmt(local.h)} h)`;
+      });
+      const texto = partes.length === 1 ? partes[0] : partes.slice(0, -1).join(", ") + " y " + partes[partes.length - 1];
+      lineas.push(`En ${texto} otro concepto queda al frente del mes.`);
+    }
+    let acum = 0;
+    let n80 = 0;
+    for (const item of ranking) {
+      acum += item.h;
+      n80 += 1;
+      if (acum >= total * 0.8) break;
+    }
+    lineas.push(`${n80} conceptos reúnen el 80% de las horas. Los tres primeros — ${ranking[0].nombre}, ${ranking[1].nombre} y ${ranking[2].nombre} — suman ${pct(ranking[0].h + ranking[1].h + ranking[2].h, total)}.`);
+    const partes = D.grupos.map((g) => `${g.nombre.toLowerCase()} ${pct(horasGrupo(D.meses, g.id), total)}`);
+    lineas.push(`Por tipo de paro: ${partes.join(", ")}.`);
+  } else {
+    const mes = meses[0];
+    const ranking = rankingConceptos(meses);
+    lineas.push(`${mes.nombre} suma ${fmt(mes.total_horas)} horas en ${mes.semanas_activas} semanas, ${fmt(mes.total_horas / mes.semanas_activas, 1)} h por semana.`);
+    lineas.push(`${ranking[0].nombre} aporta ${fmt(ranking[0].h)} h, ${pct(ranking[0].h, mes.total_horas)} del mes. Sigue ${ranking[1].nombre.toLowerCase()} con ${fmt(ranking[1].h)} h.`);
+    const det = mes.detalle;
+    const rango = det.fechas_confiables && det.rango ? ` (${det.rango})` : "";
+    if (det.completo) {
+      lineas.push(`${mes.nombre} tiene las ${semanasHoja(mes)} semanas por máquina${rango}: ${fmt(det.horas_detalle)} h en las hojas. El gráfico del mes queda en ${fmt(mes.total_horas)} h.`);
+      if (notaBrechas(mes)) lineas.push(notaBrechas(mes));
+    } else {
+      lineas.push(`La hoja semanal guardada es la ${det.etiqueta.toLowerCase()}${rango}: ${fmt(det.horas_oficiales_semana)} h, ${pct(det.horas_oficiales_semana, mes.total_horas)} del mes.`);
+      if (!det.fechas_confiables) {
+        lineas.push("Las fechas de esa hoja semanal quedaron de otro mes. Las horas coinciden con la semana del gráfico y el reporte usa esa semana.");
+      }
+    }
+  }
+  const maquinas = rankingMaquinas(meses);
+  const mayores = maquinas.filter((m) => Math.abs(m.h - maquinas[0].h) < 0.05);
+  const positivos = maquinas.filter((m) => m.h > 0.05);
+  const ceros = maquinas.filter((m) => m.h <= 0.05);
+  const minPos = positivos.length ? Math.min(...positivos.map((m) => m.h)) : 0;
+  const menores = positivos.filter((m) => Math.abs(m.h - minPos) < 0.05);
+  const alcance = state.mes === "all"
+    ? (D.meses.some(completo) ? "en el detalle disponible" : "en las semanas guardadas")
+    : (completo(meses[0]) ? "en el mes" : "en la semana guardada");
+  const nombresMayores = mayores.map((m) => m.nombre).join(" y ");
+  let frase = mayores.length > 1
+    ? `${nombresMayores} empatan con el mayor tiempo muerto ${alcance}, cerca de ${fmt(mayores[0].h)} h.`
+    : `${nombresMayores} concentra el mayor tiempo muerto ${alcance}: ${fmt(mayores[0].h)} h.`;
+  if (menores.length > 1) frase += ` ${menores.map((m) => m.nombre).join(" y ")} empatan como las más bajas con paro registrado, cerca de ${fmt(menores[0].h)} h.`;
+  else if (menores.length === 1) frase += ` ${menores[0].nombre} es la más baja con paro registrado: ${fmt(menores[0].h)} h.`;
+  if (ceros.length) frase += ` En cero: ${ceros.map((m) => m.nombre).join(", ")}.`;
+  frase += " " + fraseCobertura(meses);
+  lineas.push(frase);
+  document.getElementById("lectura").innerHTML = lineas.map((linea) => `<li>${esc(linea)}</li>`).join("");
+}
+
+function pintarGrupos() {
+  const meses = foco();
+  const total = Math.max(totalOficial(meses), 1);
+  document.getElementById("grupos").innerHTML = D.grupos.map((g) => {
+    const horas = horasGrupo(meses, g.id);
+    const ancho = horas > 0.05 ? Math.max(2, horas / total * 100) : 0;
+    return `<div class="grupo"><strong>${esc(g.nombre)}</strong><div class="track"><span style="width:${ancho}%;background:${GCOLOR[g.id]}"></span></div><span>${fmt(horas)} h · ${pct(horas, total)}</span></div>`;
+  }).join("");
+}
+
+function pintarTendencia() {
+  const titulo = document.getElementById("titulo-tendencia");
+  const cont = document.getElementById("tendencia");
+  const leyenda = document.getElementById("leyenda");
+  if (state.mes === "all") {
+    titulo.textContent = "Horas por mes, con los cinco conceptos más altos";
+    const { top, ids } = conceptosTop(D.meses);
+    const max = Math.max(...D.meses.map((m) => m.total_horas));
+    cont.innerHTML = D.meses.map((mes) => {
+      const otros = mes.total_horas - top.reduce((s, c) => s + (mes.conceptos[c.id] || 0), 0);
+      const segs = top.map((c, i) => `<div class="seg" style="flex:${Math.max(mes.conceptos[c.id] || 0, 0)} 1 0;background:${PALETA[i]}" title="${esc(c.nombre)}: ${fmt(mes.conceptos[c.id] || 0)} h"></div>`).join("");
+      const extra = otros > 0.05 ? `<div class="seg" style="flex:${otros} 1 0;background:#d6d3d1" title="Otros: ${fmt(otros)} h"></div>` : "";
+      return `<div class="colwrap"><div class="col" style="height:${Math.max(8, mes.total_horas / max * 100)}%">${extra}${segs}</div><button type="button" data-mes="${mes.id}"><strong>${fmt(mes.total_horas, 0)}</strong>${esc(mes.corto)}</button></div>`;
+    }).join("");
+    leyenda.innerHTML = top.map((c, i) => `<span><i class="dot" style="background:${PALETA[i]}"></i>${esc(c.nombre)}</span>`).join("") + `<span><i class="dot" style="background:#d6d3d1"></i>Otros</span>`;
+  } else {
+    const mes = foco()[0];
+    titulo.textContent = `Semanas de ${mes.nombre}`;
+    const semanas = mes.semanas.map((valor, i) => ({ i, valor })).filter((s) => s.valor != null);
+    const max = Math.max(...semanas.map((s) => s.valor), 1);
+    cont.innerHTML = semanas.map((s) => `<div class="colwrap"><div class="col" style="height:${Math.max(8, s.valor / max * 100)}%"><div class="seg" style="flex:1;background:${!completo(mes) && s.i + 1 === mes.detalle.semana_num ? "#9f1239" : "#1d4e89"}"></div></div><button type="button"><strong>${fmt(s.valor, 1)}</strong>Sem ${s.i + 1}</button></div>`).join("");
+    leyenda.innerHTML = completo(mes)
+      ? `<span><i class="dot" style="background:#1d4e89"></i>Las ${semanasHoja(mes)} semanas de las hojas tienen detalle de máquina</span>`
+      : `<span><i class="dot" style="background:#9f1239"></i>Semana con detalle de máquina (${esc(mes.detalle.etiqueta.toLowerCase())})</span><span><i class="dot" style="background:#1d4e89"></i>Resto de semanas del mes</span>`;
+  }
+}
+
+function ordenConceptos() {
+  const ranking = rankingConceptos(D.meses);
+  const key = state.sort;
+  const copia = ranking.slice();
+  copia.sort((a, b) => {
+    const va = valorSort(a.id, key);
+    const vb = valorSort(b.id, key);
+    return vb - va;
+  });
+  return copia;
+}
+function valorSort(id, key) {
+  if (key === "total") return horasConcepto(D.meses, id);
+  const mes = D.meses.find((m) => m.id === key);
+  return mes ? (mes.conceptos[id] || 0) : 0;
+}
+function pintarConceptos() {
+  const lista = ordenConceptos();
+  const total = totalOficial(D.meses);
+  const head = D.meses.map((m) => {
+    const cls = state.mes !== "all" && state.mes !== m.id ? "dim" : (state.mes === m.id ? "on" : "");
+    return `<th class="${cls}"><button type="button" data-sort="${m.id}">${esc(m.corto)}</button></th>`;
+  }).join("");
+  const body = lista.map((c) => {
+    const celdas = D.meses.map((m) => {
+      const cls = state.mes !== "all" && state.mes !== m.id ? "dim" : (state.mes === m.id ? "on" : "");
+      const valor = m.conceptos[c.id] || 0;
+      const texto = state.modo === "pct"
+        ? (valor ? pct(valor, m.total_horas) : "·")
+        : (valor ? fmt(valor) : "·");
+      return `<td class="${cls}">${texto}</td>`;
+    }).join("");
+    const on = c.id === state.concepto ? " on" : "";
+    return `<tr class="click${on}" data-concepto="${c.id}"><td class="l"><i class="dot" style="background:${GCOLOR[c.grupo]}"></i>${esc(c.nombre)}</td>${celdas}<td><strong>${fmt(c.h)}</strong></td><td>${pct(c.h, total)}</td></tr>`;
+  }).join("");
+  const totales = D.meses.map((m) => {
+    const cls = state.mes !== "all" && state.mes !== m.id ? "dim" : (state.mes === m.id ? "on" : "");
+    const texto = state.modo === "pct" ? "100%" : fmt(m.total_horas);
+    return `<td class="${cls}">${texto}</td>`;
+  }).join("");
+  document.getElementById("tabla-conceptos").innerHTML = `<table><thead><tr><th class="l">Concepto</th>${head}<th><button type="button" data-sort="total">Año</button></th><th>%</th></tr></thead><tbody>${body}<tr class="total"><td class="l">Total oficial</td>${totales}<td>${fmt(total)}</td><td>100%</td></tr></tbody></table>`;
+}
+
+function pintarFoco() {
+  const id = state.concepto;
+  const nombre = nombreConcepto(id);
+  const ytd = horasConcepto(D.meses, id);
+  const total = totalOficial(D.meses);
+  const semanas = D.meses.map((mes) => {
+    const serie = mes.semanas_concepto[id] || [];
+    const vals = Array.from({ length: Math.max(5, serie.length) }, (_, i) => {
+      if (i >= serie.length) return "<td></td>";
+      const v = serie[i];
+      if (v == null) return "<td>·</td>";
+      const marca = !completo(mes) && i + 1 === mes.detalle.semana_num ? "font-weight:700;color:#9f1239" : "";
+      return `<td style="${marca}">${fmt(v)}</td>`;
+    }).join("");
+    return `<tr><td class="l">${esc(mes.nombre)}</td>${vals}<td><strong>${fmt(mes.conceptos[id] || 0)}</strong></td></tr>`;
+  }).join("");
+  const porMaq = D.maquinas.map((mq) => ({ nombre: mq, h: horasMaquinaConcepto(D.meses, mq, id) })).filter((m) => m.h > 0.05).sort((a, b) => b.h - a.h);
+  const enDetalle = porMaq.reduce((s, m) => s + m.h, 0);
+  const max = porMaq.length ? porMaq[0].h : 1;
+  const barras = porMaq.length
+    ? porMaq.map((m) => `<div class="bar-row"><button type="button" data-maquina="${esc(m.nombre)}">${esc(m.nombre)}</button><div class="bar-track"><span class="bar-fill" style="width:${m.h / max * 100}%;background:${GCOLOR[grupoDe(id)] || "#9f1239"}"></span></div><span>${fmt(m.h)} h</span></div>`).join("")
+    : "<p class='sub'>Este concepto no aparece en las semanas guardadas por máquina.</p>";
+  document.getElementById("foco-concepto").innerHTML = `
+    <div class="fila-titulo"><h3 style="margin:0">${esc(nombre)}</h3><strong>${fmt(ytd)} h · ${pct(ytd, total)} del año</strong></div>
+    <p class="sub">En el detalle de máquina hay ${fmt(enDetalle)} h de este concepto. ${D.meses.some(completo) ? "En un mes completo cada semana tiene horas por máquina. En el resto, la celda en rojo es la semana guardada." : "La celda en rojo es la semana cuyo detalle sí está en el archivo."}</p>
+    <div class="grid-2">
+      <div class="tabla-wrap" style="border:0"><table><thead><tr><th class="l">Mes</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th><th>Total</th></tr></thead><tbody>${semanas}</tbody></table></div>
+      <div><h3>En qué máquina cayó, dentro de las semanas guardadas</h3><div class="bars">${barras}</div></div>
+    </div>`;
+}
+
+function pintarMaquinas() {
+  const meses = foco();
+  const listaCompletos = D.meses.filter(completo);
+  document.getElementById("subtitulo-maquinas").textContent = listaCompletos.length === 0
+    ? "semana guardada de cada mes"
+    : listaCompletos.length === D.meses.length
+      ? "semanas completas de cada mes"
+      : `${etiquetaCompletos(listaCompletos)}; el resto, una semana`;
+  const notaMaquinas = document.getElementById("nota-maquinas");
+  notaMaquinas.hidden = true;
+  notaMaquinas.innerHTML = "";
+
+  const maquinas = rankingMaquinas(meses);
+  const mayores = maquinas.filter((m) => Math.abs(m.h - maquinas[0].h) < 0.05);
+  const positivos = maquinas.filter((m) => m.h > 0.05);
+  const ceros = maquinas.filter((m) => m.h <= 0.05);
+  const minPos = positivos.length ? Math.min(...positivos.map((m) => m.h)) : 0;
+  const menores = positivos.filter((m) => Math.abs(m.h - minPos) < 0.05);
+  const conceptosDe = (nombre) => {
+    const map = {};
+    meses.forEach((mes) => {
+      const bloque = mes.detalle.por_maquina_concepto[nombre] || {};
+      Object.entries(bloque).forEach(([cid, horas]) => { map[cid] = (map[cid] || 0) + horas; });
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  };
+  const tarjeta = (clase, titulo, grupo, extra) => {
+    const tops = grupo.length === 1 ? conceptosDe(grupo[0].nombre).map(([cid, h]) => `${nombreConcepto(cid)} ${fmt(h)} h`).join(" · ") : "";
+    return `<article class="call ${clase}"><div class="lbl" style="color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase">${titulo}</div><div class="who">${grupo.map((m) => esc(m.nombre)).join("<br>")}</div><div class="num">${fmt(grupo[0].h)} h</div><div class="hint" style="color:var(--muted);font-size:13px">${esc(tops || extra)}</div></article>`;
+  };
+  const tarjetaCero = ceros.length
+    ? `<article class="call"><div class="lbl" style="color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase">En cero en este detalle</div><div class="who">${ceros.map((m) => esc(m.nombre)).join("<br>")}</div><div class="num">${ceros.length} ${ceros.length === 1 ? "máquina" : "máquinas"}</div><div class="hint" style="color:var(--muted);font-size:13px">Cero en el detalle de máquina de este filtro.</div></article>`
+    : "";
+  document.getElementById("calls").innerHTML = [
+    tarjeta("alto", "Mayor tiempo muerto", mayores, ""),
+    tarjeta("bajo", "Menor con paro registrado", menores.length ? menores : [{ nombre: "—", h: 0 }], ""),
+    tarjetaCero
+  ].join("");
+
+  const max = maquinas[0].h || 1;
+  document.getElementById("titulo-barras").textContent = state.mes === "all"
+    ? (D.meses.some(completo) ? "Horas en el detalle disponible" : "Suma de las semanas guardadas")
+    : (completo(foco()[0]) ? `Horas de ${foco()[0].nombre}, las ${semanasHoja(foco()[0])} semanas` : `Semana guardada de ${foco()[0].nombre}`);
+  document.getElementById("barras-maq").innerHTML = maquinas.map((m) => `<div class="bar-row"><button type="button" data-maquina="${esc(m.nombre)}" style="${m.nombre === state.maquina ? "font-weight:700" : ""}">${esc(m.nombre)}</button><div class="bar-track"><span class="bar-fill" style="width:${max ? m.h / max * 100 : 0}%"></span></div><span>${fmt(m.h)} h</span></div>`).join("");
+
+  const head = D.meses.map((m) => `<th class="${state.mes === m.id ? "on" : ""}">${esc(m.corto)}<div style="font-weight:500;text-transform:none;letter-spacing:0">${completo(m) ? "mes" : "sem " + m.detalle.semana_num}</div></th>`).join("");
+  const cuerpo = D.maquinas.map((nombre) => {
+    const celdas = D.meses.map((m) => {
+      const valor = (m.detalle.por_maquina || {})[nombre] || 0;
+      const maxMes = Math.max(...D.maquinas.map((mq) => (m.detalle.por_maquina || {})[mq] || 0), 1);
+      const tono = valor ? `background:rgba(159,18,57,${0.08 + valor / maxMes * 0.75});color:${valor / maxMes > 0.62 ? "#fff" : "#1c1915"}` : "";
+      return `<td class="${state.mes === m.id ? "on" : ""}"><span class="heat" style="${tono}">${valor ? fmt(valor) : "·"}</span></td>`;
+    }).join("");
+    const suma = horasMaquina(D.meses, nombre);
+    return `<tr class="click${nombre === state.maquina ? " on" : ""}" data-maquina="${esc(nombre)}"><td class="l">${esc(nombre)}</td>${celdas}<td><strong>${fmt(suma)}</strong></td></tr>`;
+  }).join("");
+  document.getElementById("matriz-mes").innerHTML = `<table><thead><tr><th class="l">Máquina</th>${head}<th>Suma</th></tr></thead><tbody>${cuerpo}</tbody></table>`;
+
+  const select = document.getElementById("elige-maq");
+  const prev = state.maquina;
+  select.innerHTML = D.maquinas.map((nombre) => `<option value="${esc(nombre)}">${esc(nombre)}</option>`).join("");
+  select.value = prev;
+  const conceptos = D.conceptos
+    .map((c) => ({ c, suma: horasMaquinaConcepto(D.meses, state.maquina, c.id) }))
+    .filter((item) => item.suma > 0.0001)
+    .sort((a, b) => b.suma - a.suma);
+  const filas = conceptos.map(({ c }) => {
+    const celdas = D.meses.map((m) => {
+      const valor = (m.detalle.por_maquina_concepto[state.maquina] || {})[c.id] || 0;
+      return `<td class="${state.mes === m.id ? "on" : ""}">${valor ? fmt(valor) : "·"}</td>`;
+    }).join("");
+    const suma = horasMaquinaConcepto(D.meses, state.maquina, c.id);
+    return `<tr data-concepto="${c.id}" class="click"><td class="l">${esc(c.nombre)}</td>${celdas}<td><strong>${fmt(suma)}</strong></td></tr>`;
+  });
+  const totMes = D.meses.map((m) => `<td class="${state.mes === m.id ? "on" : ""}">${fmt((m.detalle.por_maquina || {})[state.maquina] || 0)}</td>`).join("");
+  const completosAnio = D.meses.filter(completo);
+  let sub = `${state.maquina} en la semana guardada de cada mes. La suma no es el año completo de la máquina: es la suma de esas semanas.`;
+  if (completosAnio.length === D.meses.length) {
+    sub = `${state.maquina} en cada mes, con las semanas completas.`;
+  } else if (completosAnio.length) {
+    const quienes = etiquetaCompletos(completosAnio);
+    const frase = quienes.charAt(0).toUpperCase() + quienes.slice(1);
+    sub = `${state.maquina}. ${frase}. En los demás meses la columna es la semana guardada. La suma todavía no es el año completo de la máquina.`;
+  }
+  document.getElementById("sub-maq").textContent = sub;
+  document.getElementById("tabla-maq").innerHTML = conceptos.length
+    ? `<table><thead><tr><th class="l">Concepto</th>${D.meses.map((m) => `<th>${esc(m.corto)}</th>`).join("")}<th>Suma</th></tr></thead><tbody>${filas.join("")}<tr class="total"><td class="l">Total de la máquina</td>${totMes}<td>${fmt(horasMaquina(D.meses, state.maquina))}</td></tr></tbody></table>`
+    : "<p>Esta máquina no tiene horas en el detalle disponible.</p>";
+}
+
+function pintarSemanas() {
+  let pico = { h: -1, texto: "" };
+  D.meses.forEach((mes) => {
+    mes.semanas.forEach((valor, i) => {
+      if (valor != null && valor > pico.h) pico = { h: valor, texto: `${mes.nombre}, semana ${i + 1}` };
+    });
+  });
+  const cuerpo = D.meses.map((mes) => {
+    const celdas = Array.from({ length: 5 }, (_, i) => {
+      if (i >= mes.semanas.length) return "<td></td>";
+      const valor = mes.semanas[i];
+      if (valor == null) return "<td>·</td>";
+      const max = Math.max(...mes.semanas.filter((v) => v != null));
+      const marca = !completo(mes) && i + 1 === mes.detalle.semana_num;
+      const tono = `background:rgba(29,78,137,${0.12 + valor / max * 0.7});${marca ? "outline:2px solid #9f1239;outline-offset:-2px;" : ""}`;
+      return `<td><span class="heat" style="${tono}">${fmt(valor)}</span></td>`;
+    }).join("");
+    const ritmo = mes.total_horas / mes.semanas_activas;
+    return `<tr><td class="l">${esc(mes.nombre)}${mes.parcial ? " · parcial" : ""}</td>${celdas}<td><strong>${fmt(mes.total_horas)}</strong></td><td>${fmt(ritmo, 1)}</td></tr>`;
+  }).join("");
+  document.getElementById("tabla-semanas").innerHTML = `<table><thead><tr><th class="l">Mes</th><th>Sem 1</th><th>Sem 2</th><th>Sem 3</th><th>Sem 4</th><th>Sem 5</th><th>Total</th><th>h / sem</th></tr></thead><tbody>${cuerpo}<tr class="total"><td class="l" colspan="7">Semana más alta del año: ${esc(pico.texto)}</td><td>${fmt(pico.h)} h</td></tr></tbody></table>`;
+}
+</script>
+</body>
+</html>
