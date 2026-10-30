@@ -72,8 +72,8 @@
   .kpi .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
   .kpi .num { font-variant-numeric: tabular-nums; font-size: 26px; font-weight: 650; letter-spacing: -0.03em; margin-top: 4px; }
   .kpi .hint { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
-  .kpi .hint.sube { color: var(--good); }
-  .kpi .hint.baja { color: var(--warn); }
+  .kpis.pulso .kpi { animation: pulso 1.2s ease; }
+  @keyframes pulso { from { background: var(--accent-soft); } to { background: var(--card); } }
   .card { padding: 16px; }
   .card h3 { margin: 0 0 8px; font-size: 15px; }
   .leyenda { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 0 0 10px; font-size: 13px; color: var(--muted); }
@@ -161,10 +161,10 @@
   </nav>
 
   <div id="cuerpo"></div>
-  <p class="nota"><strong>Consulta del día.</strong> Al abrirla ves el último día capturado en BOLSEO. Con Anterior y Siguiente, o con la fecha, revisas cualquier otro día. Si la dejas abierta, vuelve a leer el seguimiento cada tres minutos.</p>
+  <p class="nota"><strong>Se actualiza solo.</strong> Cada 20 segundos vuelve a leer las capturas nuevas de BOLSEO. Si acabas de guardar en AppSheet, pulsa Actualizar. La hora de consulta cambia cuando la lectura termina.</p>
 </div>
 <script>
-const SHEET = "https://docs.google.com/spreadsheets/d/1lt9KyIA2dLe1UWGZwvZT-tG4MF9w9iWGn45io8saew4/gviz/tq?tqx=out:json&gid=2535843";
+const SHEET = "https://docs.google.com/spreadsheets/d/1lt9KyIA2dLe1UWGZwvZT-tG4MF9w9iWGn45io8saew4/gviz/tq?gid=2535843";
 const PALETA = ["#9f1239", "#0f6e56", "#9a3412", "#1d4e89", "#7c3aed", "#a16207"];
 const OTROS = "#8a8175";
 const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
@@ -180,12 +180,13 @@ let cliente = "";
 let metrica = "piezas";
 let consultado = null;
 let cargando = false;
+let reqId = 0;
+let firmaVista = "";
 
 window.google = window.google || {};
 google.visualization = google.visualization || {};
-google.visualization.Query = {
-  setResponse(resp) { recibir(resp); }
-};
+google.visualization.Query = google.visualization.Query || {};
+google.visualization.Query.setResponse = function (resp) { aplicar(resp, null); };
 
 function reparar(s) {
   s = String(s || "").replace(/\s+/g, " ").trim();
@@ -411,8 +412,14 @@ function pintar() {
   const dCli = enCurso ? { cls: "", txt: "Día en captura" } : deltaTxt(res.clientes, prev.clientes, contra);
   const dOrd = enCurso ? { cls: "", txt: "Día en captura" } : deltaTxt(res.ordenes, prev.ordenes, contra);
   document.getElementById("corteFecha").textContent = (viendoCorte ? "Corte " : "Día ") + fmtFechaLarga(fin);
-  const hora = consultado ? consultado.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : "";
+  const hora = consultado
+    ? consultado.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    : "";
   document.getElementById("corteMeta").textContent = registros.length.toLocaleString("es-MX") + " capturas · consultado " + hora;
+  const firma = periodo + "|" + iso(fin) + "|" + cliente + "|" + res.piezas + "|" + res.kilos;
+  const cambio = firmaVista !== "" && firma !== firmaVista
+    && firmaVista.split("|").slice(0, 3).join("|") === firma.split("|").slice(0, 3).join("|");
+  firmaVista = firma;
 
   const ranking = [...res.porCliente.entries()].sort((a, b) => valorDe(b[1]) - valorDe(a[1]));
   const top = ranking.slice(0, 5).map(([nombre]) => nombre);
@@ -545,7 +552,7 @@ function pintar() {
   );
 
   cuerpo.innerHTML = vacio || (
-    '<div class="kpis">'
+    '<div class="kpis' + (cambio ? " pulso" : "") + '">'
     + kpi("Piezas", fmt(res.piezas), dPiezas)
     + kpi("Kilos", fmt(res.kilos, res.kilos >= 100 ? 0 : 1), dKilos)
     + kpi("Clientes", fmt(res.clientes), dCli)
@@ -627,12 +634,7 @@ function estado(msg, error) {
   document.getElementById("cuerpo").innerHTML = '<div class="estado' + (error ? " error" : "") + '">' + esc(msg) + "</div>";
 }
 
-function recibir(resp) {
-  cargando = false;
-  if (!resp || resp.status !== "ok") {
-    estado("El seguimiento no respondió.", true);
-    return;
-  }
+function filasDe(resp) {
   const cols = resp.table.cols.map(c => c.label);
   const iFecha = cols.indexOf("FECHA");
   const iCliente = cols.indexOf("CLIENTE");
@@ -656,34 +658,78 @@ function recibir(resp) {
       kilos
     });
   });
-  registros = out;
-  corte = out.reduce((max, r) => !max || r.fecha > max ? r.fecha : max, null);
+  return out;
+}
+
+function aplicar(resp, desde) {
+  if (!resp || resp.status !== "ok") {
+    if (!registros.length) estado("El seguimiento no respondió.", true);
+    else document.getElementById("corteMeta").textContent = "El seguimiento no respondió. Se reintenta solo.";
+    return;
+  }
+  const nuevas = filasDe(resp);
+  if (desde && !nuevas.length) {
+    document.getElementById("corteMeta").textContent = "Sin capturas en esa lectura. Se reintenta solo.";
+    return;
+  }
+  if (!desde) {
+    registros = nuevas;
+  } else {
+    const min = nuevas.reduce((m, r) => !m || r.fecha < m ? r.fecha : m, null);
+    if (min && iso(min) < iso(desde)) registros = nuevas;
+    else {
+      const k = iso(desde);
+      registros = registros.filter(r => iso(r.fecha) < k).concat(nuevas);
+    }
+  }
+  corte = registros.reduce((max, r) => !max || r.fecha > max ? r.fecha : max, null);
   consultado = new Date();
   llenarClientes();
   pintar();
 }
 
-function cargar() {
-  if (cargando) return;
+function cargar(forzar) {
+  if (cargando && !forzar) return;
+  const id = ++reqId;
   cargando = true;
+  const parcial = registros.length > 0 && corte;
+  const desde = parcial ? addDays(corte, -21) : null;
   if (!registros.length) estado("Leyendo el seguimiento de AppSheet…");
+  else document.getElementById("corteMeta").textContent = "Leyendo capturas nuevas…";
+  const nombre = "__bolseo" + id;
+  window[nombre] = function (resp) {
+    try { delete window[nombre]; } catch (e) { window[nombre] = undefined; }
+    if (id !== reqId) return;
+    cargando = false;
+    clearTimeout(window.__sheetTimer);
+    aplicar(resp, desde);
+  };
   const previo = document.getElementById("sheet-jsonp");
   if (previo) previo.remove();
   const s = document.createElement("script");
   s.id = "sheet-jsonp";
-  s.src = SHEET + "&t=" + Date.now();
+  let url = SHEET + "&tqx=" + encodeURIComponent("out:json;responseHandler:" + nombre) + "&t=" + Date.now();
+  if (desde) url += "&tq=" + encodeURIComponent("select * where G >= date '" + iso(desde) + "'");
+  s.src = url;
   s.onerror = () => {
+    try { delete window[nombre]; } catch (e) { window[nombre] = undefined; }
+    if (id !== reqId) return;
     cargando = false;
     if (!registros.length) estado("No se pudo consultar el seguimiento. Revisa que la hoja siga pública.", true);
+    else document.getElementById("corteMeta").textContent = "No se pudo actualizar. Se reintenta solo.";
   };
   document.body.appendChild(s);
   clearTimeout(window.__sheetTimer);
   window.__sheetTimer = setTimeout(() => {
-    if (cargando && !registros.length) {
-      cargando = false;
-      estado("El seguimiento tardó demasiado. Pulsa Actualizar.", true);
+    if (id !== reqId) return;
+    cargando = false;
+    const node = document.getElementById("sheet-jsonp");
+    if (node) node.remove();
+    if (!registros.length) estado("El seguimiento tardó demasiado. Pulsa Actualizar.", true);
+    else if ((document.getElementById("corteMeta").textContent || "").indexOf("Leyendo") === 0) {
+      document.getElementById("corteMeta").textContent = "La lectura tardó. Se reintenta solo.";
     }
-  }, 25000);
+  }, desde ? 25000 : 45000);
 }
 
 document.querySelector("nav.bar").addEventListener("click", e => {
@@ -703,7 +749,7 @@ document.querySelector("nav.bar").addEventListener("click", e => {
     llenarClientes();
     pintar();
   }
-  if (e.target.id === "btnActualizar") cargar();
+  if (e.target.id === "btnActualizar") cargar(true);
 });
 
 document.getElementById("cliente").addEventListener("change", e => {
@@ -731,8 +777,8 @@ document.getElementById("fechaDia").addEventListener("change", e => {
 });
 
 document.getElementById("btnPiezas").classList.add("activa");
-cargar();
-setInterval(cargar, 180000);
+cargar(false);
+setInterval(() => cargar(false), 20000);
 </script>
 </body>
 </html>
