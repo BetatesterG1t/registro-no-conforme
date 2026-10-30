@@ -60,6 +60,7 @@
   .dia-nav.visible { display: flex; }
   .jump:disabled { opacity: 0.38; cursor: default; }
   .jump:disabled:hover { color: var(--muted); }
+  #btnActualizar:disabled { opacity: 1; cursor: wait; background: var(--ink); color: #fff; border-color: var(--ink); }
   section { margin-top: 22px; }
   h2 { font-family: Palatino, Georgia, serif; font-size: 28px; margin: 0 0 4px; font-weight: 600; }
   h2 span { color: var(--muted); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 15px; font-weight: 500; margin-left: 8px; }
@@ -157,11 +158,11 @@
     <span class="spacer"></span>
     <button type="button" class="jump" data-metrica="piezas" id="btnPiezas">Piezas</button>
     <button type="button" class="jump" data-metrica="kilos" id="btnKilos">Kilos</button>
-    <button type="button" class="jump no-print" id="btnActualizar">Actualizar</button>
+    <button type="button" class="jump no-print" id="btnActualizar" onclick="actualizarReporte()">Actualizar</button>
   </nav>
 
   <div id="cuerpo"></div>
-  <p class="nota"><strong>Se actualiza solo.</strong> Cada 20 segundos vuelve a leer las capturas nuevas de BOLSEO. Si acabas de guardar en AppSheet, pulsa Actualizar. La hora de consulta cambia cuando la lectura termina.</p>
+  <p class="nota"><strong>Lectura en vivo.</strong> Al abrir esta página trae lo último de BOLSEO. Actualizar vuelve a leerlo en el momento y regresa al día de hoy. Si el botón dice Leyendo…, espera a que vuelva a decir Actualizar.</p>
 </div>
 <script>
 const SHEET = "https://docs.google.com/spreadsheets/d/1lt9KyIA2dLe1UWGZwvZT-tG4MF9w9iWGn45io8saew4/gviz/tq?gid=2535843";
@@ -663,13 +664,15 @@ function filasDe(resp) {
 
 function aplicar(resp, desde) {
   if (!resp || resp.status !== "ok") {
+    marcarBoton("Actualizar", false);
     if (!registros.length) estado("El seguimiento no respondió.", true);
-    else document.getElementById("corteMeta").textContent = "El seguimiento no respondió. Se reintenta solo.";
+    else document.getElementById("corteMeta").textContent = "El seguimiento no respondió. Pulsa Actualizar otra vez.";
     return;
   }
   const nuevas = filasDe(resp);
   if (desde && !nuevas.length) {
-    document.getElementById("corteMeta").textContent = "Sin capturas en esa lectura. Se reintenta solo.";
+    marcarBoton("Actualizar", false);
+    document.getElementById("corteMeta").textContent = "Sin capturas en esa lectura. Pulsa Actualizar otra vez.";
     return;
   }
   if (!desde) {
@@ -684,8 +687,27 @@ function aplicar(resp, desde) {
   }
   corte = registros.reduce((max, r) => !max || r.fecha > max ? r.fecha : max, null);
   consultado = new Date();
+  marcarBoton("Actualizar", false);
   llenarClientes();
   pintar();
+}
+
+function marcarBoton(txt, espera) {
+  const b = document.getElementById("btnActualizar");
+  if (!b) return;
+  b.textContent = txt;
+  b.disabled = !!espera;
+}
+
+function actualizarReporte() {
+  diaElegido = null;
+  periodo = "dia";
+  cliente = "";
+  const sel = document.getElementById("cliente");
+  if (sel) sel.value = "";
+  document.querySelectorAll("[data-periodo]").forEach(b => b.classList.toggle("activa", b.dataset.periodo === "dia"));
+  marcarBoton("Leyendo…", true);
+  cargar(true);
 }
 
 function cargar(forzar) {
@@ -695,7 +717,10 @@ function cargar(forzar) {
   const parcial = registros.length > 0 && corte;
   const desde = parcial ? addDays(corte, -21) : null;
   if (!registros.length) estado("Leyendo el seguimiento de AppSheet…");
-  else document.getElementById("corteMeta").textContent = "Leyendo capturas nuevas…";
+  else {
+    document.getElementById("corteMeta").textContent = "Leyendo capturas nuevas…";
+    marcarBoton("Leyendo…", true);
+  }
   const nombre = "__bolseo" + id;
   window[nombre] = function (resp) {
     try { delete window[nombre]; } catch (e) { window[nombre] = undefined; }
@@ -715,19 +740,21 @@ function cargar(forzar) {
     try { delete window[nombre]; } catch (e) { window[nombre] = undefined; }
     if (id !== reqId) return;
     cargando = false;
+    marcarBoton("Actualizar", false);
     if (!registros.length) estado("No se pudo consultar el seguimiento. Revisa que la hoja siga pública.", true);
-    else document.getElementById("corteMeta").textContent = "No se pudo actualizar. Se reintenta solo.";
+    else document.getElementById("corteMeta").textContent = "No se pudo actualizar. Pulsa Actualizar otra vez.";
   };
   document.body.appendChild(s);
   clearTimeout(window.__sheetTimer);
   window.__sheetTimer = setTimeout(() => {
     if (id !== reqId) return;
     cargando = false;
+    marcarBoton("Actualizar", false);
     const node = document.getElementById("sheet-jsonp");
     if (node) node.remove();
     if (!registros.length) estado("El seguimiento tardó demasiado. Pulsa Actualizar.", true);
     else if ((document.getElementById("corteMeta").textContent || "").indexOf("Leyendo") === 0) {
-      document.getElementById("corteMeta").textContent = "La lectura tardó. Se reintenta solo.";
+      document.getElementById("corteMeta").textContent = "La lectura tardó. Pulsa Actualizar otra vez.";
     }
   }, desde ? 25000 : 45000);
 }
@@ -749,7 +776,6 @@ document.querySelector("nav.bar").addEventListener("click", e => {
     llenarClientes();
     pintar();
   }
-  if (e.target.id === "btnActualizar") cargar(true);
 });
 
 document.getElementById("cliente").addEventListener("change", e => {
