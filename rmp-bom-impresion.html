@@ -118,6 +118,16 @@
   .sugerencias small { display: block; color: var(--muted); font-size: 12px; }
   .producto-linea { margin: 12px 0 0; }
   .kpi .num.largo { font-size: 16px; line-height: 1.25; }
+  select.calibre {
+    width: auto; font-size: 13.5px; font-weight: 500; letter-spacing: 0; text-transform: none;
+    padding: 4px 8px; margin: 0 6px 4px 0;
+    border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  }
+  .micras { display: flex; flex-wrap: wrap; gap: 6px; }
+  .micra {
+    border: 1px solid var(--line); background: #f3eee6; border-radius: 999px;
+    padding: 3px 8px; font-variant-numeric: tabular-nums; font-size: 13px;
+  }
   .maquinas { display: flex; flex-wrap: wrap; gap: 8px; }
   .maq {
     border: 1px solid var(--line); background: var(--card); border-radius: 12px;
@@ -158,6 +168,7 @@
 
   <nav class="bar">
     <a class="jump" href="#orden">Orden</a>
+    <a class="jump" href="#calibres">Calibres</a>
     <a class="jump" href="#ruta">Ruta</a>
     <a class="jump" href="#bom">BOM del área</a>
     <a class="jump" href="#maquinas">Máquinas</a>
@@ -229,6 +240,13 @@
         <tbody id="bom-body"></tbody>
       </table>
     </div>
+  </section>
+
+  <section id="calibres">
+    <h2>Calibres <span>películas del área</span></h2>
+    <p class="sub">BOPP, CAST, poliéster y polietileno, con el pigmento y las micras de la tabla. El boom de la orden solo ofrece estos calibres.</p>
+    <div class="pills" id="cal-pills"></div>
+    <div class="tabla-wrap" style="margin-top:12px" id="cal-tabla"></div>
   </section>
 
   <section id="maquinas">
@@ -457,7 +475,23 @@ const BOM = [
   }
 ];
 
-const state = { paso: "10", tipo: "Todas", registro: null, opciones: [] };
+const CALIBRES = [
+  ["BOPP", "Blanco", [20, 25, 30, 35]],
+  ["BOPP", "Mate", [17, 20, 30, 35]],
+  ["BOPP", "Metalizado", [15, 17, 20]],
+  ["BOPP", "Transparente", [15, 20, 25, 30, 35, 50]],
+  ["CAST", "Transparente", [20, 25, 30, 35, 40, 50]],
+  ["CAST", "Blanco", [20, 25]],
+  ["CAST", "Mate", [30]],
+  ["CAST", "Metalizado", [20, 25, 30, 40, 50]],
+  ["POLIESTER", "Mate", [12]],
+  ["POLIESTER", "Metalizado", [12]],
+  ["POLIESTER", "Transparente", [12, 12.5, 19, 23]],
+  ["POLIETILENO", "Blanco", [100, 120, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 210, 220, 230, 235, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 365, 370, 375, 380, 390, 400, 430, 440, 450, 470, 500]],
+  ["POLIETILENO", "Transparente", [90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370, 380, 390, 400, 420, 430, 440, 450, 470, 500, 550, 600]]
+];
+
+const state = { paso: "10", tipo: "Todas", registro: null, opciones: [], sustratos: [], familiaVista: "BOPP" };
 const indice = new Map();
 
 function el(tag, cls, text) {
@@ -491,39 +525,105 @@ function leerImpresion(producto) {
   if (tinta) colores = Number(tinta[1]);
   else if (corta) colores = Number(corta[1]);
   if (colores != null && (colores < 1 || colores > 12)) colores = null;
-  const peliculas = [];
-  [["BOPP", "BOPP"], ["PET", "PET"], ["CPP", "CPP"], ["OPA", "OPA"], ["NYLON", "Nylon"], ["PEBD", "PEBD"], ["PEAD", "PEAD"], ["ALUMINIO", "Aluminio"], ["PAPEL", "Papel"]].forEach((par) => {
-    if (p.includes(par[0]) && peliculas.indexOf(par[1]) < 0) peliculas.push(par[1]);
+  return { colores: colores, barniz: /\bBARNIZ\b/.test(p) };
+}
+
+function textoUm(n) {
+  return String(n) + " µm";
+}
+
+function listaMicras(familia, pigmento) {
+  const fila = CALIBRES.find((r) => r[0] === familia && r[1] === pigmento);
+  return fila ? fila[2] : [];
+}
+
+function pigmentosDe(familia) {
+  return CALIBRES.filter((r) => r[0] === familia).map((r) => r[1]);
+}
+
+function estaEnCatalogo(familia, pigmento, micras) {
+  return listaMicras(familia, pigmento).some((n) => n === micras);
+}
+
+function familiaDe(seg) {
+  if (seg.includes("BOPP")) return "BOPP";
+  if (seg.includes("CAST") || /\bCPP\b/.test(seg)) return "CAST";
+  if (seg.includes("POLIESTER") || /\bPET\b/.test(seg) || seg.includes("POLYESTER")) return "POLIESTER";
+  if (seg.includes("POLIETILENO") || seg.includes("PEBD") || seg.includes("PEAD") || /(^|[^A-Z])POL([^A-Z]|$)/.test(seg) || /(^|[^A-Z])PE([^A-Z]|$)/.test(seg)) return "POLIETILENO";
+  return "";
+}
+
+function pigmentoDe(seg) {
+  if (/METALIZ/.test(seg) || /\bMET\b/.test(seg)) return "Metalizado";
+  if (/MATE/.test(seg)) return "Mate";
+  if (/BLANCO|\bBCO\b/.test(seg)) return "Blanco";
+  if (/TRANSP/.test(seg)) return "Transparente";
+  return "";
+}
+
+function micrasDeTexto(seg) {
+  const explicita = seg.match(/(\d+(?:[.,]\d+)?)(?![\d.,])\s*MICS?\b/);
+  if (explicita) return Number(explicita[1].replace(",", "."));
+  const tras = seg.match(/(?:TRANSPARENTE|TRANSP|METALIZADO|MATE|BLANCO)\.?\s*(\d+(?:[.,]\d+)?)(?![\d.,])(?!\s*MM\b)/);
+  if (tras) return Number(tras[1].replace(",", "."));
+  const met = seg.match(/\bMET\.?\s*(\d+(?:[.,]\d+)?)(?![\d.,])(?!\s*MM\b)/);
+  if (met) return Number(met[1].replace(",", "."));
+  return null;
+}
+
+function detectarSustratos(producto) {
+  const texto = String(producto || "").toUpperCase();
+  const partes = texto.split(/[/+]/).map((s) => s.trim()).filter(Boolean);
+  const vistos = new Set();
+  const out = [];
+  partes.forEach((seg) => {
+    const familia = familiaDe(seg);
+    if (!familia) return;
+    const pigmento = pigmentoDe(seg);
+    const pedido = micrasDeTexto(seg);
+    const claveFilm = familia + "|" + pigmento + "|" + (pedido == null ? "" : pedido);
+    if (vistos.has(claveFilm)) return;
+    vistos.add(claveFilm);
+    const enCatalogo = pigmento && pedido != null && estaEnCatalogo(familia, pigmento, pedido);
+    out.push({
+      familia: familia,
+      pigmento: pigmento,
+      micras: enCatalogo ? pedido : null,
+      pedido: pedido,
+      cpp: /\bCPP\b/.test(seg)
+    });
   });
-  if (/(^|[^A-Z])POL([^A-Z]|$)/.test(p) && peliculas.indexOf("Polietileno") < 0) peliculas.push("Polietileno");
-  if (/(^|[^A-Z])PE([^A-Z]|$)/.test(p) && peliculas.indexOf("PEBD") < 0 && peliculas.indexOf("PEAD") < 0 && peliculas.indexOf("Polietileno") < 0) {
-    peliculas.push("PE");
+  if (!out.length) out.push({ familia: "", pigmento: "", micras: null, pedido: null, cpp: false });
+  return out;
+}
+
+function detalleSustrato(s) {
+  const partes = [];
+  if (s.familia && s.pigmento && s.micras != null && estaEnCatalogo(s.familia, s.pigmento, s.micras)) {
+    partes.push("Calibre del catálogo.");
+    if (s.pedido === s.micras) partes.push("El producto lo nombra.");
+  } else if (s.pedido != null && s.familia && s.pigmento && !estaEnCatalogo(s.familia, s.pigmento, s.pedido)) {
+    partes.push("El producto dice " + textoUm(s.pedido) + " y ese calibre no está en la tabla.");
+  } else if (s.familia && !s.pigmento) {
+    partes.push("El producto nombra la película. Elige pigmento y calibre.");
+  } else if (s.familia) {
+    partes.push("Elige el calibre de la tabla.");
+  } else {
+    partes.push("Elige la película y el calibre de la tabla del área.");
   }
-  const mic = p.match(/(\d+)\s*MICS?\b/);
-  return { colores: colores, peliculas: peliculas, micras: mic ? mic[1] : null, barniz: /\bBARNIZ\b/.test(p) };
+  if (s.cpp) partes.push("En la orden dice CPP; en el catálogo es CAST.");
+  partes.push("El seguimiento no trae metros ni kilos.");
+  return partes.join(" ");
+}
+
+function fijarRegistro(reg) {
+  state.registro = reg;
+  state.sustratos = reg ? detectarSustratos(reg.producto) : [];
 }
 
 function boomDe(reg) {
   const info = leerImpresion(reg.producto);
   const filas = [];
-  if (info.peliculas.length) {
-    info.peliculas.forEach((nombre) => {
-      let detalle = "Está en el nombre del producto.";
-      if (info.micras) detalle += " El texto trae " + info.micras + " micras.";
-      detalle += " El seguimiento no trae metros ni kilos.";
-      filas.push({ nombre: "Sustrato " + nombre, tipo: "Materia prima", cantidad: "Lo pide el producto", detalle: detalle });
-    });
-    if (info.peliculas.length > 1) {
-      filas[0].detalle += " Hay más de una película: en prensa entra la que marca la ficha.";
-    }
-  } else {
-    filas.push({
-      nombre: "Sustrato en bobina",
-      tipo: "Materia prima",
-      cantidad: "No viene en la orden",
-      detalle: "Hace falta la bobina que se imprime. El seguimiento trae el producto, no la película, los metros ni los kilos."
-    });
-  }
   if (info.colores) {
     for (let i = 1; i <= info.colores; i += 1) {
       filas.push({
@@ -673,7 +773,12 @@ function renderFicha() {
   kpi(caja, "Orden", reg.orden, reg.ordenCompra ? "OC " + reg.ordenCompra : "Sin orden de compra");
   kpi(caja, "Cliente", reg.cliente || "—", "");
   kpi(caja, "SKU", reg.sku || reg.idArticulo || "—", "");
-  kpi(caja, "Impresión", info.colores ? info.colores + (info.colores === 1 ? " tinta" : " tintas") : "Sin número", info.peliculas.join(" · ") || "El producto no nombra la película");
+  const pelicula = state.sustratos.map((s) => {
+    if (s.familia && s.pigmento && s.micras != null) return s.familia + " " + s.pigmento.toLowerCase() + " " + textoUm(s.micras);
+    if (s.familia) return s.familia;
+    return "Película por elegir";
+  }).join(" · ");
+  kpi(caja, "Impresión", info.colores ? info.colores + (info.colores === 1 ? " tinta" : " tintas") : "Sin número", pelicula);
   linea.hidden = false;
   linea.textContent = reg.producto || "";
 }
@@ -697,6 +802,16 @@ function renderBoom() {
     nota.append(document.createTextNode("Cliente, SKU y producto vienen del seguimiento de OT. Los kilos de tinta y los metros no están en esa base."));
     return;
   }
+  state.sustratos.forEach((s, index) => {
+    const tr = el("tr");
+    tr.append(el("td", null, state.sustratos.length > 1 ? "Sustrato " + (index + 1) : "Sustrato"));
+    tr.append(el("td", null, "Materia prima"));
+    tr.append(celdaCalibre(s, index));
+    let detalle = detalleSustrato(s);
+    if (index === 0 && state.sustratos.length > 1) detalle += " Hay más de una película: en prensa entra la que marca la ficha.";
+    tr.append(el("td", null, detalle));
+    body.append(tr);
+  });
   const boom = boomDe(reg);
   boom.filas.forEach((fila) => {
     const tr = el("tr");
@@ -706,8 +821,91 @@ function renderBoom() {
     tr.append(el("td", null, fila.detalle));
     body.append(tr);
   });
-  nota.append(el("strong", null, reg.orden + " · " + boom.filas.length + " partidas. "));
-  nota.append(document.createTextNode("Es lo que impresión requiere para este producto. Donde el seguimiento no trae la cantidad, la partida lo dice. Los kilos de tinta siguen en la fórmula."));
+  const total = state.sustratos.length + boom.filas.length;
+  nota.append(el("strong", null, reg.orden + " · " + total + " partidas. "));
+  nota.append(document.createTextNode("El sustrato se elige del catálogo de calibres. Los kilos de tinta siguen en la fórmula; el seguimiento no los trae."));
+}
+
+function selectCalibre(opciones, valor, placeholder, onChange) {
+  const s = el("select", "calibre");
+  const vacio = el("option", null, placeholder);
+  vacio.value = "";
+  vacio.selected = valor === "" || valor == null;
+  s.append(vacio);
+  opciones.forEach((op) => {
+    const o = el("option", null, op[1]);
+    o.value = op[0];
+    if (op[0] === valor) o.selected = true;
+    s.append(o);
+  });
+  s.addEventListener("change", onChange);
+  return s;
+}
+
+function cambiarSustrato(index, campo, valor) {
+  const s = state.sustratos[index];
+  if (campo === "micras") s.micras = valor === "" ? null : Number(valor);
+  else s[campo] = valor;
+  if (campo === "familia") {
+    s.pigmento = "";
+    s.micras = null;
+    s.pedido = null;
+  }
+  if (campo === "pigmento") s.micras = null;
+  renderFicha();
+  renderBoom();
+}
+
+function celdaCalibre(s, index) {
+  const td = el("td");
+  const familias = ["BOPP", "CAST", "POLIESTER", "POLIETILENO"].map((f) => [f, f]);
+  td.append(selectCalibre(familias, s.familia, "Película", (ev) => cambiarSustrato(index, "familia", ev.target.value)));
+  const pigmentos = s.familia ? pigmentosDe(s.familia).map((p) => [p, p]) : [];
+  const selPig = selectCalibre(pigmentos, s.pigmento, "Pigmento", (ev) => cambiarSustrato(index, "pigmento", ev.target.value));
+  selPig.disabled = !s.familia;
+  td.append(selPig);
+  const micras = s.familia && s.pigmento ? listaMicras(s.familia, s.pigmento).map((n) => [String(n), textoUm(n)]) : [];
+  const selMic = selectCalibre(micras, s.micras == null ? "" : String(s.micras), "Calibre", (ev) => cambiarSustrato(index, "micras", ev.target.value));
+  selMic.disabled = !s.familia || !s.pigmento;
+  td.append(selMic);
+  return td;
+}
+
+function renderCalibres() {
+  const pills = document.getElementById("cal-pills");
+  const tabla = document.getElementById("cal-tabla");
+  pills.replaceChildren();
+  ["BOPP", "CAST", "POLIESTER", "POLIETILENO"].forEach((familia) => {
+    const b = el("button", null, familia);
+    b.type = "button";
+    b.setAttribute("aria-pressed", familia === state.familiaVista ? "true" : "false");
+    b.addEventListener("click", () => {
+      state.familiaVista = familia;
+      renderCalibres();
+    });
+    pills.append(b);
+  });
+  const filas = CALIBRES.filter((r) => r[0] === state.familiaVista);
+  const table = el("table");
+  const thead = el("thead");
+  const hr = el("tr");
+  hr.append(el("th", null, "Pigmento"));
+  hr.append(el("th", null, "Micras"));
+  thead.append(hr);
+  table.append(thead);
+  const body = el("tbody");
+  filas.forEach((fila) => {
+    const tr = el("tr");
+    tr.append(el("td", null, fila[1]));
+    const td = el("td");
+    const caja = el("div", "micras");
+    fila[2].forEach((n) => caja.append(el("span", "micra", textoUm(n))));
+    td.append(caja);
+    tr.append(td);
+    body.append(tr);
+  });
+  table.append(body);
+  tabla.replaceChildren(table);
 }
 
 function ocultarSugerencias() {
@@ -759,7 +957,7 @@ function elegirOrden(valor) {
   const select = document.getElementById("producto-opcion");
   const k = clave(valor);
   if (!k) {
-    state.registro = null;
+    fijarRegistro(null);
     state.opciones = [];
     elige.hidden = true;
     hint.textContent = "Escribe la orden de venta o la orden de compra.";
@@ -773,7 +971,7 @@ function elegirOrden(valor) {
   }
   const regs = indice.get(k);
   if (!regs) {
-    state.registro = null;
+    fijarRegistro(null);
     state.opciones = [];
     elige.hidden = true;
     hint.textContent = k.length < 4
@@ -789,7 +987,7 @@ function elegirOrden(valor) {
     elige.hidden = true;
     select.replaceChildren();
     hint.textContent = "Orden encontrada en el seguimiento.";
-    state.registro = lista[0];
+    fijarRegistro(lista[0]);
   } else {
     elige.hidden = false;
     select.replaceChildren();
@@ -800,7 +998,7 @@ function elegirOrden(valor) {
     });
     const mismaOrden = lista.every((r) => r.orden === lista[0].orden);
     hint.textContent = (mismaOrden ? "Esta orden tiene " : "Esta orden de compra tiene ") + lista.length + " productos. Elige cuál se va a imprimir.";
-    state.registro = lista[0];
+    fijarRegistro(lista[0]);
   }
   renderFicha();
   renderBoom();
@@ -821,7 +1019,7 @@ function renderFuentes() {
   const nota = document.getElementById("fuentes");
   nota.replaceChildren();
   nota.append(el("strong", null, "De dónde sale cada cosa. "));
-  nota.append(document.createTextNode("Las ocho máquinas y los defectos salen del catálogo de no conforme. Los paros salen del tiempo muerto del área. Cliente, SKU y producto salen del seguimiento de OT. Si el producto dice las tintas o la película, el boom las toma de ahí. Los kilos de tinta y los metros no vienen en esa base."));
+  nota.append(document.createTextNode("Los calibres salen de la tabla de películas del área: BOPP, CAST, poliéster y polietileno. Cliente, SKU y producto salen del seguimiento de OT. Si el nombre trae película, pigmento o micras, el boom los propone solo cuando ese calibre está en la tabla. Los kilos de tinta y los metros no vienen en esa base."));
 }
 
 function render() {
@@ -829,6 +1027,7 @@ function render() {
   renderDetalle();
   renderFiltros();
   renderBom();
+  renderCalibres();
   renderFicha();
   renderBoom();
 }
@@ -886,7 +1085,7 @@ document.getElementById("busca").addEventListener("input", (ev) => {
 document.getElementById("producto-opcion").addEventListener("change", (ev) => {
   const i = Number(ev.target.value);
   if (state.opciones[i]) {
-    state.registro = state.opciones[i];
+    fijarRegistro(state.opciones[i]);
     renderFicha();
     renderBoom();
   }
