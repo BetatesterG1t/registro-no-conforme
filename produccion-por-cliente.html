@@ -51,10 +51,15 @@
   .jump:hover { color: var(--ink); }
   .jump.activa { background: var(--ink); color: #fff; border-color: var(--ink); }
   .spacer { flex: 1; }
-  select.cliente {
+  select.cliente, input.fecha {
     border: 1px solid var(--line); background: var(--card); border-radius: 999px;
     padding: 6px 12px; font: inherit; font-size: 13px; color: var(--ink); max-width: 280px;
   }
+  input.fecha { max-width: 168px; padding: 5px 10px; }
+  .dia-nav { display: none; align-items: center; gap: 6px; }
+  .dia-nav.visible { display: flex; }
+  .jump:disabled { opacity: 0.38; cursor: default; }
+  .jump:disabled:hover { color: var(--muted); }
   section { margin-top: 22px; }
   h2 { font-family: Palatino, Georgia, serif; font-size: 28px; margin: 0 0 4px; font-weight: 600; }
   h2 span { color: var(--muted); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 15px; font-weight: 500; margin-left: 8px; }
@@ -138,10 +143,15 @@
   </header>
 
   <nav class="bar">
-    <button type="button" class="jump activa" data-periodo="7">7 días</button>
+    <button type="button" class="jump activa" data-periodo="dia">Día</button>
+    <span class="dia-nav visible" id="diaNav">
+      <button type="button" class="jump" id="btnDiaAnt">Anterior</button>
+      <input class="fecha" type="date" id="fechaDia" aria-label="Día a consultar">
+      <button type="button" class="jump" id="btnDiaSig">Siguiente</button>
+    </span>
+    <button type="button" class="jump" data-periodo="7">7 días</button>
     <button type="button" class="jump" data-periodo="14">14 días</button>
     <button type="button" class="jump" data-periodo="mes">Mes</button>
-    <button type="button" class="jump" data-periodo="dia">Último corte</button>
     <button type="button" class="jump" data-periodo="todo">Todo</button>
     <select class="cliente" id="cliente" aria-label="Cliente"></select>
     <span class="spacer"></span>
@@ -151,7 +161,7 @@
   </nav>
 
   <div id="cuerpo"></div>
-  <p class="nota"><strong>Se arma solo.</strong> Cada vez que se abre esta página, y cada tres minutos si se deja abierta, lee la hoja BOLSEO del seguimiento. AppSheet escribe ahí; el reporte no hay que exportarlo.</p>
+  <p class="nota"><strong>Consulta del día.</strong> Al abrirla ves el último día capturado en BOLSEO. Con Anterior y Siguiente, o con la fecha, revisas cualquier otro día. Si la dejas abierta, vuelve a leer el seguimiento cada tres minutos.</p>
 </div>
 <script>
 const SHEET = "https://docs.google.com/spreadsheets/d/1lt9KyIA2dLe1UWGZwvZT-tG4MF9w9iWGn45io8saew4/gviz/tq?tqx=out:json&gid=2535843";
@@ -164,7 +174,8 @@ const MESES_C = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", 
 
 let registros = [];
 let corte = null;
-let periodo = "7";
+let diaElegido = null;
+let periodo = "dia";
 let cliente = "";
 let metrica = "piezas";
 let consultado = null;
@@ -231,6 +242,47 @@ function parseFecha(v) {
 
 function iso(d) {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+function parseIso(s) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || "");
+  if (!m) return null;
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+
+function finActivo() {
+  if (!corte) return null;
+  if (!diaElegido || diaElegido > corte) return corte;
+  return diaElegido;
+}
+
+function fijarDia(d) {
+  if (!d || !corte || iso(d) >= iso(corte)) diaElegido = null;
+  else diaElegido = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function fechasConDatos(solo) {
+  const set = new Set();
+  registros.forEach(r => {
+    if (solo && r.cliente !== solo) return;
+    set.add(iso(r.fecha));
+  });
+  return [...set].sort();
+}
+
+function fechaAnterior(fin, solo) {
+  const k = iso(fin);
+  let bestIso = "";
+  let best = null;
+  registros.forEach(r => {
+    if (solo && r.cliente !== solo) return;
+    const dk = iso(r.fecha);
+    if (dk < k && dk > bestIso) {
+      bestIso = dk;
+      best = r.fecha;
+    }
+  });
+  return best;
 }
 
 function addDays(d, n) {
@@ -317,12 +369,12 @@ function etiquetaMetrica(n) {
   return metrica === "kilos" ? fmt(n, n >= 100 ? 0 : 1) + " kg" : fmt(n) + " pzas";
 }
 
-function deltaTxt(actual, anterior) {
-  if (!anterior) return { cls: "", txt: "Sin periodo anterior" };
+function deltaTxt(actual, anterior, contra) {
+  if (!anterior) return { cls: "", txt: contra != null ? "Sin día anterior" : "Sin periodo anterior" };
   const d = (actual - anterior) / anterior;
   const signo = d > 0 ? "+" : "";
   const cls = d > 0.005 ? "sube" : d < -0.005 ? "baja" : "";
-  return { cls, txt: signo + (d * 100).toLocaleString("es-MX", { maximumFractionDigits: 1 }) + "% vs el periodo anterior" };
+  return { cls, txt: signo + (d * 100).toLocaleString("es-MX", { maximumFractionDigits: 1 }) + "% vs " + (contra || "el periodo anterior") };
 }
 
 function colores(nombres) {
@@ -337,18 +389,28 @@ function pintar() {
     cuerpo.innerHTML = '<div class="estado">Todavía no hay fechas en el seguimiento.</div>';
     return;
   }
-  const v = ventana(corte, periodo);
+  const fin = periodo === "dia" ? finActivo() : corte;
+  const v = ventana(fin, periodo);
   const rows = tomar(v.ini, v.fin, cliente);
   const res = resumir(rows);
-  const diasVentana = Math.round((v.fin - v.ini) / 86400000) + 1;
-  const prevFin = addDays(v.ini, -1);
-  const prev = resumir(tomar(addDays(prevFin, -(diasVentana - 1)), prevFin, cliente));
-  const dPiezas = deltaTxt(res.piezas, prev.piezas);
-  const dKilos = deltaTxt(res.kilos, prev.kilos);
-  const dCli = deltaTxt(res.clientes, prev.clientes);
-  const dOrd = deltaTxt(res.ordenes, prev.ordenes);
-
-  document.getElementById("corteFecha").textContent = "Corte " + fmtFechaLarga(corte);
+  let prev;
+  let contra = null;
+  if (periodo === "dia") {
+    const anterior = fechaAnterior(v.ini, cliente);
+    contra = anterior ? fmtFechaCorta(anterior) : "";
+    prev = resumir(anterior ? tomar(anterior, anterior, cliente) : []);
+  } else {
+    const diasVentana = Math.round((v.fin - v.ini) / 86400000) + 1;
+    const prevFin = addDays(v.ini, -1);
+    prev = resumir(tomar(addDays(prevFin, -(diasVentana - 1)), prevFin, cliente));
+  }
+  const viendoCorte = iso(fin) === iso(corte);
+  const enCurso = periodo === "dia" && viendoCorte && iso(fin) === iso(new Date());
+  const dPiezas = enCurso ? { cls: "", txt: "Día en captura" } : deltaTxt(res.piezas, prev.piezas, contra);
+  const dKilos = enCurso ? { cls: "", txt: "Día en captura" } : deltaTxt(res.kilos, prev.kilos, contra);
+  const dCli = enCurso ? { cls: "", txt: "Día en captura" } : deltaTxt(res.clientes, prev.clientes, contra);
+  const dOrd = enCurso ? { cls: "", txt: "Día en captura" } : deltaTxt(res.ordenes, prev.ordenes, contra);
+  document.getElementById("corteFecha").textContent = (viendoCorte ? "Corte " : "Día ") + fmtFechaLarga(fin);
   const hora = consultado ? consultado.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : "";
   document.getElementById("corteMeta").textContent = registros.length.toLocaleString("es-MX") + " capturas · consultado " + hora;
 
@@ -431,7 +493,7 @@ function pintar() {
   const filasDia = diasDesc.map(dia => {
     const total = valorDe(dia) || 1;
     const clientes = [...dia.clientes.entries()].sort((a, b) => valorDe(b[1]) - valorDe(a[1]));
-    const head = '<tr class="dia"><td colspan="5">' + esc(fmtFechaLarga(dia.fecha)) + " · " + etiquetaMetrica(valorDe(dia)) + "</td></tr>";
+    const head = '<tr class="dia click" data-fecha="' + iso(dia.fecha) + '"><td colspan="5">' + esc(fmtFechaLarga(dia.fecha)) + " · " + etiquetaMetrica(valorDe(dia)) + "</td></tr>";
     const body = clientes.map(([nombre, info]) => {
       return '<tr class="click' + (nombre === cliente ? " sel" : "") + '" data-cliente="' + esc(nombre) + '"><td class="l">' + esc(corto(nombre)) + "</td><td>"
         + info.ordenes.size + "</td><td>" + fmt(info.piezas) + "</td><td>" + fmt(info.kilos, info.kilos >= 100 ? 0 : 1) + "</td><td>"
@@ -444,6 +506,19 @@ function pintar() {
     ? ""
     : '<div class="estado">En ese periodo no hay capturas' + (cliente ? " de ese cliente" : "") + ".</div>";
 
+  const bloqueDias = dias.length < 2 ? "" : (
+    '<section><h2>Por día <span>' + esc(fmtFechaCorta(v.ini)) + " – " + esc(fmtFechaCorta(v.fin)) + "</span></h2>"
+    + '<p class="sub">Cada barra es un día. El color es el cliente. Toca un día en la tabla para consultarlo.</p>'
+    + '<article class="card"><div class="leyenda">' + leyenda + '</div><div class="chart-scroll"><svg class="dias" viewBox="0 0 ' + ancho + " " + alto + '" role="img" aria-label="Producción diaria">'
+    + barrasSvg + "</svg></div></article></section>"
+  );
+  const bloqueDetalle = dias.length < 2 ? "" : (
+    '<section><h2>Diario <span>del más reciente al más antiguo</span></h2>'
+    + '<p class="sub">Toca un día para consultarlo solo.</p>'
+    + '<div class="tabla-wrap"><table><thead><tr><th class="l">Cliente</th><th>Órdenes</th><th>Piezas</th><th>Kilos</th><th>% del día</th></tr></thead><tbody>'
+    + filasDia + "</tbody></table></div></section>"
+  );
+
   cuerpo.innerHTML = vacio || (
     '<div class="kpis">'
     + kpi("Piezas", fmt(res.piezas), dPiezas)
@@ -451,31 +526,64 @@ function pintar() {
     + kpi("Clientes", fmt(res.clientes), dCli)
     + kpi("Órdenes", fmt(res.ordenes), dOrd)
     + "</div>"
-    + '<section><h2>Por día <span>' + esc(fmtFechaCorta(v.ini)) + " – " + esc(fmtFechaCorta(v.fin)) + "</span></h2>"
-    + '<p class="sub">Cada barra es un día. El color es el cliente.</p>'
-    + '<article class="card"><div class="leyenda">' + leyenda + '</div><div class="chart-scroll"><svg class="dias" viewBox="0 0 ' + ancho + " " + alto + '" role="img" aria-label="Producción diaria">'
-    + barrasSvg + "</svg></div></article></section>"
-    + '<section><h2>Por cliente <span>' + (metrica === "kilos" ? "kilos" : "piezas") + " del periodo</span></h2>"
+    + bloqueDias
+    + '<section><h2>Por cliente <span>' + (metrica === "kilos" ? "kilos" : "piezas") + (dias.length < 2 ? " del día" : " del periodo") + "</span></h2>"
     + '<p class="sub">Toca un cliente para ver solo su producción. Toca otra vez para volver a todos.</p>'
     + '<article class="card"><h3>Participación</h3>' + participacion
     + '<div class="bars" style="margin-top:14px">' + barrasCli + "</div></article>"
     + '<div class="tabla-wrap" style="margin-top:12px"><table><thead><tr><th class="l">Cliente</th><th>Días</th><th>Órdenes</th><th>Piezas</th><th>Kilos</th><th>%</th></tr></thead><tbody>'
     + filasCliente
-    + '<tr class="total"><td class="l">Periodo</td><td></td><td>' + fmt(res.ordenes) + "</td><td>" + fmt(res.piezas) + "</td><td>" + fmt(res.kilos, 0) + "</td><td>100%</td></tr>"
+    + '<tr class="total"><td class="l">' + (dias.length < 2 ? "Día" : "Periodo") + '</td><td></td><td>' + fmt(res.ordenes) + "</td><td>" + fmt(res.piezas) + "</td><td>" + fmt(res.kilos, 0) + "</td><td>100%</td></tr>"
     + "</tbody></table></div></section>"
-    + '<section><h2>Diario <span>del más reciente al más antiguo</span></h2>'
-    + '<div class="tabla-wrap"><table><thead><tr><th class="l">Cliente</th><th>Órdenes</th><th>Piezas</th><th>Kilos</th><th>% del día</th></tr></thead><tbody>'
-    + filasDia + "</tbody></table></div></section>"
+    + bloqueDetalle
   );
+  sincronizarDia();
 
   function kpi(lbl, num, d) {
     return '<article class="kpi"><div class="lbl">' + lbl + '</div><div class="num">' + num + '</div><div class="hint ' + d.cls + '">' + d.txt + "</div></article>";
   }
 }
 
+function sincronizarDia() {
+  const nav = document.getElementById("diaNav");
+  const input = document.getElementById("fechaDia");
+  const fin = periodo === "dia" ? finActivo() : corte;
+  nav.classList.toggle("visible", periodo === "dia");
+  if (fin) input.value = iso(fin);
+  const fechas = fechasConDatos(cliente);
+  if (fechas.length) {
+    input.min = fechas[0];
+    input.max = iso(corte);
+  }
+  const actual = fin ? iso(fin) : "";
+  document.getElementById("btnDiaAnt").disabled = !fechas.some(f => f < actual);
+  document.getElementById("btnDiaSig").disabled = !fechas.some(f => f > actual);
+}
+
+function irAlDia(destino) {
+  if (!destino) return;
+  fijarDia(destino);
+  periodo = "dia";
+  document.querySelectorAll("[data-periodo]").forEach(b => b.classList.toggle("activa", b.dataset.periodo === "dia"));
+  llenarClientes();
+  pintar();
+}
+
+function moverDia(dir) {
+  const fin = finActivo();
+  if (!fin) return;
+  const fechas = fechasConDatos(cliente);
+  const actual = iso(fin);
+  const destino = dir < 0
+    ? fechas.filter(f => f < actual).pop()
+    : fechas.find(f => f > actual);
+  if (destino) irAlDia(parseIso(destino));
+}
+
 function llenarClientes() {
   const sel = document.getElementById("cliente");
-  const v = ventana(corte, periodo);
+  const fin = periodo === "dia" ? finActivo() : corte;
+  const v = ventana(fin, periodo);
   const nombres = v
     ? [...resumir(tomar(v.ini, v.fin, "")).porCliente.entries()].sort((a, b) => valorDe(b[1]) - valorDe(a[1])).map(([n]) => n)
     : [];
@@ -558,6 +666,7 @@ document.querySelector("nav.bar").addEventListener("click", e => {
   const m = e.target.closest("[data-metrica]");
   if (p) {
     periodo = p.dataset.periodo;
+    if (periodo === "dia") diaElegido = null;
     document.querySelectorAll("[data-periodo]").forEach(b => b.classList.toggle("activa", b === p));
     llenarClientes();
     pintar();
@@ -579,11 +688,21 @@ document.getElementById("cliente").addEventListener("change", e => {
 
 document.getElementById("cuerpo").addEventListener("click", e => {
   const b = e.target.closest("[data-cliente]");
-  if (!b) return;
-  const nombre = b.dataset.cliente;
-  cliente = cliente === nombre ? "" : nombre;
-  document.getElementById("cliente").value = cliente;
-  pintar();
+  if (b) {
+    const nombre = b.dataset.cliente;
+    cliente = cliente === nombre ? "" : nombre;
+    document.getElementById("cliente").value = cliente;
+    pintar();
+    return;
+  }
+  const dia = e.target.closest("tr.dia[data-fecha]");
+  if (dia) irAlDia(parseIso(dia.dataset.fecha));
+});
+document.getElementById("btnDiaAnt").addEventListener("click", () => moverDia(-1));
+document.getElementById("btnDiaSig").addEventListener("click", () => moverDia(1));
+document.getElementById("fechaDia").addEventListener("change", e => {
+  const d = parseIso(e.target.value);
+  if (d) irAlDia(d);
 });
 
 document.getElementById("btnPiezas").classList.add("activa");
