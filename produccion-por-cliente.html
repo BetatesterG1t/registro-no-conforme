@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Producción por cliente</title>
+<style>
+  :root {
+    --bg: #efe8dc;
+    --ink: #1c1915;
+    --muted: #5e574c;
+    --card: #fffdf8;
+    --line: #e3d9c8;
+    --accent: #9f1239;
+    --accent-soft: #f8e8ec;
+    --good: #0f6e56;
+    --good-soft: #e5f4ef;
+    --warn: #9a3412;
+    --shadow: 0 1px 0 rgba(28, 25, 21, 0.04);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 400px at 10% -10%, #f7f1e6 0%, transparent 50%),
+      var(--bg);
+    color: var(--ink);
+    font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+    font-size: 15.5px;
+    line-height: 1.45;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 72px; }
+  header.top { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; margin-bottom: 18px; }
+  .eyebrow { letter-spacing: 0.14em; text-transform: uppercase; font-size: 12px; color: var(--accent); font-weight: 700; margin: 0 0 6px; }
+  h1 { font-family: Palatino, "Iowan Old Style", Georgia, serif; font-size: 40px; line-height: 1.02; font-weight: 600; margin: 0; letter-spacing: -0.03em; }
+  .lede { margin: 8px 0 0; max-width: 720px; color: var(--muted); }
+  .corte { text-align: right; font-size: 13px; color: var(--muted); }
+  .corte strong { display: block; color: var(--ink); font-size: 15px; }
+  nav.bar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    background: rgba(239, 232, 220, 0.92); backdrop-filter: blur(8px);
+    padding: 10px 0 12px; margin-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .jump {
+    border: 1px solid var(--line); background: var(--card); border-radius: 999px;
+    padding: 6px 11px; color: var(--muted); font-size: 13px; font-family: inherit; cursor: pointer;
+  }
+  .jump:hover { color: var(--ink); }
+  .jump.activa { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .spacer { flex: 1; }
+  select.cliente {
+    border: 1px solid var(--line); background: var(--card); border-radius: 999px;
+    padding: 6px 12px; font: inherit; font-size: 13px; color: var(--ink); max-width: 280px;
+  }
+  section { margin-top: 22px; }
+  h2 { font-family: Palatino, Georgia, serif; font-size: 28px; margin: 0 0 4px; font-weight: 600; }
+  h2 span { color: var(--muted); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 15px; font-weight: 500; margin-left: 8px; }
+  .sub { color: var(--muted); margin: 0 0 14px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .kpi, .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow);
+  }
+  .kpi { padding: 14px 14px 12px; }
+  .kpi .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .kpi .num { font-variant-numeric: tabular-nums; font-size: 26px; font-weight: 650; letter-spacing: -0.03em; margin-top: 4px; }
+  .kpi .hint { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .kpi .hint.sube { color: var(--good); }
+  .kpi .hint.baja { color: var(--warn); }
+  .card { padding: 16px; }
+  .card h3 { margin: 0 0 8px; font-size: 15px; }
+  .leyenda { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+  .leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .chart-scroll { overflow-x: auto; }
+  svg.dias { display: block; min-width: 640px; width: 100%; height: auto; }
+  svg.dias text { font-family: "Avenir Next", "Segoe UI", sans-serif; }
+  .part { display: flex; height: 16px; border-radius: 99px; overflow: hidden; background: #f3eee6; }
+  .part span { display: block; height: 100%; }
+  .bars { display: flex; flex-direction: column; gap: 8px; }
+  .bar-row {
+    display: grid; grid-template-columns: 148px 1fr 168px; gap: 8px; align-items: center;
+    font-size: 14px; background: transparent; border: 0; padding: 0; text-align: left;
+    font-family: inherit; color: inherit; cursor: pointer; width: 100%;
+  }
+  .bar-row:hover .bar-name { color: var(--accent); }
+  .bar-row.sel .bar-name { font-weight: 700; }
+  .bar-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-track { height: 12px; background: #f3eee6; border-radius: 99px; overflow: hidden; }
+  .bar-fill { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+  .bar-num { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .tabla-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13.5px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  th { font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 650; background: #fbf7f1; position: sticky; top: 0; }
+  th.l, td.l { text-align: left; white-space: normal; }
+  tr.dia td { background: #fbf7f1; font-weight: 700; text-align: left; }
+  tr.total td { font-weight: 700; background: #fbf7f1; border-bottom: 0; }
+  tr.click td { cursor: pointer; }
+  tr.click:hover td { background: #f8f1e8; }
+  tr.sel td { background: var(--accent-soft); }
+  .estado {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 28px 18px; text-align: center;
+  }
+  .estado.error { border-color: #e7c2cb; background: #fdf2f4; }
+  .nota { background: #f7f1e6; border: 1px dashed #d9cdb8; border-radius: 12px; padding: 12px 14px; color: var(--muted); font-size: 14px; margin-top: 22px; }
+  .nota strong { color: var(--ink); }
+  @media (max-width: 980px) {
+    .kpis, header.top { grid-template-columns: 1fr 1fr; display: grid; }
+    h1 { font-size: 32px; }
+    .corte { text-align: left; }
+    .bar-row { grid-template-columns: 96px 1fr 92px; }
+    select.cliente { max-width: 100%; }
+  }
+  @media (max-width: 640px) {
+    .kpis { grid-template-columns: 1fr; }
+  }
+  @media print {
+    body { background: white; }
+    nav.bar, .no-print { display: none !important; }
+    .card, .kpi, .tabla-wrap { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">Bolseo · gerencia</p>
+      <h1>Producción por cliente</h1>
+      <p class="lede">Lo capturado en AppSheet, en cuanto queda en el seguimiento. Piezas y kilos del día, por cliente.</p>
+    </div>
+    <div class="corte">
+      <strong id="corteFecha">Cargando…</strong>
+      <span id="corteMeta"></span>
+    </div>
+  </header>
+
+  <nav class="bar">
+    <button type="button" class="jump activa" data-periodo="7">7 días</button>
+    <button type="button" class="jump" data-periodo="14">14 días</button>
+    <button type="button" class="jump" data-periodo="mes">Mes</button>
+    <button type="button" class="jump" data-periodo="dia">Último corte</button>
+    <button type="button" class="jump" data-periodo="todo">Todo</button>
+    <select class="cliente" id="cliente" aria-label="Cliente"></select>
+    <span class="spacer"></span>
+    <button type="button" class="jump" data-metrica="piezas" id="btnPiezas">Piezas</button>
+    <button type="button" class="jump" data-metrica="kilos" id="btnKilos">Kilos</button>
+    <button type="button" class="jump no-print" id="btnActualizar">Actualizar</button>
+  </nav>
+
+  <div id="cuerpo"></div>
+  <p class="nota"><strong>Se arma solo.</strong> Cada vez que se abre esta página, y cada tres minutos si se deja abierta, lee la hoja BOLSEO del seguimiento. AppSheet escribe ahí; el reporte no hay que exportarlo.</p>
+</div>
+<script>
+const SHEET = "https://docs.google.com/spreadsheets/d/1lt9KyIA2dLe1UWGZwvZT-tG4MF9w9iWGn45io8saew4/gviz/tq?tqx=out:json&gid=2535843";
+const PALETA = ["#9f1239", "#0f6e56", "#9a3412", "#1d4e89", "#7c3aed", "#a16207"];
+const OTROS = "#8a8175";
+const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+const DIAS_C = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const MESES_C = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+let registros = [];
+let corte = null;
+let periodo = "7";
+let cliente = "";
+let metrica = "piezas";
+let consultado = null;
+let cargando = false;
+
+window.google = window.google || {};
+google.visualization = google.visualization || {};
+google.visualization.Query = {
+  setResponse(resp) { recibir(resp); }
+};
+
+function reparar(s) {
+  s = String(s || "").replace(/\s+/g, " ").trim();
+  if (!s) return "(sin cliente)";
+  if (!/[^\u0000-\u007f]/.test(s)) return s;
+  const bytes = [];
+  for (const ch of s) {
+    const o = ch.codePointAt(0);
+    if (o > 255) return s;
+    bytes.push(o);
+  }
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(bytes));
+  } catch (e) {
+    return s;
+  }
+}
+
+function corto(nombre) {
+  const reglas = [
+    [/kimberly/i, "Kimberly-Clark"],
+    [/essity/i, "Essity"],
+    [/mabe/i, "Mabe"],
+    [/lambi/i, "Lambi"],
+    [/absormex|cmpc/i, "Absormex"],
+    [/ontex/i, "Ontex"],
+    [/degasa/i, "Degasa"],
+    [/pepsico/i, "Pepsico"],
+    [/american beef/i, "American Beef"],
+    [/fortomex/i, "Fortomex"],
+    [/polymerall/i, "Polymerall"],
+    [/professional packaging/i, "Prof. Packaging"],
+    [/martin/i, "Plásticos Martín"],
+    [/preformados/i, "Alimentos Preformados"],
+    [/happy flower/i, "Happy Flower"],
+    [/hershey/i, "Hershey"],
+    [/miguelito/i, "Miguelito"],
+    [/sun coast/i, "Sun Coast"],
+    [/kipi/i, "Kipi"],
+    [/nuevos desarrollos/i, "Nuevos Desarrollos"]
+  ];
+  for (const [re, nombreCorto] of reglas) {
+    if (re.test(nombre)) return nombreCorto;
+  }
+  const base = nombre.split(",")[0].replace(/\s+S\.?A\.?.*$/i, "").trim();
+  return base.length > 22 ? base.slice(0, 21) + "…" : base;
+}
+
+function parseFecha(v) {
+  const m = /^Date\((\d+),(\d+),(\d+)/.exec(String(v || ""));
+  if (!m) return null;
+  return new Date(Number(m[1]), Number(m[2]), Number(m[3]));
+}
+
+function iso(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+function addDays(d, n) {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() + n);
+  return x;
+}
+
+function fmt(n, dec) {
+  return (Number(n) || 0).toLocaleString("es-MX", {
+    minimumFractionDigits: dec || 0,
+    maximumFractionDigits: dec || 0
+  });
+}
+
+function fmtFechaCorta(d) {
+  return DIAS_C[d.getDay()] + " " + d.getDate() + " " + MESES_C[d.getMonth()];
+}
+
+function fmtFechaLarga(d) {
+  return DIAS[d.getDay()] + " " + d.getDate() + " de " + MESES[d.getMonth()] + " de " + d.getFullYear();
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+}
+
+function ventana(fin, modo) {
+  if (!fin) return null;
+  if (modo === "todo") {
+    const ini = registros.reduce((min, r) => r.fecha < min ? r.fecha : min, fin);
+    return { ini, fin };
+  }
+  if (modo === "dia") return { ini: fin, fin };
+  if (modo === "mes") return { ini: new Date(fin.getFullYear(), fin.getMonth(), 1), fin };
+  const n = modo === "14" ? 13 : 6;
+  return { ini: addDays(fin, -n), fin };
+}
+
+function enRango(d, ini, fin) {
+  const k = iso(d);
+  return k >= iso(ini) && k <= iso(fin);
+}
+
+function tomar(ini, fin, solo) {
+  return registros.filter(r => enRango(r.fecha, ini, fin) && (!solo || r.cliente === solo));
+}
+
+function resumir(rows) {
+  const porDia = new Map();
+  const porCliente = new Map();
+  const ordenes = new Set();
+  let piezas = 0;
+  let kilos = 0;
+  rows.forEach(r => {
+    piezas += r.piezas;
+    kilos += r.kilos;
+    if (r.orden) ordenes.add(r.orden);
+    const dk = iso(r.fecha);
+    if (!porDia.has(dk)) porDia.set(dk, { fecha: r.fecha, piezas: 0, kilos: 0, clientes: new Map() });
+    const dia = porDia.get(dk);
+    dia.piezas += r.piezas;
+    dia.kilos += r.kilos;
+    if (!dia.clientes.has(r.cliente)) dia.clientes.set(r.cliente, { piezas: 0, kilos: 0, ordenes: new Set() });
+    const dc = dia.clientes.get(r.cliente);
+    dc.piezas += r.piezas;
+    dc.kilos += r.kilos;
+    if (r.orden) dc.ordenes.add(r.orden);
+    if (!porCliente.has(r.cliente)) porCliente.set(r.cliente, { piezas: 0, kilos: 0, ordenes: new Set(), dias: new Set() });
+    const c = porCliente.get(r.cliente);
+    c.piezas += r.piezas;
+    c.kilos += r.kilos;
+    c.dias.add(dk);
+    if (r.orden) c.ordenes.add(r.orden);
+  });
+  return { piezas, kilos, ordenes: ordenes.size, clientes: porCliente.size, porDia, porCliente };
+}
+
+function valorDe(obj) {
+  return metrica === "kilos" ? obj.kilos : obj.piezas;
+}
+
+function etiquetaMetrica(n) {
+  return metrica === "kilos" ? fmt(n, n >= 100 ? 0 : 1) + " kg" : fmt(n) + " pzas";
+}
+
+function deltaTxt(actual, anterior) {
+  if (!anterior) return { cls: "", txt: "Sin periodo anterior" };
+  const d = (actual - anterior) / anterior;
+  const signo = d > 0 ? "+" : "";
+  const cls = d > 0.005 ? "sube" : d < -0.005 ? "baja" : "";
+  return { cls, txt: signo + (d * 100).toLocaleString("es-MX", { maximumFractionDigits: 1 }) + "% vs el periodo anterior" };
+}
+
+function colores(nombres) {
+  const map = new Map();
+  nombres.forEach((nombre, i) => map.set(nombre, PALETA[i % PALETA.length]));
+  return map;
+}
+
+function pintar() {
+  const cuerpo = document.getElementById("cuerpo");
+  if (!corte) {
+    cuerpo.innerHTML = '<div class="estado">Todavía no hay fechas en el seguimiento.</div>';
+    return;
+  }
+  const v = ventana(corte, periodo);
+  const rows = tomar(v.ini, v.fin, cliente);
+  const res = resumir(rows);
+  const diasVentana = Math.round((v.fin - v.ini) / 86400000) + 1;
+  const prevFin = addDays(v.ini, -1);
+  const prev = resumir(tomar(addDays(prevFin, -(diasVentana - 1)), prevFin, cliente));
+  const dPiezas = deltaTxt(res.piezas, prev.piezas);
+  const dKilos = deltaTxt(res.kilos, prev.kilos);
+  const dCli = deltaTxt(res.clientes, prev.clientes);
+  const dOrd = deltaTxt(res.ordenes, prev.ordenes);
+
+  document.getElementById("corteFecha").textContent = "Corte " + fmtFechaLarga(corte);
+  const hora = consultado ? consultado.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : "";
+  document.getElementById("corteMeta").textContent = registros.length.toLocaleString("es-MX") + " capturas · consultado " + hora;
+
+  const ranking = [...res.porCliente.entries()].sort((a, b) => valorDe(b[1]) - valorDe(a[1]));
+  const top = ranking.slice(0, 5).map(([nombre]) => nombre);
+  const color = colores(top);
+  const dias = [...res.porDia.values()].sort((a, b) => a.fecha - b.fecha);
+  const maxDia = Math.max(1, ...dias.map(valorDe));
+  const ancho = Math.max(640, dias.length * 46);
+
+  const partes = dias.map(dia => {
+    let otros = 0;
+    const segs = [];
+    dia.clientes.forEach((info, nombre) => {
+      const val = valorDe(info);
+      if (top.includes(nombre)) segs.push({ nombre, val, color: color.get(nombre) });
+      else otros += val;
+    });
+    segs.sort((a, b) => top.indexOf(a.nombre) - top.indexOf(b.nombre));
+    if (otros) segs.push({ nombre: "Otros", val: otros, color: OTROS });
+    return { dia, segs };
+  });
+
+  const leyenda = top.map(nombre => '<span><i style="background:' + color.get(nombre) + '"></i>' + esc(corto(nombre)) + "</span>").join("")
+    + (ranking.length > 5 ? '<span><i style="background:' + OTROS + '"></i>Otros</span>' : "");
+
+  let x0 = 44;
+  const alto = 210;
+  const base = 168;
+  const gap = dias.length > 20 ? 4 : 10;
+  const bw = Math.max(8, (ancho - 56 - gap * dias.length) / Math.max(dias.length, 1));
+  const barrasSvg = partes.map(({ dia, segs }) => {
+    let y = base;
+    const rects = [];
+    segs.forEach(seg => {
+      const h = Math.max(0, (seg.val / maxDia) * 140);
+      y -= h;
+      if (h > 0) rects.push('<rect x="' + x0 + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="' + seg.color + '"><title>' + esc(seg.nombre) + " " + etiquetaMetrica(seg.val) + "</title></rect>");
+    });
+    const etiqueta = dias.length > 18 && dia.fecha.getDate() % 2 ? "" : fmtFechaCorta(dia.fecha);
+    const g = '<g>' + rects.join("") + '<text x="' + (x0 + bw / 2).toFixed(1) + '" y="188" text-anchor="middle" font-size="11" fill="#5e574c">' + esc(etiqueta) + "</text></g>";
+    x0 += bw + gap;
+    return g;
+  }).join("");
+
+  const totalRank = ranking.reduce((s, [, info]) => s + valorDe(info), 0) || 1;
+  const maxRank = ranking.length ? valorDe(ranking[0][1]) : 1;
+  const barrasCli = ranking.slice(0, 12).map(([nombre, info]) => {
+    const val = valorDe(info);
+    const anchoBar = Math.max(2, 100 * val / maxRank);
+    const sel = nombre === cliente ? " sel" : "";
+    return '<button type="button" class="bar-row' + sel + '" data-cliente="' + esc(nombre) + '">'
+      + '<span class="bar-name">' + esc(corto(nombre)) + "</span>"
+      + '<span class="bar-track"><span class="bar-fill" style="width:' + anchoBar.toFixed(1) + '%;background:' + (color.get(nombre) || OTROS) + '"></span></span>'
+      + '<span class="bar-num">' + etiquetaMetrica(val) + " · " + fmt(100 * val / totalRank, 1) + "%</span></button>";
+  }).join("");
+
+  const participacion = ranking.length
+    ? '<div class="part" aria-hidden="true">' + (function () {
+        const segs = [];
+        let otros = 0;
+        ranking.forEach(([nombre, info]) => {
+          const val = valorDe(info);
+          if (top.includes(nombre)) segs.push('<span style="width:' + (100 * val / totalRank).toFixed(2) + "%;background:" + color.get(nombre) + '" title="' + esc(corto(nombre)) + '"></span>');
+          else otros += val;
+        });
+        if (otros) segs.push('<span style="width:' + (100 * otros / totalRank).toFixed(2) + "%;background:" + OTROS + '"></span>');
+        return segs.join("");
+      })() + "</div>"
+    : "";
+
+  const filasCliente = ranking.map(([nombre, info]) => {
+    const val = valorDe(info);
+    return '<tr class="click' + (nombre === cliente ? " sel" : "") + '" data-cliente="' + esc(nombre) + '"><td class="l">' + esc(nombre) + "</td><td>"
+      + info.dias.size + "</td><td>" + info.ordenes.size + "</td><td>" + fmt(info.piezas) + "</td><td>"
+      + fmt(info.kilos, info.kilos >= 100 ? 0 : 1) + "</td><td>" + fmt(100 * val / totalRank, 1) + "%</td></tr>";
+  }).join("");
+
+  const diasDesc = [...dias].sort((a, b) => b.fecha - a.fecha);
+  const filasDia = diasDesc.map(dia => {
+    const total = valorDe(dia) || 1;
+    const clientes = [...dia.clientes.entries()].sort((a, b) => valorDe(b[1]) - valorDe(a[1]));
+    const head = '<tr class="dia"><td colspan="5">' + esc(fmtFechaLarga(dia.fecha)) + " · " + etiquetaMetrica(valorDe(dia)) + "</td></tr>";
+    const body = clientes.map(([nombre, info]) => {
+      return '<tr class="click' + (nombre === cliente ? " sel" : "") + '" data-cliente="' + esc(nombre) + '"><td class="l">' + esc(corto(nombre)) + "</td><td>"
+        + info.ordenes.size + "</td><td>" + fmt(info.piezas) + "</td><td>" + fmt(info.kilos, info.kilos >= 100 ? 0 : 1) + "</td><td>"
+        + fmt(100 * valorDe(info) / total, 1) + "%</td></tr>";
+    }).join("");
+    return head + body;
+  }).join("");
+
+  const vacio = rows.length
+    ? ""
+    : '<div class="estado">En ese periodo no hay capturas' + (cliente ? " de ese cliente" : "") + ".</div>";
+
+  cuerpo.innerHTML = vacio || (
+    '<div class="kpis">'
+    + kpi("Piezas", fmt(res.piezas), dPiezas)
+    + kpi("Kilos", fmt(res.kilos, res.kilos >= 100 ? 0 : 1), dKilos)
+    + kpi("Clientes", fmt(res.clientes), dCli)
+    + kpi("Órdenes", fmt(res.ordenes), dOrd)
+    + "</div>"
+    + '<section><h2>Por día <span>' + esc(fmtFechaCorta(v.ini)) + " – " + esc(fmtFechaCorta(v.fin)) + "</span></h2>"
+    + '<p class="sub">Cada barra es un día. El color es el cliente.</p>'
+    + '<article class="card"><div class="leyenda">' + leyenda + '</div><div class="chart-scroll"><svg class="dias" viewBox="0 0 ' + ancho + " " + alto + '" role="img" aria-label="Producción diaria">'
+    + barrasSvg + "</svg></div></article></section>"
+    + '<section><h2>Por cliente <span>' + (metrica === "kilos" ? "kilos" : "piezas") + " del periodo</span></h2>"
+    + '<p class="sub">Toca un cliente para ver solo su producción. Toca otra vez para volver a todos.</p>'
+    + '<article class="card"><h3>Participación</h3>' + participacion
+    + '<div class="bars" style="margin-top:14px">' + barrasCli + "</div></article>"
+    + '<div class="tabla-wrap" style="margin-top:12px"><table><thead><tr><th class="l">Cliente</th><th>Días</th><th>Órdenes</th><th>Piezas</th><th>Kilos</th><th>%</th></tr></thead><tbody>'
+    + filasCliente
+    + '<tr class="total"><td class="l">Periodo</td><td></td><td>' + fmt(res.ordenes) + "</td><td>" + fmt(res.piezas) + "</td><td>" + fmt(res.kilos, 0) + "</td><td>100%</td></tr>"
+    + "</tbody></table></div></section>"
+    + '<section><h2>Diario <span>del más reciente al más antiguo</span></h2>'
+    + '<div class="tabla-wrap"><table><thead><tr><th class="l">Cliente</th><th>Órdenes</th><th>Piezas</th><th>Kilos</th><th>% del día</th></tr></thead><tbody>'
+    + filasDia + "</tbody></table></div></section>"
+  );
+
+  function kpi(lbl, num, d) {
+    return '<article class="kpi"><div class="lbl">' + lbl + '</div><div class="num">' + num + '</div><div class="hint ' + d.cls + '">' + d.txt + "</div></article>";
+  }
+}
+
+function llenarClientes() {
+  const sel = document.getElementById("cliente");
+  const v = ventana(corte, periodo);
+  const nombres = v
+    ? [...resumir(tomar(v.ini, v.fin, "")).porCliente.entries()].sort((a, b) => valorDe(b[1]) - valorDe(a[1])).map(([n]) => n)
+    : [];
+  const actual = cliente;
+  sel.innerHTML = '<option value="">Todos los clientes</option>' + nombres.map(n => '<option value="' + esc(n) + '">' + esc(n) + "</option>").join("");
+  if (actual && nombres.includes(actual)) sel.value = actual;
+  else {
+    cliente = "";
+    sel.value = "";
+  }
+}
+
+function estado(msg, error) {
+  document.getElementById("corteFecha").textContent = error ? "No se pudo leer" : "Cargando…";
+  document.getElementById("corteMeta").textContent = "";
+  document.getElementById("cuerpo").innerHTML = '<div class="estado' + (error ? " error" : "") + '">' + esc(msg) + "</div>";
+}
+
+function recibir(resp) {
+  cargando = false;
+  if (!resp || resp.status !== "ok") {
+    estado("El seguimiento no respondió.", true);
+    return;
+  }
+  const cols = resp.table.cols.map(c => c.label);
+  const iFecha = cols.indexOf("FECHA");
+  const iCliente = cols.indexOf("CLIENTE");
+  const iOrden = cols.indexOf("ORDEN");
+  const iPiezas = cols.indexOf("CANTIDAD PIEZAS");
+  const iKilos = cols.findIndex(c => c && c.trim() === "PESO TOTAL");
+  const out = [];
+  resp.table.rows.forEach(row => {
+    const c = row.c || [];
+    const leer = i => (c[i] && c[i].v != null ? c[i].v : null);
+    const fecha = parseFecha(leer(iFecha));
+    if (!fecha) return;
+    const piezas = Number(leer(iPiezas)) || 0;
+    const kilos = Number(leer(iKilos)) || 0;
+    if (!piezas && !kilos) return;
+    out.push({
+      fecha,
+      cliente: reparar(leer(iCliente) || ""),
+      orden: String(leer(iOrden) || "").trim(),
+      piezas,
+      kilos
+    });
+  });
+  registros = out;
+  corte = out.reduce((max, r) => !max || r.fecha > max ? r.fecha : max, null);
+  consultado = new Date();
+  llenarClientes();
+  pintar();
+}
+
+function cargar() {
+  if (cargando) return;
+  cargando = true;
+  if (!registros.length) estado("Leyendo el seguimiento de AppSheet…");
+  const previo = document.getElementById("sheet-jsonp");
+  if (previo) previo.remove();
+  const s = document.createElement("script");
+  s.id = "sheet-jsonp";
+  s.src = SHEET + "&t=" + Date.now();
+  s.onerror = () => {
+    cargando = false;
+    if (!registros.length) estado("No se pudo consultar el seguimiento. Revisa que la hoja siga pública.", true);
+  };
+  document.body.appendChild(s);
+  clearTimeout(window.__sheetTimer);
+  window.__sheetTimer = setTimeout(() => {
+    if (cargando && !registros.length) {
+      cargando = false;
+      estado("El seguimiento tardó demasiado. Pulsa Actualizar.", true);
+    }
+  }, 25000);
+}
+
+document.querySelector("nav.bar").addEventListener("click", e => {
+  const p = e.target.closest("[data-periodo]");
+  const m = e.target.closest("[data-metrica]");
+  if (p) {
+    periodo = p.dataset.periodo;
+    document.querySelectorAll("[data-periodo]").forEach(b => b.classList.toggle("activa", b === p));
+    llenarClientes();
+    pintar();
+  }
+  if (m) {
+    metrica = m.dataset.metrica;
+    document.getElementById("btnPiezas").classList.toggle("activa", metrica === "piezas");
+    document.getElementById("btnKilos").classList.toggle("activa", metrica === "kilos");
+    llenarClientes();
+    pintar();
+  }
+  if (e.target.id === "btnActualizar") cargar();
+});
+
+document.getElementById("cliente").addEventListener("change", e => {
+  cliente = e.target.value;
+  pintar();
+});
+
+document.getElementById("cuerpo").addEventListener("click", e => {
+  const b = e.target.closest("[data-cliente]");
+  if (!b) return;
+  const nombre = b.dataset.cliente;
+  cliente = cliente === nombre ? "" : nombre;
+  document.getElementById("cliente").value = cliente;
+  pintar();
+});
+
+document.getElementById("btnPiezas").classList.add("activa");
+cargar();
+setInterval(cargar, 180000);
+</script>
+</body>
+</html>
