@@ -100,6 +100,20 @@ def main():
     )
     print("validaciones.json:", {k: len(v) for k, v in validaciones.items()})
     print("ordenes.json:", len(ordenes), "registros")
+    embeber_ordenes(ordenes)
+
+
+def embeber_ordenes(registros):
+    html_path = OUT.parent / "rmp-bom-impresion.html"
+    payload = json.dumps(registros, ensure_ascii=False).replace("<", "\\u003c")
+    html = html_path.read_text(encoding="utf-8")
+    inicio = html.find('<script type="application/json" id="ordenes-embebidas">')
+    fin = html.find("</script>", inicio)
+    if inicio < 0 or fin < 0:
+        raise RuntimeError("Falta el bloque de órdenes en rmp-bom-impresion.html")
+    html = html[:inicio] + '<script type="application/json" id="ordenes-embebidas">' + payload + html[fin:]
+    html_path.write_text(html, encoding="utf-8")
+    print("rmp-bom-impresion.html: órdenes dentro de la hoja")
 
 
 if __name__ == "__main__":
