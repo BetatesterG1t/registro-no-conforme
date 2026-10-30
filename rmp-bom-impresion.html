@@ -295,7 +295,7 @@ const PASOS = [
     id: "40",
     nombre: "Montaje",
     centro: "Prensa de la orden",
-    texto: "En la prensa se montan manga, anilox y cinta. La cuchilla entra con el anilox. Al cambio de orden se lava la estación.",
+    texto: "En la prensa se montan manga, anilox y cinta. La cuchilla entra con el anilox. Al cambio de orden se lava la estación con R4.",
     paros: ["Montaje por mismas mangas", "Error en montaje", "Mangas y/o anilox en mal estado"],
     defectos: []
   },
@@ -303,7 +303,7 @@ const PASOS = [
     id: "50",
     nombre: "Tintas",
     centro: "Estación de tinta",
-    texto: "Una tinta por color. El barniz entra solo si la orden lo lleva. La cantidad en kilos sale de la fórmula, no de esta lista.",
+    texto: "Una tinta por color. El solvente de ajuste es R4. El barniz entra solo si la orden lo lleva. La cantidad en kilos sale de la fórmula, no de esta lista.",
     paros: ["Tintas"],
     defectos: ["TONOS DIFERENTES", "SIN BARNIZ", "PIEL DE NARANJA"]
   },
@@ -382,12 +382,12 @@ const BOM = [
   },
   {
     id: "solvente",
-    nombre: "Solvente de ajuste",
+    nombre: "Solvente R4",
     tipo: "Consumible",
     um: "L",
     pasos: ["50"],
     origen: "Estación de tinta",
-    detalle: "Ajusta la viscosidad en prensa. Esta lista no trae factor.",
+    detalle: "R4 para ajustar la viscosidad en prensa. Esta lista no trae factor.",
     regla: "texto",
     textoCantidad: "Según viscosidad"
   },
@@ -443,12 +443,12 @@ const BOM = [
   },
   {
     id: "limpieza",
-    nombre: "Solvente de limpieza",
+    nombre: "Solvente R4",
     tipo: "Consumible",
     um: "L",
     pasos: ["40", "100"],
     origen: "Cambio de orden",
-    detalle: "Lavado de estación al montar y al cerrar la orden.",
+    detalle: "R4 para lavar la estación al montar y al cerrar la orden.",
     regla: "texto",
     textoCantidad: "Al cambio de orden"
   },
@@ -662,8 +662,8 @@ function boomDe(reg) {
   ].forEach((item) => {
     filas.push({ nombre: item[0], tipo: item[1], cantidad: pieza, detalle: notaPieza + item[2] });
   });
-  filas.push({ nombre: "Solvente de ajuste", tipo: "Consumible", cantidad: "Según viscosidad", detalle: "En la estación de tinta. El seguimiento no trae litros." });
-  filas.push({ nombre: "Solvente de limpieza", tipo: "Consumible", cantidad: "Al cambio de orden", detalle: "Lavado al montar y al cerrar esta orden." });
+  filas.push({ nombre: "Solvente R4", tipo: "Consumible", cantidad: "Según viscosidad", detalle: "Ajuste de viscosidad en la estación de tinta. El seguimiento no trae litros." });
+  filas.push({ nombre: "Solvente R4", tipo: "Consumible", cantidad: "Al cambio de orden", detalle: "Lavado de la estación al montar y al cerrar esta orden." });
   filas.push({ nombre: "Cinta de empalme", tipo: "Consumible", cantidad: "Según empalmes", detalle: "En el desembobinador, una por empalme." });
   filas.push({ nombre: "Tubo de salida", tipo: "Materia prima", cantidad: "1 por bobina", detalle: "El seguimiento no dice cuántas bobinas salen. El diámetro lo pide el cliente." });
   return { info: info, filas: filas };
