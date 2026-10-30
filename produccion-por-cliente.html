@@ -79,7 +79,7 @@
   .leyenda { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 0 0 10px; font-size: 13px; color: var(--muted); }
   .leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
   .chart-scroll { overflow-x: auto; }
-  svg.dias { display: block; min-width: 640px; width: 100%; height: auto; }
+  svg.dias { display: block; width: auto; min-width: 100%; height: auto; }
   svg.dias text { font-family: "Avenir Next", "Segoe UI", sans-serif; }
   .part { display: flex; height: 16px; border-radius: 99px; overflow: hidden; background: #f3eee6; }
   .part span { display: block; height: 100%; }
@@ -418,40 +418,65 @@ function pintar() {
   const top = ranking.slice(0, 5).map(([nombre]) => nombre);
   const color = colores(top);
   const dias = [...res.porDia.values()].sort((a, b) => a.fecha - b.fecha);
-  const maxDia = Math.max(1, ...dias.map(valorDe));
-  const ancho = Math.max(640, dias.length * 46);
 
-  const partes = dias.map(dia => {
+  let grafIni = v.ini;
+  let grafFin = v.fin;
+  let grafRes = res;
+  if (periodo === "dia") {
+    grafIni = addDays(fin, -6);
+    grafFin = fin;
+    grafRes = resumir(tomar(grafIni, grafFin, cliente));
+  }
+  const diasGraf = [...grafRes.porDia.values()].sort((a, b) => a.fecha - b.fecha);
+  const rankGraf = [...grafRes.porCliente.entries()].sort((a, b) => valorDe(b[1]) - valorDe(a[1]));
+  const topGraf = rankGraf.slice(0, 5).map(([nombre]) => nombre);
+  const colorGraf = colores(topGraf);
+  const maxDia = Math.max(1, ...diasGraf.map(valorDe));
+  const ancho = Math.max(720, diasGraf.length * 92);
+
+  const partes = diasGraf.map(dia => {
     let otros = 0;
     const segs = [];
     dia.clientes.forEach((info, nombre) => {
       const val = valorDe(info);
-      if (top.includes(nombre)) segs.push({ nombre, val, color: color.get(nombre) });
+      if (topGraf.includes(nombre)) segs.push({ nombre, val, color: colorGraf.get(nombre) });
       else otros += val;
     });
-    segs.sort((a, b) => top.indexOf(a.nombre) - top.indexOf(b.nombre));
+    segs.sort((a, b) => topGraf.indexOf(a.nombre) - topGraf.indexOf(b.nombre));
     if (otros) segs.push({ nombre: "Otros", val: otros, color: OTROS });
     return { dia, segs };
   });
 
-  const leyenda = top.map(nombre => '<span><i style="background:' + color.get(nombre) + '"></i>' + esc(corto(nombre)) + "</span>").join("")
-    + (ranking.length > 5 ? '<span><i style="background:' + OTROS + '"></i>Otros</span>' : "");
+  const leyenda = topGraf.map(nombre => '<span><i style="background:' + colorGraf.get(nombre) + '"></i>' + esc(corto(nombre)) + "</span>").join("")
+    + (rankGraf.length > 5 ? '<span><i style="background:' + OTROS + '"></i>Otros</span>' : "");
 
-  let x0 = 44;
-  const alto = 210;
-  const base = 168;
-  const gap = dias.length > 20 ? 4 : 10;
-  const bw = Math.max(8, (ancho - 56 - gap * dias.length) / Math.max(dias.length, 1));
+  let x0 = 36;
+  const alto = 236;
+  const base = 178;
+  const maxBar = 142;
+  const gap = 14;
+  const bw = Math.max(64, (ancho - 52 - gap * diasGraf.length) / Math.max(diasGraf.length, 1));
   const barrasSvg = partes.map(({ dia, segs }) => {
     let y = base;
     const rects = [];
+    const cx = x0 + bw / 2;
     segs.forEach(seg => {
-      const h = Math.max(0, (seg.val / maxDia) * 140);
+      const h = Math.max(0, (seg.val / maxDia) * maxBar);
       y -= h;
-      if (h > 0) rects.push('<rect x="' + x0 + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="' + seg.color + '"><title>' + esc(seg.nombre) + " " + etiquetaMetrica(seg.val) + "</title></rect>");
+      if (h <= 0) return;
+      const numSeg = fmt(seg.val, metrica === "kilos" && seg.val < 100 ? 1 : 0);
+      const cabe = h >= 16 && numSeg.length * 6.4 <= bw - 8;
+      rects.push('<rect x="' + x0 + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="' + seg.color + '"><title>' + esc(corto(seg.nombre)) + " " + etiquetaMetrica(seg.val) + "</title></rect>");
+      if (cabe) {
+        rects.push('<text x="' + cx.toFixed(1) + '" y="' + (y + h / 2 + 4).toFixed(1) + '" text-anchor="middle" font-size="11" font-weight="650" fill="#fffdf8">' + esc(numSeg) + "</text>");
+      }
     });
-    const etiqueta = dias.length > 18 && dia.fecha.getDate() % 2 ? "" : fmtFechaCorta(dia.fecha);
-    const g = '<g>' + rects.join("") + '<text x="' + (x0 + bw / 2).toFixed(1) + '" y="188" text-anchor="middle" font-size="11" fill="#5e574c">' + esc(etiqueta) + "</text></g>";
+    const totalDia = valorDe(dia);
+    const numDia = fmt(totalDia, metrica === "kilos" && totalDia < 100 ? 1 : 0);
+    const etiqueta = fmtFechaCorta(dia.fecha);
+    const g = '<g data-fecha="' + iso(dia.fecha) + '" style="cursor:pointer">' + rects.join("")
+      + '<text x="' + cx.toFixed(1) + '" y="' + Math.max(14, y - 6).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="700" fill="#1c1915">' + esc(numDia) + "</text>"
+      + '<text x="' + cx.toFixed(1) + '" y="206" text-anchor="middle" font-size="11" fill="#5e574c">' + esc(etiqueta) + "</text></g>";
     x0 += bw + gap;
     return g;
   }).join("");
@@ -506,10 +531,10 @@ function pintar() {
     ? ""
     : '<div class="estado">En ese periodo no hay capturas' + (cliente ? " de ese cliente" : "") + ".</div>";
 
-  const bloqueDias = dias.length < 2 ? "" : (
-    '<section><h2>Por día <span>' + esc(fmtFechaCorta(v.ini)) + " – " + esc(fmtFechaCorta(v.fin)) + "</span></h2>"
-    + '<p class="sub">Cada barra es un día. El color es el cliente. Toca un día en la tabla para consultarlo.</p>'
-    + '<article class="card"><div class="leyenda">' + leyenda + '</div><div class="chart-scroll"><svg class="dias" viewBox="0 0 ' + ancho + " " + alto + '" role="img" aria-label="Producción diaria">'
+  const bloqueDias = diasGraf.length < 2 ? "" : (
+    '<section><h2>Por día <span>' + esc(fmtFechaCorta(grafIni)) + " – " + esc(fmtFechaCorta(grafFin)) + "</span></h2>"
+    + '<p class="sub">El número de arriba es el total del día. Dentro de la barra, lo de cada cliente cuando cabe. Toca una barra para consultar ese día.</p>'
+    + '<article class="card"><div class="leyenda">' + leyenda + '</div><div class="chart-scroll"><svg class="dias" width="' + Math.ceil(ancho) + '" height="' + alto + '" viewBox="0 0 ' + ancho + " " + alto + '" role="img" aria-label="Producción diaria">'
     + barrasSvg + "</svg></div></article></section>"
   );
   const bloqueDetalle = dias.length < 2 ? "" : (
@@ -695,8 +720,8 @@ document.getElementById("cuerpo").addEventListener("click", e => {
     pintar();
     return;
   }
-  const dia = e.target.closest("tr.dia[data-fecha]");
-  if (dia) irAlDia(parseIso(dia.dataset.fecha));
+  const marca = e.target.closest("[data-fecha]");
+  if (marca) irAlDia(parseIso(marca.dataset.fecha));
 });
 document.getElementById("btnDiaAnt").addEventListener("click", () => moverDia(-1));
 document.getElementById("btnDiaSig").addEventListener("click", () => moverDia(1));
