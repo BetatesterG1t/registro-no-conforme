@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RMP y BOM · Área de impresión</title>
+<style>
+  :root {
+    --bg: #efe8dc;
+    --ink: #1c1915;
+    --muted: #5e574c;
+    --card: #fffdf8;
+    --line: #e3d9c8;
+    --accent: #9f1239;
+    --accent-soft: #f8e8ec;
+    --good: #0f6e56;
+    --good-soft: #e5f4ef;
+    --warn: #9a3412;
+    --shadow: 0 1px 0 rgba(28, 25, 21, 0.04);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 400px at 10% -10%, #f7f1e6 0%, transparent 50%),
+      var(--bg);
+    color: var(--ink);
+    font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+    font-size: 15.5px;
+    line-height: 1.45;
+  }
+  button, input, select { font: inherit; color: inherit; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 72px; }
+  header.top { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; margin-bottom: 18px; }
+  .eyebrow { letter-spacing: 0.14em; text-transform: uppercase; font-size: 12px; color: var(--accent); font-weight: 700; margin: 0 0 6px; }
+  h1 { font-family: Palatino, "Iowan Old Style", Georgia, serif; font-size: 46px; line-height: 0.95; font-weight: 600; margin: 0; letter-spacing: -0.03em; }
+  .lede { margin: 8px 0 0; max-width: 680px; color: var(--muted); }
+  .corte { text-align: right; font-size: 13px; color: var(--muted); }
+  .corte strong { display: block; color: var(--ink); font-size: 15px; }
+  nav.bar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    background: rgba(239, 232, 220, 0.92); backdrop-filter: blur(8px);
+    padding: 10px 0 12px; margin-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .jump {
+    border: 1px solid var(--line); background: var(--card); border-radius: 999px;
+    padding: 6px 11px; text-decoration: none; color: var(--muted); font-size: 13px; cursor: pointer;
+  }
+  .jump:hover { color: var(--ink); }
+  .spacer { flex: 1; }
+  section { margin-top: 26px; scroll-margin-top: 72px; }
+  h2 { font-family: Palatino, Georgia, serif; font-size: 28px; margin: 0 0 4px; font-weight: 600; }
+  h2 span { color: var(--muted); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 15px; font-weight: 500; margin-left: 8px; }
+  .sub { color: var(--muted); margin: 0 0 14px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .kpi, .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+  .kpi { padding: 14px 14px 12px; }
+  .kpi .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .kpi .num { font-variant-numeric: tabular-nums; font-size: 26px; font-weight: 650; letter-spacing: -0.03em; margin-top: 4px; }
+  .kpi .hint { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .ruta { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .paso {
+    text-align: left; border: 1px solid var(--line); background: var(--card);
+    border-radius: 14px; padding: 12px 12px 10px; cursor: pointer; box-shadow: var(--shadow);
+  }
+  .paso .op { font-variant-numeric: tabular-nums; font-size: 12px; letter-spacing: 0.08em; color: var(--accent); font-weight: 700; }
+  .paso strong { display: block; margin-top: 2px; font-size: 15px; }
+  .paso small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .paso[aria-pressed="true"] { background: var(--ink); color: #fffdf8; border-color: var(--ink); }
+  .paso[aria-pressed="true"] .op, .paso[aria-pressed="true"] small { color: #f0d5dc; }
+  .card { padding: 16px; }
+  .card h3 { margin: 0 0 8px; font-size: 15px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .tag {
+    display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 12px;
+    background: #f3eee6; color: var(--ink);
+  }
+  .tag.paro { background: var(--accent-soft); color: var(--accent); }
+  .tag.def { background: #f3eee6; }
+  .tag.bom { background: var(--good-soft); color: var(--good); }
+  .fila-titulo { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pills button { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 11px; cursor: pointer; }
+  .pills button[aria-pressed="true"] { background: var(--ink); color: #fffdf8; border-color: var(--ink); }
+  .tabla-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13.5px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 650; background: #fbf7f1; position: sticky; top: 0; z-index: 1; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  tr.click { cursor: pointer; }
+  tr.click:hover td { background: #fbf7f1; }
+  tr.on td { background: var(--accent-soft); }
+  tr.off td { color: var(--muted); }
+  .nota { background: #f7f1e6; border: 1px dashed #d9cdb8; border-radius: 12px; padding: 12px 14px; color: var(--muted); font-size: 14px; }
+  .nota strong { color: var(--ink); }
+  .aviso { margin-top: 10px; }
+  .aviso p { margin: 0 0 6px; }
+  .aviso p:last-child { margin: 0; }
+  .form-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  label.field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
+  label.field input[type="text"] {
+    text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 16px;
+    border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 8px 10px; color: var(--ink);
+  }
+  label.check {
+    flex-direction: row; align-items: center; gap: 8px; text-transform: none;
+    letter-spacing: 0; font-size: 15px; font-weight: 500; color: var(--ink); padding-top: 18px;
+  }
+  .maquinas { display: flex; flex-wrap: wrap; gap: 8px; }
+  .maq {
+    border: 1px solid var(--line); background: var(--card); border-radius: 12px;
+    padding: 10px 12px; min-width: 88px; box-shadow: var(--shadow);
+  }
+  .maq strong { display: block; font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 16px; }
+  .maq span { color: var(--muted); font-size: 12px; }
+  .dos { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 12px; margin-top: 12px; }
+  @media (max-width: 980px) {
+    .kpis, .form-grid { grid-template-columns: 1fr 1fr; }
+    .ruta { grid-template-columns: 1fr 1fr; }
+    .dos, header.top { grid-template-columns: 1fr; display: grid; }
+    h1 { font-size: 36px; }
+    .corte { text-align: left; }
+    label.check { padding-top: 0; }
+  }
+  @media print {
+    body { background: white; }
+    nav.bar, .no-print { display: none !important; }
+    .card, .kpi, .tabla-wrap, .paso { break-inside: avoid; }
+    .ruta { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">Área de impresión</p>
+      <h1>RMP y su BOM</h1>
+      <p class="lede">Ruta de manufactura del proceso, con su BOM: la lista de materiales que entra en cada paso. La misma ruta corre en las ocho prensas. La orden dice la máquina, los colores y el sustrato.</p>
+    </div>
+    <div class="corte">
+      <strong>Área de impresión</strong>
+      <span>Flexigrip · rollo impreso</span>
+    </div>
+  </header>
+
+  <nav class="bar">
+    <a class="jump" href="#ruta">Ruta</a>
+    <a class="jump" href="#bom">BOM</a>
+    <a class="jump" href="#explosion">Explosión</a>
+    <a class="jump" href="#maquinas">Máquinas</a>
+    <div class="spacer"></div>
+    <button class="jump no-print" type="button" id="imprimir">Imprimir</button>
+  </nav>
+
+  <section id="ruta">
+    <h2>Ruta <span>diez operaciones, de la orden al rollo liberado</span></h2>
+    <p class="sub">Elige un paso. Abajo queda qué entra, qué paro del tiempo muerto cae ahí y qué defecto del catálogo se vigila.</p>
+    <div class="ruta" id="ruta-botones"></div>
+    <article class="card" id="detalle" style="margin-top:12px"></article>
+  </section>
+
+  <section id="bom">
+    <div class="fila-titulo">
+      <div>
+        <h2>BOM <span>lista de materiales del área</span></h2>
+        <p class="sub" id="bom-sub">El herramental regresa. La tinta y el barniz salen de la fórmula de la orden. El sustrato se calcula en la explosión.</p>
+      </div>
+      <div class="pills no-print" id="filtros" role="group" aria-label="Tipo de material"></div>
+    </div>
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Material</th>
+            <th>Tipo</th>
+            <th>Unidad</th>
+            <th>Paso</th>
+            <th>Origen</th>
+          </tr>
+        </thead>
+        <tbody id="bom-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="explosion">
+    <h2>Explosión <span>la BOM aplicada a una orden</span></h2>
+    <p class="sub">Escribe metros, ancho y gramaje para el sustrato. Los colores arman el herramental. Tinta, barniz y solvente no llevan factor: salen de la fórmula.</p>
+    <article class="card">
+      <form id="form-orden" class="form-grid">
+        <label class="field">Metros
+          <input id="metros" type="text" inputmode="decimal" autocomplete="off" placeholder="0">
+        </label>
+        <label class="field">Ancho mm
+          <input id="ancho" type="text" inputmode="decimal" autocomplete="off" placeholder="0">
+        </label>
+        <label class="field">Gramaje g/m²
+          <input id="gramaje" type="text" inputmode="decimal" autocomplete="off" placeholder="ficha">
+        </label>
+        <label class="field">Colores
+          <input id="colores" type="text" inputmode="numeric" autocomplete="off" placeholder="1 a 10">
+        </label>
+        <label class="field">Bobinas salida
+          <input id="bobinas" type="text" inputmode="numeric" autocomplete="off" placeholder="1">
+        </label>
+        <label class="field check"><input id="barniz" type="checkbox"> Lleva barniz</label>
+      </form>
+      <div class="kpis" id="kpis" style="margin-top:14px"></div>
+      <div class="aviso" id="avisos"></div>
+    </article>
+    <div class="tabla-wrap" style="margin-top:12px">
+      <table>
+        <thead>
+          <tr>
+            <th>Material</th>
+            <th>Tipo</th>
+            <th class="num">Cantidad</th>
+            <th>Cómo sale</th>
+          </tr>
+        </thead>
+        <tbody id="explosion-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="maquinas">
+    <h2>Máquinas <span>las ocho prensas del área</span></h2>
+    <p class="sub">Salen del catálogo de no conforme y del tiempo muerto. La ruta no cambia de máquina. Cambia el herramental: grabado, manga o anilox, según la prensa de la orden.</p>
+    <div class="maquinas" id="maquinas-lista"></div>
+    <article class="card" style="margin-top:12px">
+      <h3>A dónde sigue el rollo</h3>
+      <p class="sub" style="margin:0">Laminado, refinado, pouch, bolseo, o entrega en rollo. Esos procesos están en el catálogo de no conforme. Esta ruta se queda en impresión.</p>
+    </article>
+  </section>
+
+  <section>
+    <p class="nota" id="fuentes"></p>
+  </section>
+</div>
+<script>
+const MAQUINAS = ["F4-1", "F4-2", "F4-3", "F2-1", "F2-2", "F2-3", "FJ-2", "FLEXO"];
+
+const PASOS = [
+  {
+    id: "10",
+    nombre: "Programa",
+    centro: "Programación",
+    texto: "Entra la orden con cliente, SKU y máquina. Aquí se fija la secuencia de colores y si lleva barniz.",
+    paros: ["Cambio de secuencia", "Cambios excesivos por orden corta", "Cambio de programación", "Orden suspendida"],
+    defectos: []
+  },
+  {
+    id: "20",
+    nombre: "Preprensa",
+    centro: "Preprensa",
+    texto: "El arte queda separado y listo para grabar. La prensa espera cuando el paro es de preprensa.",
+    paros: ["Preprensa"],
+    defectos: []
+  },
+  {
+    id: "30",
+    nombre: "Grabados",
+    centro: "Preprensa",
+    texto: "Cada color lleva su grabado. En esta planta el herramental es cliché o cilindro, según la máquina de la orden.",
+    paros: ["Grabados", "Espera de montaje de grabados"],
+    defectos: []
+  },
+  {
+    id: "40",
+    nombre: "Montaje",
+    centro: "Prensa de la orden",
+    texto: "En la prensa se montan manga, anilox y cinta. La cuchilla entra con el anilox. Al cambio de orden se lava la estación.",
+    paros: ["Montaje por mismas mangas", "Error en montaje", "Mangas y/o anilox en mal estado"],
+    defectos: []
+  },
+  {
+    id: "50",
+    nombre: "Tintas",
+    centro: "Estación de tinta",
+    texto: "Una tinta por color. El barniz entra solo si la orden lo lleva. La cantidad en kilos sale de la fórmula, no de esta lista.",
+    paros: ["Tintas"],
+    defectos: ["TONOS DIFERENTES", "SIN BARNIZ", "PIEL DE NARANJA"]
+  },
+  {
+    id: "60",
+    nombre: "Sustrato",
+    centro: "Desembobinador",
+    texto: "Entra la bobina de la orden y el tubo donde va a salir el rollo impreso. El empalme se hace en este paso.",
+    paros: ["Falta de materiales", "Material en mal estado"],
+    defectos: ["ARRUGA", "RASGADURA", "MATERIAL BLOQUEADO", "MATERIAL PEGADO", "MATERIAL COLGADO"]
+  },
+  {
+    id: "70",
+    nombre: "Arranque",
+    centro: "Prensa de la orden",
+    texto: "Registro, presión y primera pieza buena. La merma de arranque ya va dentro de los metros de sustrato.",
+    paros: [],
+    defectos: ["FUERA DE REGISTRO", "IMPRESIÓN DESFASADA", "BARNIZ FUERA DE REGISTRO", "GOLPE DE ANILOX", "GOLPE DE TAMBOR", "FALLA DE PRESION", "REMOSQUEO", "FANTASMAS"]
+  },
+  {
+    id: "80",
+    nombre: "Corrida",
+    centro: "Prensa de la orden",
+    texto: "La prensa corre con inspección en línea. La planta publica inspección AVT, 10 colores, 175 LPI y 140 pulgadas de ancho. Cada orden usa lo que trae su ficha.",
+    paros: ["Máquina descompuesta, en reparación", "Máquina alarmada", "Luz"],
+    defectos: ["MANCHAS", "RAYA", "REPINTE", "TABLETEO"]
+  },
+  {
+    id: "90",
+    nombre: "VoBo",
+    centro: "Calidad",
+    texto: "Calidad libera el rollo. Sin visto bueno, el rollo no sigue al proceso siguiente.",
+    paros: ["Visto bueno (VoBo)", "Autorización de calidad"],
+    defectos: []
+  },
+  {
+    id: "100",
+    nombre: "Salida",
+    centro: "Rebobinador",
+    texto: "El rollo queda identificado con la orden. Sigue a laminado, refinado, pouch, bolseo, o se entrega en rollo.",
+    paros: [],
+    defectos: ["TELESCOPEO"]
+  }
+];
+
+const BOM = [
+  {
+    id: "sustrato",
+    nombre: "Sustrato en bobina",
+    tipo: "Materia prima",
+    um: "kg",
+    pasos: ["60"],
+    origen: "Seguimiento de OT",
+    detalle: "PE, BOPP, PET, CPP, OPA o aluminio, el que traiga la orden.",
+    regla: "sustrato"
+  },
+  {
+    id: "tinta",
+    nombre: "Tinta",
+    tipo: "Materia prima",
+    um: "kg",
+    pasos: ["50"],
+    origen: "Tiempo muerto · Tintas",
+    detalle: "Una partida por color. Los kilos salen de la fórmula.",
+    regla: "tinta"
+  },
+  {
+    id: "barniz",
+    nombre: "Barniz",
+    tipo: "Materia prima",
+    um: "kg",
+    pasos: ["50"],
+    origen: "Catálogo · SIN BARNIZ",
+    detalle: "Solo si la orden lo lleva. Los kilos salen de la fórmula.",
+    regla: "barniz"
+  },
+  {
+    id: "solvente",
+    nombre: "Solvente de ajuste",
+    tipo: "Consumible",
+    um: "L",
+    pasos: ["50"],
+    origen: "Estación de tinta",
+    detalle: "Ajusta la viscosidad en prensa. Esta lista no trae factor.",
+    regla: "texto",
+    textoCantidad: "Según viscosidad"
+  },
+  {
+    id: "grabado",
+    nombre: "Grabado",
+    tipo: "Herramental",
+    um: "pza",
+    pasos: ["30"],
+    origen: "Tiempo muerto · Grabados",
+    detalle: "Cliché o cilindro, según la máquina. Una referencia por color. Regresa.",
+    regla: "por_color"
+  },
+  {
+    id: "manga",
+    nombre: "Manga de montaje",
+    tipo: "Herramental",
+    um: "pza",
+    pasos: ["40"],
+    origen: "Tiempo muerto · Mangas",
+    detalle: "Una referencia por color. El desarrollo de la orden puede cambiar la cantidad. Regresa.",
+    regla: "por_color"
+  },
+  {
+    id: "anilox",
+    nombre: "Anilox",
+    tipo: "Herramental",
+    um: "pza",
+    pasos: ["40"],
+    origen: "Tiempo muerto · Mangas y/o anilox",
+    detalle: "Una referencia por estación de color. Regresa.",
+    regla: "por_color"
+  },
+  {
+    id: "cinta",
+    nombre: "Cinta de montaje",
+    tipo: "Consumible",
+    um: "pza",
+    pasos: ["40"],
+    origen: "Montaje del grabado",
+    detalle: "Un juego por color montado.",
+    regla: "por_color"
+  },
+  {
+    id: "cuchilla",
+    nombre: "Cuchilla",
+    tipo: "Consumible",
+    um: "pza",
+    pasos: ["40"],
+    origen: "Conjunto del anilox",
+    detalle: "Una por estación de color.",
+    regla: "por_color"
+  },
+  {
+    id: "limpieza",
+    nombre: "Solvente de limpieza",
+    tipo: "Consumible",
+    um: "L",
+    pasos: ["40", "100"],
+    origen: "Cambio de orden",
+    detalle: "Lavado de estación al montar y al cerrar la orden.",
+    regla: "texto",
+    textoCantidad: "Al cambio de orden"
+  },
+  {
+    id: "empalme",
+    nombre: "Cinta de empalme",
+    tipo: "Consumible",
+    um: "pza",
+    pasos: ["60"],
+    origen: "Desembobinador",
+    detalle: "Una por empalme de bobina.",
+    regla: "texto",
+    textoCantidad: "Según empalmes"
+  },
+  {
+    id: "tubo",
+    nombre: "Tubo de salida",
+    tipo: "Materia prima",
+    um: "pza",
+    pasos: ["60"],
+    origen: "Rebobinado",
+    detalle: "Uno por bobina de salida. El diámetro lo pide el cliente.",
+    regla: "bobinas"
+  }
+];
+
+const state = { paso: "10", tipo: "Todas" };
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+
+function num(valor) {
+  if (valor == null) return null;
+  let s = String(valor).trim().replace(/\s/g, "");
+  if (!s) return null;
+  const hasComma = s.includes(",");
+  const hasDot = s.includes(".");
+  if (hasComma && hasDot) {
+    if (s.lastIndexOf(",") > s.lastIndexOf(".")) s = s.replace(/\./g, "").replace(",", ".");
+    else s = s.replace(/,/g, "");
+  } else if (hasComma) {
+    s = /^\d{1,3}(,\d{3})+$/.test(s) ? s.replace(/,/g, "") : s.replace(",", ".");
+  }
+  const n = Number(s);
+  return Number.isFinite(n) ? n : NaN;
+}
+
+function fmt(n, d) {
+  return n.toLocaleString("es-MX", { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+
+function leer() {
+  return {
+    metros: num(document.getElementById("metros").value),
+    ancho: num(document.getElementById("ancho").value),
+    gramaje: num(document.getElementById("gramaje").value),
+    colores: num(document.getElementById("colores").value),
+    bobinas: num(document.getElementById("bobinas").value),
+    barniz: document.getElementById("barniz").checked
+  };
+}
+
+function pasoPorId(id) {
+  return PASOS.find((p) => p.id === id);
+}
+
+function nombresPasos(ids) {
+  return ids.map((id) => id + " " + pasoPorId(id).nombre).join(" · ");
+}
+
+function materialesDelPaso(id) {
+  return BOM.filter((b) => b.pasos.indexOf(id) >= 0);
+}
+
+function linea(item, inp) {
+  const malo = [inp.metros, inp.ancho, inp.gramaje, inp.colores, inp.bobinas].some((n) => Number.isNaN(n));
+  if (item.regla === "barniz" && !inp.barniz) {
+    return { aplica: false, cantidad: "No lleva", nota: "La orden no trae barniz." };
+  }
+  if (item.regla === "sustrato") {
+    if (Number.isNaN(inp.metros) || Number.isNaN(inp.ancho) || Number.isNaN(inp.gramaje)) {
+      return { aplica: true, cantidad: "—", nota: "Revisa metros, ancho y gramaje." };
+    }
+    if (inp.metros == null || inp.ancho == null) {
+      return { aplica: true, cantidad: "—", nota: "Escribe metros y ancho para sacar los m²." };
+    }
+    if (inp.metros < 0 || inp.ancho < 0 || (inp.gramaje != null && inp.gramaje < 0)) {
+      return { aplica: true, cantidad: "—", nota: "Metros, ancho y gramaje van en cero o más." };
+    }
+    const m2 = inp.metros * inp.ancho / 1000;
+    if (inp.gramaje == null) {
+      return { aplica: true, cantidad: "—", nota: fmt(m2, 2) + " m². Falta el gramaje de la ficha para los kilos." };
+    }
+    const kg = m2 * inp.gramaje / 1000;
+    return { aplica: true, cantidad: fmt(kg, 2) + " kg", nota: fmt(m2, 2) + " m² × " + fmt(inp.gramaje, 2) + " g/m²." };
+  }
+  if (item.regla === "tinta") {
+    if (Number.isNaN(inp.colores)) return { aplica: true, cantidad: "Fórmula", nota: "Revisa el número de colores." };
+    if (inp.colores == null) return { aplica: true, cantidad: "Fórmula", nota: "Escribe los colores para saber cuántas partidas." };
+    if (inp.colores <= 0) return { aplica: true, cantidad: "Fórmula", nota: "Los colores van de 1 para arriba." };
+    const n = Math.round(inp.colores);
+    return { aplica: true, cantidad: "Fórmula", nota: n + (n === 1 ? " partida, un color." : " partidas, una por color.") };
+  }
+  if (item.regla === "barniz") {
+    return { aplica: true, cantidad: "Fórmula", nota: "Una partida de barniz." };
+  }
+  if (item.regla === "por_color" || item.regla === "bobinas") {
+    const base = item.regla === "por_color" ? inp.colores : inp.bobinas;
+    const etiqueta = item.regla === "por_color" ? "colores" : "bobinas de salida";
+    if (Number.isNaN(base)) return { aplica: true, cantidad: "—", nota: "Revisa " + etiqueta + "." };
+    if (base == null) return { aplica: true, cantidad: "—", nota: "Escribe " + etiqueta + "." };
+    if (base <= 0) return { aplica: true, cantidad: "—", nota: etiqueta.charAt(0).toUpperCase() + etiqueta.slice(1) + " van de 1 para arriba." };
+    const n = Math.round(base);
+    const nota = item.regla === "por_color" ? item.detalle : n + (n === 1 ? " bobina de salida." : " bobinas de salida.");
+    return { aplica: true, cantidad: fmt(n, 0) + " " + item.um, nota: nota };
+  }
+  if (malo && item.regla === "texto") {
+    return { aplica: true, cantidad: item.textoCantidad, nota: item.detalle };
+  }
+  return { aplica: true, cantidad: item.textoCantidad, nota: item.detalle };
+}
+
+function renderRuta() {
+  const caja = document.getElementById("ruta-botones");
+  caja.replaceChildren();
+  PASOS.forEach((p) => {
+    const b = el("button", "paso");
+    b.type = "button";
+    b.setAttribute("aria-pressed", p.id === state.paso ? "true" : "false");
+    b.append(el("span", "op", p.id));
+    b.append(el("strong", null, p.nombre));
+    b.append(el("small", null, p.centro));
+    b.addEventListener("click", () => {
+      state.paso = p.id;
+      render();
+    });
+    caja.append(b);
+  });
+}
+
+function renderDetalle() {
+  const p = pasoPorId(state.paso);
+  const caja = document.getElementById("detalle");
+  caja.replaceChildren();
+  caja.append(el("h3", null, p.id + " · " + p.nombre));
+  caja.append(el("p", "sub", p.texto + " Centro: " + p.centro + "."));
+  const tags = el("div", "tags");
+  materialesDelPaso(p.id).forEach((b) => tags.append(el("span", "tag bom", b.nombre)));
+  p.paros.forEach((nombre) => tags.append(el("span", "tag paro", nombre)));
+  p.defectos.forEach((nombre) => tags.append(el("span", "tag def", nombre)));
+  if (!tags.childNodes.length) tags.append(el("span", "tag", "Sin material en este paso"));
+  caja.append(tags);
+}
+
+function renderFiltros() {
+  const tipos = ["Todas", "Materia prima", "Herramental", "Consumible"];
+  const caja = document.getElementById("filtros");
+  caja.replaceChildren();
+  tipos.forEach((tipo) => {
+    const b = el("button", null, tipo);
+    b.type = "button";
+    b.setAttribute("aria-pressed", tipo === state.tipo ? "true" : "false");
+    b.addEventListener("click", () => {
+      state.tipo = tipo;
+      render();
+    });
+    caja.append(b);
+  });
+}
+
+function renderBom() {
+  const body = document.getElementById("bom-body");
+  body.replaceChildren();
+  const filas = BOM.filter((b) => state.tipo === "Todas" || b.tipo === state.tipo);
+  document.getElementById("bom-sub").textContent = filas.length + (filas.length === 1 ? " material" : " materiales") + " en esta vista. El herramental regresa. La tinta y el barniz salen de la fórmula. El sustrato se calcula en la explosión.";
+  filas.forEach((b) => {
+    const tr = el("tr", "click" + (b.pasos.indexOf(state.paso) >= 0 ? " on" : ""));
+    tr.append(el("td", null, b.nombre));
+    tr.append(el("td", null, b.tipo));
+    tr.append(el("td", null, b.um));
+    tr.append(el("td", null, nombresPasos(b.pasos)));
+    tr.append(el("td", null, b.origen));
+    tr.addEventListener("click", () => {
+      state.paso = b.pasos[0];
+      render();
+      document.getElementById("ruta").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    body.append(tr);
+  });
+}
+
+function sustratoDe(inp) {
+  if ([inp.metros, inp.ancho, inp.gramaje].some((n) => Number.isNaN(n))) return { m2: null, kg: null, error: true };
+  if (inp.metros == null || inp.ancho == null || inp.metros < 0 || inp.ancho < 0) return { m2: null, kg: null };
+  const m2 = inp.metros * inp.ancho / 1000;
+  if (inp.gramaje == null) return { m2: m2, kg: null };
+  if (inp.gramaje < 0) return { m2: null, kg: null };
+  return { m2: m2, kg: m2 * inp.gramaje / 1000 };
+}
+
+function renderKpis(inp) {
+  const s = sustratoDe(inp);
+  const caja = document.getElementById("kpis");
+  caja.replaceChildren();
+  const datos = [
+    ["Sustrato", s.m2 == null ? "—" : fmt(s.m2, 2) + " m²", s.m2 == null ? "Metros × ancho" : "Metros × ancho en metros"],
+    ["Kilos", s.kg == null ? "—" : fmt(s.kg, 2) + " kg", s.kg == null ? "Falta el gramaje" : "m² × gramaje"],
+    ["Colores", inp.colores == null || Number.isNaN(inp.colores) || inp.colores <= 0 ? "—" : fmt(Math.round(inp.colores), 0), "Partidas de tinta"],
+    ["Barniz", inp.barniz ? "Sí" : "No", inp.barniz ? "Una partida, kilos de la fórmula" : "Esta orden no lo lleva"]
+  ];
+  datos.forEach((d) => {
+    const card = el("article", "kpi");
+    card.append(el("div", "lbl", d[0]));
+    card.append(el("div", "num", d[1]));
+    card.append(el("div", "hint", d[2]));
+    caja.append(card);
+  });
+}
+
+function renderAvisos(inp) {
+  const caja = document.getElementById("avisos");
+  caja.replaceChildren();
+  const msgs = [];
+  if ([inp.metros, inp.ancho, inp.gramaje, inp.colores, inp.bobinas].some((n) => Number.isNaN(n))) {
+    msgs.push("Hay un número que no se puede leer. Usa cifras, con punto o con coma.");
+  }
+  if ([inp.metros, inp.ancho, inp.gramaje, inp.colores, inp.bobinas].some((n) => n != null && n < 0)) {
+    msgs.push("Las cantidades van en cero o más.");
+  }
+  if (inp.ancho != null && inp.ancho > 3556) {
+    msgs.push("El ancho pasa de 140 pulgadas (3,556 mm), que es la capacidad publicada de la planta.");
+  }
+  if (inp.colores != null && inp.colores > 10) {
+    msgs.push("La capacidad publicada es de 10 colores. Esta orden trae " + fmt(Math.round(inp.colores), 0) + ".");
+  }
+  if (!msgs.length) {
+    caja.hidden = true;
+    return;
+  }
+  caja.hidden = false;
+  const nota = el("div", "nota");
+  msgs.forEach((m) => nota.append(el("p", null, m)));
+  caja.append(nota);
+}
+
+function renderExplosion() {
+  const inp = leer();
+  const body = document.getElementById("explosion-body");
+  body.replaceChildren();
+  BOM.forEach((b) => {
+    const calc = linea(b, inp);
+    const tr = el("tr", calc.aplica ? "" : "off");
+    tr.append(el("td", null, b.nombre));
+    tr.append(el("td", null, b.tipo));
+    const cant = el("td", "num", calc.cantidad);
+    tr.append(cant);
+    tr.append(el("td", null, calc.nota));
+    body.append(tr);
+  });
+  renderKpis(inp);
+  renderAvisos(inp);
+}
+
+function renderMaquinas() {
+  const caja = document.getElementById("maquinas-lista");
+  caja.replaceChildren();
+  MAQUINAS.forEach((nombre) => {
+    const card = el("div", "maq");
+    card.append(el("strong", null, nombre));
+    card.append(el("span", null, "Impresión"));
+    caja.append(card);
+  });
+}
+
+function renderFuentes() {
+  const nota = document.getElementById("fuentes");
+  nota.replaceChildren();
+  nota.append(el("strong", null, "De dónde sale cada cosa. "));
+  nota.append(document.createTextNode("Las ocho máquinas y los defectos salen del catálogo de no conforme. Los paros salen del tiempo muerto del área de impresión. Las familias de sustrato son las que ya aparecen en el seguimiento de OT. La planta publica 10 colores, 175 LPI, 140 pulgadas e inspección AVT: es capacidad de planta, no la ficha de cada orden. Esta hoja no sustituye la explosión del sistema: no trae códigos ni kilos de tinta."));
+}
+
+function render() {
+  renderRuta();
+  renderDetalle();
+  renderFiltros();
+  renderBom();
+  renderExplosion();
+}
+
+document.getElementById("form-orden").addEventListener("input", renderExplosion);
+document.getElementById("imprimir").addEventListener("click", () => window.print());
+renderMaquinas();
+renderFuentes();
+render();
+</script>
+</body>
+</html>
