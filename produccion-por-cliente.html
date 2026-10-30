@@ -112,6 +112,7 @@
   .estado.error { border-color: #e7c2cb; background: #fdf2f4; }
   .nota { background: #f7f1e6; border: 1px dashed #d9cdb8; border-radius: 12px; padding: 12px 14px; color: var(--muted); font-size: 14px; margin-top: 22px; }
   .nota strong { color: var(--ink); }
+  .solo-impresion { display: none; }
   @media (max-width: 980px) {
     .kpis, header.top { grid-template-columns: 1fr 1fr; display: grid; }
     h1 { font-size: 32px; }
@@ -123,9 +124,22 @@
     .kpis { grid-template-columns: 1fr; }
   }
   @media print {
-    body { background: white; }
-    nav.bar, .no-print { display: none !important; }
-    .card, .kpi, .tabla-wrap { break-inside: avoid; }
+    @page { size: letter landscape; margin: 12mm; }
+    html, body { background: #fff !important; color: #111; }
+    .wrap { max-width: none; padding: 0; }
+    nav.bar, .nota, .no-print, .sub { display: none !important; }
+    .solo-impresion { display: block; margin: 0 0 10px; font-size: 13px; color: #333; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    header.top { margin-bottom: 8px; }
+    h1 { font-size: 26px; }
+    .kpi, .card, .tabla-wrap { box-shadow: none; break-inside: avoid; }
+    .kpis { grid-template-columns: repeat(4, 1fr); }
+    .chart-scroll { overflow: visible; }
+    svg.dias { width: 100% !important; min-width: 0 !important; height: auto !important; }
+    th { position: static; background: #f4f0e8; }
+    .bar-row { break-inside: avoid; grid-template-columns: 210px 1fr 160px; }
+    .bar-name { white-space: normal; overflow: visible; text-overflow: unset; }
+    tr { break-inside: avoid; }
   }
 </style>
 </head>
@@ -142,6 +156,7 @@
       <span id="corteMeta"></span>
     </div>
   </header>
+  <p id="pieImpreso" class="solo-impresion"></p>
 
   <nav class="bar">
     <button type="button" class="jump activa" data-periodo="dia">Día</button>
@@ -158,6 +173,7 @@
     <span class="spacer"></span>
     <button type="button" class="jump" data-metrica="piezas" id="btnPiezas">Piezas</button>
     <button type="button" class="jump" data-metrica="kilos" id="btnKilos">Kilos</button>
+    <button type="button" class="jump no-print" id="btnImprimir" onclick="imprimirReporte()">Imprimir</button>
     <button type="button" class="jump no-print" id="btnActualizar" onclick="actualizarReporte()">Actualizar</button>
   </nav>
 
@@ -421,6 +437,14 @@ function pintar() {
     : "";
   document.getElementById("corteMeta").textContent = registros.length.toLocaleString("es-MX")
     + " capturas · " + (lecturaLocal ? "guardado " : "consultado ") + hora;
+  const pie = document.getElementById("pieImpreso");
+  if (pie) {
+    const rango = periodo === "dia"
+      ? fmtFechaLarga(fin)
+      : fmtFechaCorta(v.ini) + " – " + fmtFechaCorta(v.fin);
+    pie.textContent = rango + (cliente ? " · " + cliente : " · Todos los clientes")
+      + " · " + (metrica === "kilos" ? "Kilos" : "Piezas");
+  }
   const firma = periodo + "|" + iso(fin) + "|" + cliente + "|" + res.piezas + "|" + res.kilos;
   const cambio = firmaVista !== "" && firma !== firmaVista
     && firmaVista.split("|").slice(0, 3).join("|") === firma.split("|").slice(0, 3).join("|");
@@ -545,13 +569,13 @@ function pintar() {
 
   const bloqueDias = diasGraf.length < 2 ? "" : (
     '<section><h2>Por día <span>' + esc(fmtFechaCorta(grafIni)) + " – " + esc(fmtFechaCorta(grafFin)) + "</span></h2>"
-    + '<p class="sub">El número de arriba es el total del día. Dentro de la barra, lo de cada cliente cuando cabe. Toca una barra para consultar ese día.</p>'
+    + '<p class="sub no-print">El número de arriba es el total del día. Dentro de la barra, lo de cada cliente cuando cabe. Toca una barra para consultar ese día.</p>'
     + '<article class="card"><div class="leyenda">' + leyenda + '</div><div class="chart-scroll"><svg class="dias" width="' + Math.ceil(ancho) + '" height="' + alto + '" viewBox="0 0 ' + ancho + " " + alto + '" role="img" aria-label="Producción diaria">'
     + barrasSvg + "</svg></div></article></section>"
   );
   const bloqueDetalle = dias.length < 2 ? "" : (
     '<section><h2>Diario <span>del más reciente al más antiguo</span></h2>'
-    + '<p class="sub">Toca un día para consultarlo solo.</p>'
+    + '<p class="sub no-print">Toca un día para consultarlo solo.</p>'
     + '<div class="tabla-wrap"><table><thead><tr><th class="l">Cliente</th><th>Órdenes</th><th>Piezas</th><th>Kilos</th><th>% del día</th></tr></thead><tbody>'
     + filasDia + "</tbody></table></div></section>"
   );
@@ -565,7 +589,7 @@ function pintar() {
     + "</div>"
     + bloqueDias
     + '<section><h2>Por cliente <span>' + (metrica === "kilos" ? "kilos" : "piezas") + (dias.length < 2 ? " del día" : " del periodo") + "</span></h2>"
-    + '<p class="sub">Toca un cliente para ver solo su producción. Toca otra vez para volver a todos.</p>'
+    + '<p class="sub no-print">Toca un cliente para ver solo su producción. Toca otra vez para volver a todos.</p>'
     + '<article class="card"><h3>Participación</h3>' + participacion
     + '<div class="bars" style="margin-top:14px">' + barrasCli + "</div></article>"
     + '<div class="tabla-wrap" style="margin-top:12px"><table><thead><tr><th class="l">Cliente</th><th>Días</th><th>Órdenes</th><th>Piezas</th><th>Kilos</th><th>%</th></tr></thead><tbody>'
@@ -758,6 +782,13 @@ function aplicar(resp, desde) {
   pintar();
 }
 
+function imprimirReporte() {
+  if (!registros.length || !corte) return;
+  const fin = periodo === "dia" ? finActivo() : corte;
+  document.title = "Producción por cliente · " + fmtFechaLarga(fin);
+  window.print();
+}
+
 function marcarBoton(txt, espera) {
   const b = document.getElementById("btnActualizar");
   if (!b) return;
@@ -867,6 +898,7 @@ document.getElementById("fechaDia").addEventListener("change", e => {
 });
 
 document.getElementById("btnPiezas").classList.add("activa");
+window.addEventListener("afterprint", () => { document.title = "Producción por cliente"; });
 restaurar();
 cargar(false);
 setInterval(() => cargar(false), 20000);
