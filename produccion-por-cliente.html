@@ -162,7 +162,7 @@
   </nav>
 
   <div id="cuerpo"></div>
-  <p class="nota"><strong>Lectura en vivo.</strong> Al abrir esta página trae lo último de BOLSEO. Actualizar vuelve a leerlo en el momento y regresa al día de hoy. Si el botón dice Leyendo…, espera a que vuelva a decir Actualizar.</p>
+  <p class="nota"><strong>Queda guardada en este navegador.</strong> Al volver a abrirla se ve la última lectura aunque el seguimiento tarde. En cuanto BOLSEO responde, esa lectura se reemplaza con lo nuevo.</p>
 </div>
 <script>
 const SHEET = "https://docs.google.com/spreadsheets/d/1lt9KyIA2dLe1UWGZwvZT-tG4MF9w9iWGn45io8saew4/gviz/tq?gid=2535843";
@@ -183,6 +183,9 @@ let consultado = null;
 let cargando = false;
 let reqId = 0;
 let firmaVista = "";
+let lecturaLocal = false;
+let copiaParcial = false;
+const STORE = "bolseo-reporte-v1";
 
 window.google = window.google || {};
 google.visualization = google.visualization || {};
@@ -416,7 +419,8 @@ function pintar() {
   const hora = consultado
     ? consultado.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
     : "";
-  document.getElementById("corteMeta").textContent = registros.length.toLocaleString("es-MX") + " capturas · consultado " + hora;
+  document.getElementById("corteMeta").textContent = registros.length.toLocaleString("es-MX")
+    + " capturas · " + (lecturaLocal ? "guardado " : "consultado ") + hora;
   const firma = periodo + "|" + iso(fin) + "|" + cliente + "|" + res.piezas + "|" + res.kilos;
   const cambio = firmaVista !== "" && firma !== firmaVista
     && firmaVista.split("|").slice(0, 3).join("|") === firma.split("|").slice(0, 3).join("|");
@@ -662,11 +666,71 @@ function filasDe(resp) {
   return out;
 }
 
+function empaquetar(lista) {
+  return lista.map(r => [iso(r.fecha), r.cliente, r.orden, r.piezas, Math.round(r.kilos * 10) / 10]);
+}
+
+function guardar() {
+  const payload = (filas, parcial) => JSON.stringify({ v: 1, t: Date.now(), parcial: !!parcial, filas });
+  try {
+    localStorage.setItem(STORE, payload(empaquetar(registros), false));
+    copiaParcial = false;
+  } catch (e) {
+    try {
+      const desde = corte ? iso(addDays(corte, -60)) : "";
+      const filas = empaquetar(registros.filter(r => !desde || iso(r.fecha) >= desde));
+      localStorage.setItem(STORE, payload(filas, true));
+      copiaParcial = true;
+    } catch (e2) {}
+  }
+}
+
+function restaurar() {
+  try {
+    const raw = localStorage.getItem(STORE);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data || data.v !== 1 || !Array.isArray(data.filas) || !data.filas.length) return false;
+    const out = [];
+    data.filas.forEach(f => {
+      const fecha = parseIso(f[0]);
+      if (!fecha) return;
+      out.push({
+        fecha,
+        cliente: f[1] || "(sin cliente)",
+        orden: f[2] || "",
+        piezas: Number(f[3]) || 0,
+        kilos: Number(f[4]) || 0
+      });
+    });
+    if (!out.length) return false;
+    registros = out;
+    corte = out.reduce((max, r) => !max || r.fecha > max ? r.fecha : max, null);
+    consultado = new Date(data.t || Date.now());
+    copiaParcial = !!data.parcial;
+    lecturaLocal = true;
+    llenarClientes();
+    pintar();
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function avisoGuardado(msg) {
+  const meta = document.getElementById("corteMeta");
+  if (!meta) return;
+  if (registros.length && consultado) {
+    const hora = consultado.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+    meta.textContent = msg + " Se muestra lo guardado a las " + hora + ".";
+  } else meta.textContent = msg;
+}
+
 function aplicar(resp, desde) {
   if (!resp || resp.status !== "ok") {
     marcarBoton("Actualizar", false);
     if (!registros.length) estado("El seguimiento no respondió.", true);
-    else document.getElementById("corteMeta").textContent = "El seguimiento no respondió. Pulsa Actualizar otra vez.";
+    else avisoGuardado("El seguimiento no respondió.");
     return;
   }
   const nuevas = filasDe(resp);
@@ -687,6 +751,8 @@ function aplicar(resp, desde) {
   }
   corte = registros.reduce((max, r) => !max || r.fecha > max ? r.fecha : max, null);
   consultado = new Date();
+  lecturaLocal = false;
+  guardar();
   marcarBoton("Actualizar", false);
   llenarClientes();
   pintar();
@@ -714,11 +780,11 @@ function cargar(forzar) {
   if (cargando && !forzar) return;
   const id = ++reqId;
   cargando = true;
-  const parcial = registros.length > 0 && corte;
+  const parcial = registros.length > 0 && corte && !copiaParcial;
   const desde = parcial ? addDays(corte, -21) : null;
   if (!registros.length) estado("Leyendo el seguimiento de AppSheet…");
   else {
-    document.getElementById("corteMeta").textContent = "Leyendo capturas nuevas…";
+    if (!lecturaLocal) document.getElementById("corteMeta").textContent = "Leyendo capturas nuevas…";
     marcarBoton("Leyendo…", true);
   }
   const nombre = "__bolseo" + id;
@@ -742,7 +808,7 @@ function cargar(forzar) {
     cargando = false;
     marcarBoton("Actualizar", false);
     if (!registros.length) estado("No se pudo consultar el seguimiento. Revisa que la hoja siga pública.", true);
-    else document.getElementById("corteMeta").textContent = "No se pudo actualizar. Pulsa Actualizar otra vez.";
+    else avisoGuardado("No se pudo actualizar.");
   };
   document.body.appendChild(s);
   clearTimeout(window.__sheetTimer);
@@ -753,9 +819,7 @@ function cargar(forzar) {
     const node = document.getElementById("sheet-jsonp");
     if (node) node.remove();
     if (!registros.length) estado("El seguimiento tardó demasiado. Pulsa Actualizar.", true);
-    else if ((document.getElementById("corteMeta").textContent || "").indexOf("Leyendo") === 0) {
-      document.getElementById("corteMeta").textContent = "La lectura tardó. Pulsa Actualizar otra vez.";
-    }
+    else avisoGuardado("La lectura tardó.");
   }, desde ? 25000 : 45000);
 }
 
@@ -803,6 +867,7 @@ document.getElementById("fechaDia").addEventListener("change", e => {
 });
 
 document.getElementById("btnPiezas").classList.add("activa");
+restaurar();
 cargar(false);
 setInterval(() => cargar(false), 20000);
 </script>
