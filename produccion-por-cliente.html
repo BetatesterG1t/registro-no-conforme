@@ -115,13 +115,25 @@
   .nota { background: #f7f1e6; border: 1px dashed #d9cdb8; border-radius: 12px; padding: 12px 14px; color: var(--muted); font-size: 14px; margin-top: 22px; }
   .nota strong { color: var(--ink); }
   .kpi .num.texto { font-size: 18px; line-height: 1.25; letter-spacing: 0; }
+  .panel-clientes {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-top: 10px;
+  }
+  .panel-clientes h2 { font-size: 22px; margin-bottom: 10px; }
+  .lista-clientes { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+  .cli-btn {
+    text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 12px;
+    padding: 10px 12px; font: inherit; color: inherit; cursor: pointer;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .cli-btn small { color: var(--muted); font-size: 12px; }
+  .cli-btn strong { font-size: 15px; }
+  .cli-btn.activa { border-color: var(--accent); background: var(--accent-soft); }
   @media (max-width: 980px) {
     .kpis { grid-template-columns: 1fr 1fr; display: grid; }
     header.top { display: grid; grid-template-columns: 1fr; gap: 12px; }
     h1 { font-size: 32px; }
     .corte { text-align: left; min-width: 0; }
     .bar-row { grid-template-columns: 96px 1fr 92px; }
-    select.cliente { max-width: 100%; }
   }
   @media (max-width: 640px) {
     .kpis { grid-template-columns: 1fr; }
@@ -130,7 +142,7 @@
     @page { size: letter landscape; margin: 12mm; }
     html, body { background: #fff !important; color: #111; }
     .wrap { max-width: none; padding: 0; }
-    nav.bar, .nota, .no-print, .sub { display: none !important; }
+    nav.bar, .nota, .no-print, .sub, .panel-clientes { display: none !important; }
     .solo-impresion { display: block; margin: 0 0 10px; font-size: 13px; color: #333; }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     header.top { margin-bottom: 8px; }
@@ -172,13 +184,18 @@
     <button type="button" class="jump" data-periodo="14">14 días</button>
     <button type="button" class="jump" data-periodo="mes">Mes</button>
     <button type="button" class="jump" data-periodo="todo">Todo</button>
-    <select class="cliente" id="cliente" aria-label="Cliente"></select>
     <span class="spacer"></span>
     <button type="button" class="jump" data-metrica="piezas" id="btnPiezas">Piezas</button>
     <button type="button" class="jump" data-metrica="kilos" id="btnKilos">Kilos</button>
     <button type="button" class="jump no-print" id="btnImprimir" onclick="imprimirReporte()">Imprimir</button>
     <button type="button" class="jump no-print" id="btnActualizar" onclick="actualizarReporte()">Actualizar</button>
   </nav>
+
+  <div id="panelClientes" class="panel-clientes no-print">
+    <h2>Elige el cliente</h2>
+    <p class="sub">Oprime un nombre. El tablero muestra solo a ese cliente.</p>
+    <div class="lista-clientes" id="listaClientes"></div>
+  </div>
 
   <div id="cuerpo"></div>
   <p class="nota"><strong>Queda guardada en este navegador.</strong> Al volver a abrirla se ve la última lectura aunque el seguimiento tarde. En cuanto BOLSEO responde, esa lectura se reemplaza con lo nuevo.</p>
@@ -655,19 +672,24 @@ function moverDia(dir) {
 }
 
 function llenarClientes() {
-  const sel = document.getElementById("cliente");
+  const lista = document.getElementById("listaClientes");
+  if (!lista) return;
   const fin = periodo === "dia" ? finActivo() : corte;
   const v = ventana(fin, periodo);
-  const nombres = v
-    ? [...resumir(tomar(v.ini, v.fin, "")).porCliente.entries()].sort((a, b) => valorDe(b[1]) - valorDe(a[1])).map(([n]) => n)
+  const entradas = v
+    ? [...resumir(tomar(v.ini, v.fin, "")).porCliente.entries()].sort((a, b) => valorDe(b[1]) - valorDe(a[1]))
     : [];
-  const actual = cliente;
-  sel.innerHTML = '<option value="">Todos los clientes</option>' + nombres.map(n => '<option value="' + esc(n) + '">' + esc(n) + "</option>").join("");
-  if (actual && nombres.includes(actual)) sel.value = actual;
-  else {
-    cliente = "";
-    sel.value = "";
-  }
+  const nombres = entradas.map(([n]) => n);
+  if (cliente && !nombres.includes(cliente)) cliente = "";
+  const boton = (nombre, titulo, detalle, activo) => '<button type="button" class="cli-btn' + (activo ? " activa" : "") + '" data-elegir="' + esc(nombre) + '"><strong>' + esc(titulo) + "</strong><small>" + esc(detalle) + "</small></button>";
+  lista.innerHTML = boton("", "Todos los clientes", "Ver el total de todos", !cliente)
+    + entradas.map(([n, info]) => boton(n, corto(n), n === corto(n) ? etiquetaMetrica(valorDe(info)) : n + " · " + etiquetaMetrica(valorDe(info)), n === cliente)).join("");
+}
+
+function elegirCliente(nombre) {
+  cliente = nombre || "";
+  llenarClientes();
+  pintar();
 }
 
 function estado(msg, error) {
@@ -813,8 +835,6 @@ function actualizarReporte() {
   diaElegido = null;
   periodo = "dia";
   cliente = "";
-  const sel = document.getElementById("cliente");
-  if (sel) sel.value = "";
   document.querySelectorAll("[data-periodo]").forEach(b => b.classList.toggle("activa", b.dataset.periodo === "dia"));
   marcarBoton("Leyendo…", true);
   cargar(true);
@@ -886,18 +906,17 @@ document.querySelector("nav.bar").addEventListener("click", e => {
   }
 });
 
-document.getElementById("cliente").addEventListener("change", e => {
-  cliente = e.target.value;
-  pintar();
+document.getElementById("listaClientes").addEventListener("click", e => {
+  const b = e.target.closest("[data-elegir]");
+  if (!b) return;
+  elegirCliente(b.dataset.elegir);
 });
 
 document.getElementById("cuerpo").addEventListener("click", e => {
   const b = e.target.closest("[data-cliente]");
   if (b) {
     const nombre = b.dataset.cliente;
-    cliente = cliente === nombre ? "" : nombre;
-    document.getElementById("cliente").value = cliente;
-    pintar();
+    elegirCliente(cliente === nombre ? "" : nombre);
     return;
   }
   const marca = e.target.closest("[data-fecha]");
