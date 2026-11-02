@@ -114,26 +114,6 @@
   .estado.error { border-color: #e7c2cb; background: #fdf2f4; }
   .nota { background: #f7f1e6; border: 1px dashed #d9cdb8; border-radius: 12px; padding: 12px 14px; color: var(--muted); font-size: 14px; margin-top: 22px; }
   .nota strong { color: var(--ink); }
-  .aviso {
-    display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap;
-    background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-top: 12px;
-  }
-  .aviso p { margin: 0; }
-  .panel-clientes {
-    background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-top: 10px;
-  }
-  .panel-clientes[hidden] { display: none; }
-  .panel-clientes h2 { font-size: 22px; margin-bottom: 10px; }
-  .lista-clientes { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
-  .cli-btn {
-    text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 12px;
-    padding: 10px 12px; font: inherit; color: inherit; cursor: pointer;
-    display: flex; flex-direction: column; gap: 2px;
-  }
-  .cli-btn small { color: var(--muted); font-size: 12px; }
-  .cli-btn strong { font-size: 15px; }
-  .cli-btn.activa { border-color: var(--accent); background: var(--accent-soft); }
-  #btnCliente.activa { background: var(--accent); color: #fff; border-color: var(--accent); }
   .kpi .num.texto { font-size: 18px; line-height: 1.25; letter-spacing: 0; }
   @media (max-width: 980px) {
     .kpis { grid-template-columns: 1fr 1fr; display: grid; }
@@ -150,7 +130,7 @@
     @page { size: letter landscape; margin: 12mm; }
     html, body { background: #fff !important; color: #111; }
     .wrap { max-width: none; padding: 0; }
-    nav.bar, .nota, .no-print, .sub, .panel-clientes { display: none !important; }
+    nav.bar, .nota, .no-print, .sub { display: none !important; }
     .solo-impresion { display: block; margin: 0 0 10px; font-size: 13px; color: #333; }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     header.top { margin-bottom: 8px; }
@@ -172,7 +152,7 @@
     <div>
       <p class="eyebrow">Bolseo · gerencia</p>
       <h1>Producción por cliente</h1>
-      <p class="lede">El número grande es lo que se produjo. Cada color es un cliente. Oprime <strong>Cliente</strong> para ver solo a uno.</p>
+      <p class="lede">El número grande es lo que se produjo. Cada color es un cliente.</p>
     </div>
     <div class="corte">
       <strong id="corteFecha">Cargando…</strong>
@@ -192,19 +172,13 @@
     <button type="button" class="jump" data-periodo="14">14 días</button>
     <button type="button" class="jump" data-periodo="mes">Mes</button>
     <button type="button" class="jump" data-periodo="todo">Todo</button>
-    <button type="button" class="jump" id="btnCliente" onclick="abrirClientes()">Cliente</button>
+    <select class="cliente" id="cliente" aria-label="Cliente"></select>
     <span class="spacer"></span>
     <button type="button" class="jump" data-metrica="piezas" id="btnPiezas">Piezas</button>
     <button type="button" class="jump" data-metrica="kilos" id="btnKilos">Kilos</button>
     <button type="button" class="jump no-print" id="btnImprimir" onclick="imprimirReporte()">Imprimir</button>
     <button type="button" class="jump no-print" id="btnActualizar" onclick="actualizarReporte()">Actualizar</button>
   </nav>
-
-  <div id="panelClientes" class="panel-clientes no-print" hidden>
-    <h2>Elige el cliente</h2>
-    <p class="sub">Oprime un nombre. El tablero muestra solo a ese cliente.</p>
-    <div class="lista-clientes" id="listaClientes"></div>
-  </div>
 
   <div id="cuerpo"></div>
   <p class="nota"><strong>Queda guardada en este navegador.</strong> Al volver a abrirla se ve la última lectura aunque el seguimiento tarde. En cuanto BOLSEO responde, esa lectura se reemplaza con lo nuevo.</p>
@@ -466,13 +440,6 @@ function pintar() {
   const dOrd = enCurso ? enCursoTxt : deltaTxt(res.ordenes, prev.ordenes, contra);
   const etiqDia = hoy ? "Hoy" : viendoCorte ? "Último día con producción" : "Día consultado";
   document.getElementById("corteFecha").innerHTML = '<span class="corte-etiq">' + esc(etiqDia) + "</span>" + esc(fmtFechaLarga(fin));
-  document.querySelector("h1").textContent = cliente ? corto(cliente) : "Producción por cliente";
-  const lede = document.querySelector(".lede");
-  if (lede) {
-    lede.innerHTML = cliente
-      ? "Solo se muestra lo de <strong>" + esc(corto(cliente)) + "</strong>. El nombre completo está abajo."
-      : "El número grande es lo que se produjo. Cada color es un cliente. Oprime <strong>Cliente</strong> para ver solo a uno.";
-  }
   const hora = consultado
     ? consultado.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })
     : "";
@@ -609,10 +576,6 @@ function pintar() {
     ? ""
     : '<div class="estado">' + (cliente ? "Ese día no hay producción de " + esc(corto(cliente)) + "." : "Ese día no hay producción.") + "</div>";
 
-  const aviso = cliente
-    ? '<div class="aviso"><p>Estás viendo solo a <strong>' + esc(corto(cliente)) + "</strong>. " + esc(cliente) + '</p><button type="button" class="jump" data-ver-todos="1">Ver todos los clientes</button></div>'
-    : '<div class="aviso"><p>Estás viendo <strong>a todos los clientes</strong> juntos. Oprime <strong>Cliente</strong> para ver uno solo.</p></div>';
-
   const bloqueDias = diasGraf.length < 2 ? "" : (
     '<section><h2>Cada día <span>' + esc(fmtFechaCorta(grafIni)) + " – " + esc(fmtFechaCorta(grafFin)) + "</span></h2>"
     + '<p class="sub no-print">' + (cliente
@@ -629,8 +592,7 @@ function pintar() {
   );
 
   cuerpo.innerHTML = vacio || (
-    aviso
-    + '<div class="kpis' + (cambio ? " pulso" : "") + '">'
+    '<div class="kpis' + (cambio ? " pulso" : "") + '">'
     + kpi("Piezas producidas", fmt(res.piezas), dPiezas)
     + kpi("Kilos producidos", fmt(res.kilos, res.kilos >= 100 ? 0 : 1), dKilos)
     + (cliente
@@ -693,36 +655,19 @@ function moverDia(dir) {
 }
 
 function llenarClientes() {
-  const lista = document.getElementById("listaClientes");
+  const sel = document.getElementById("cliente");
   const fin = periodo === "dia" ? finActivo() : corte;
   const v = ventana(fin, periodo);
-  const entradas = v
-    ? [...resumir(tomar(v.ini, v.fin, "")).porCliente.entries()].sort((a, b) => valorDe(b[1]) - valorDe(a[1]))
+  const nombres = v
+    ? [...resumir(tomar(v.ini, v.fin, "")).porCliente.entries()].sort((a, b) => valorDe(b[1]) - valorDe(a[1])).map(([n]) => n)
     : [];
-  const nombres = entradas.map(([n]) => n);
-  if (cliente && !nombres.includes(cliente)) cliente = "";
-  const boton = (nombre, titulo, detalle, activo) => '<button type="button" class="cli-btn' + (activo ? " activa" : "") + '" data-elegir="' + esc(nombre) + '"><strong>' + esc(titulo) + "</strong><small>" + esc(detalle) + "</small></button>";
-  lista.innerHTML = boton("", "Todos los clientes", "Ver el total de todos", !cliente)
-    + entradas.map(([n, info]) => boton(n, corto(n), n === corto(n) ? etiquetaMetrica(valorDe(info)) : n + " · " + etiquetaMetrica(valorDe(info)), n === cliente)).join("");
-  const btn = document.getElementById("btnCliente");
-  if (btn) {
-    btn.textContent = cliente ? "Cliente: " + corto(cliente) : "Cliente";
-    btn.classList.toggle("activa", !!cliente);
+  const actual = cliente;
+  sel.innerHTML = '<option value="">Todos los clientes</option>' + nombres.map(n => '<option value="' + esc(n) + '">' + esc(n) + "</option>").join("");
+  if (actual && nombres.includes(actual)) sel.value = actual;
+  else {
+    cliente = "";
+    sel.value = "";
   }
-}
-
-function abrirClientes() {
-  const panel = document.getElementById("panelClientes");
-  panel.hidden = !panel.hidden;
-  if (!panel.hidden) llenarClientes();
-}
-
-function elegirCliente(nombre) {
-  cliente = nombre || "";
-  const panel = document.getElementById("panelClientes");
-  if (panel) panel.hidden = true;
-  llenarClientes();
-  pintar();
 }
 
 function estado(msg, error) {
@@ -868,6 +813,8 @@ function actualizarReporte() {
   diaElegido = null;
   periodo = "dia";
   cliente = "";
+  const sel = document.getElementById("cliente");
+  if (sel) sel.value = "";
   document.querySelectorAll("[data-periodo]").forEach(b => b.classList.toggle("activa", b.dataset.periodo === "dia"));
   marcarBoton("Leyendo…", true);
   cargar(true);
@@ -939,21 +886,18 @@ document.querySelector("nav.bar").addEventListener("click", e => {
   }
 });
 
-document.getElementById("listaClientes").addEventListener("click", e => {
-  const b = e.target.closest("[data-elegir]");
-  if (!b) return;
-  elegirCliente(b.dataset.elegir);
+document.getElementById("cliente").addEventListener("change", e => {
+  cliente = e.target.value;
+  pintar();
 });
 
 document.getElementById("cuerpo").addEventListener("click", e => {
-  if (e.target.closest("[data-ver-todos]")) {
-    elegirCliente("");
-    return;
-  }
   const b = e.target.closest("[data-cliente]");
   if (b) {
     const nombre = b.dataset.cliente;
-    elegirCliente(cliente === nombre ? "" : nombre);
+    cliente = cliente === nombre ? "" : nombre;
+    document.getElementById("cliente").value = cliente;
+    pintar();
     return;
   }
   const marca = e.target.closest("[data-fecha]");
