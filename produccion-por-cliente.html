@@ -219,6 +219,7 @@
 </div>
 <script>
 const SHEET = "https://docs.google.com/spreadsheets/d/1lt9KyIA2dLe1UWGZwvZT-tG4MF9w9iWGn45io8saew4/gviz/tq?gid=2535843";
+const COLUMNAS = "select B, C, G, L, P";
 const PALETA = ["#9f1239", "#0f6e56", "#9a3412", "#1d4e89", "#7c3aed", "#a16207"];
 const OTROS = "#8a8175";
 const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
@@ -236,6 +237,7 @@ let consultado = null;
 let cargando = false;
 let reqId = 0;
 let firmaVista = "";
+let firmaLectura = "";
 let lecturaLocal = false;
 let copiaParcial = false;
 const STORE = "bolseo-reporte-v1";
@@ -790,6 +792,21 @@ function filasDe(resp) {
   return out;
 }
 
+function firmaDatos(lista) {
+  let piezas = 0;
+  let kilos = 0;
+  let max = "";
+  let extra = 0;
+  lista.forEach(r => {
+    piezas += r.piezas;
+    kilos += r.kilos;
+    const k = iso(r.fecha);
+    if (k > max) max = k;
+    extra = (extra + r.piezas * 13 + r.cliente.length * 17 + r.orden.length) % 10000019;
+  });
+  return lista.length + "|" + max + "|" + piezas + "|" + Math.round(kilos * 10) + "|" + extra;
+}
+
 function empaquetar(lista) {
   return lista.map(r => [iso(r.fecha), r.cliente, r.orden, r.piezas, Math.round(r.kilos * 10) / 10]);
 }
@@ -833,6 +850,7 @@ function restaurar() {
     consultado = new Date(data.t || Date.now());
     copiaParcial = !!data.parcial;
     lecturaLocal = true;
+    firmaLectura = firmaDatos(registros);
     llenarClientes();
     pintar();
     return true;
@@ -876,8 +894,16 @@ function aplicar(resp, desde) {
   corte = registros.reduce((max, r) => !max || r.fecha > max ? r.fecha : max, null);
   consultado = new Date();
   lecturaLocal = false;
-  guardar();
+  const firma = firmaDatos(registros);
+  const igual = firma === firmaLectura;
+  firmaLectura = firma;
   marcarBoton("Actualizar", false);
+  const hora = consultado.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+  if (igual) {
+    document.getElementById("corteMeta").textContent = "Actualizado a las " + hora;
+    return;
+  }
+  guardar();
   llenarClientes();
   pintar();
 }
@@ -897,22 +923,30 @@ function marcarBoton(txt, espera) {
 }
 
 function actualizarReporte() {
+  if (cargando) {
+    marcarBoton("Leyendo…", true);
+    return;
+  }
   diaElegido = null;
   periodo = "todo";
   cliente = "";
-  marcarBoton("Leyendo…", true);
+  if (registros.length) {
+    llenarClientes();
+    pintar();
+  }
   cargar(true);
 }
 
 function cargar(forzar) {
-  if (cargando && !forzar) return;
+  if (cargando) return;
   const id = ++reqId;
   cargando = true;
+  const manual = !!forzar;
   const parcial = registros.length > 0 && corte && !copiaParcial;
   const desde = parcial ? addDays(corte, -21) : null;
   if (!registros.length) estado("Leyendo el seguimiento de AppSheet…");
-  else {
-    if (!lecturaLocal) document.getElementById("corteMeta").textContent = "Leyendo capturas nuevas…";
+  else if (manual) {
+    document.getElementById("corteMeta").textContent = "Leyendo capturas nuevas…";
     marcarBoton("Leyendo…", true);
   }
   const nombre = "__bolseo" + id;
@@ -928,7 +962,9 @@ function cargar(forzar) {
   const s = document.createElement("script");
   s.id = "sheet-jsonp";
   let url = SHEET + "&tqx=" + encodeURIComponent("out:json;responseHandler:" + nombre) + "&t=" + Date.now();
-  if (desde) url += "&tq=" + encodeURIComponent("select * where G >= date '" + iso(desde) + "'");
+  let tq = COLUMNAS;
+  if (desde) tq += " where G >= date '" + iso(desde) + "'";
+  url += "&tq=" + encodeURIComponent(tq);
   s.src = url;
   s.onerror = () => {
     try { delete window[nombre]; } catch (e) { window[nombre] = undefined; }
