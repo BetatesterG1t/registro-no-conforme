@@ -258,7 +258,7 @@
 
   <div id="panelClientes" class="panel-clientes no-print">
     <h2>Cliente</h2>
-    <p class="sub">Salen del seguimiento de bolseo. Oprime una tarjeta para ver sus piezas y sus kilos. Otra vez, vuelves a ver a todas.</p>
+    <p class="sub">Las empresas se quedan aunque cambies la fecha. El número es de esas fechas. Oprime una tarjeta para ver sus piezas y sus kilos.</p>
     <div class="lista-clientes" id="listaClientes"></div>
   </div>
 
@@ -697,13 +697,11 @@ function pintar() {
 
   const numeros = document.getElementById("numeros");
   if (numeros) {
-    numeros.innerHTML = vacio ? "" : (
-      '<div class="kpis' + (cambio ? " pulso" : "") + (cliente ? " tres" : "") + '">'
+    numeros.innerHTML = '<div class="kpis' + (cambio ? " pulso" : "") + (cliente ? " tres" : "") + '">'
       + (cliente ? kpi("Cliente", corto(cliente), { cls: "", txt: "Solo esta empresa" }, true) : "")
       + kpi("Piezas producidas", fmt(res.piezas), dPiezas)
       + kpi("Kilos producidos", fmt(res.kilos, res.kilos >= 100 ? 0 : 1), dKilos)
-      + "</div>"
-    );
+      + "</div>";
   }
   cuerpo.innerHTML = vacio || (
     bloqueDias
@@ -886,32 +884,32 @@ function conteoDelPeriodo() {
   return v ? resumir(tomar(v.ini, v.fin, "")).porCliente : new Map();
 }
 
-function llenarClientes() {
-  const lista = document.getElementById("listaClientes");
-  if (!lista) return;
-  const enPeriodo = conteoDelPeriodo();
+function clientesFijos() {
   const totales = new Map();
-  if (periodo === "todo") {
-    registros.forEach(r => {
-      if (!totales.has(r.cliente)) totales.set(r.cliente, { piezas: 0, kilos: 0 });
-    });
-  }
-  enPeriodo.forEach((info, nombre) => {
-    if (!info.piezas && !info.kilos) return;
-    totales.set(nombre, { piezas: info.piezas, kilos: info.kilos });
+  registros.forEach(r => {
+    if (!totales.has(r.cliente)) totales.set(r.cliente, 0);
+    totales.set(r.cliente, totales.get(r.cliente) + r.piezas);
   });
-  const entradas = [...totales.entries()].sort((a, b) => {
-    const d = b[1].piezas - a[1].piezas;
+  return [...totales.entries()].sort((a, b) => {
+    const d = b[1] - a[1];
     if (d) return d;
     if (a[0] === "(sin cliente)") return 1;
     if (b[0] === "(sin cliente)") return -1;
     return a[0].localeCompare(b[0], "es");
-  });
-  const nombres = entradas.map(([n]) => n);
-  if (cliente && !nombres.includes(cliente)) cliente = "";
+  }).map(([nombre]) => nombre);
+}
+
+function llenarClientes() {
+  const lista = document.getElementById("listaClientes");
+  if (!lista) return;
+  const enPeriodo = conteoDelPeriodo();
+  const nombres = clientesFijos();
   const linea = (nombre, piezas) => esc(nombre) + ' · <span class="cli-pzas">' + esc(fmt(piezas) + " pzas") + "</span>";
   const boton = (nombre, titulo, detalle, activo) => '<button type="button" class="cli-btn' + (activo ? " activa" : "") + '" data-elegir="' + esc(nombre) + '" aria-pressed="' + (activo ? "true" : "false") + '"><strong>' + esc(titulo) + "</strong><small>" + detalle + "</small></button>";
-  lista.innerHTML = entradas.map(([n, info]) => boton(n, corto(n, 0), linea(n, info.piezas), n === cliente)).join("");
+  lista.innerHTML = nombres.map(n => {
+    const info = enPeriodo.get(n);
+    return boton(n, corto(n, 0), linea(n, info ? info.piezas : 0), n === cliente);
+  }).join("");
 }
 
 function marcarBotonTodos() {
