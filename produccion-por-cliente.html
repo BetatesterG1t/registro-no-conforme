@@ -115,6 +115,19 @@
   .nota { background: #f7f1e6; border: 1px dashed #d9cdb8; border-radius: 12px; padding: 12px 14px; color: var(--muted); font-size: 14px; margin-top: 22px; }
   .nota strong { color: var(--ink); }
   .kpi .num.texto { font-size: 18px; line-height: 1.25; letter-spacing: 0; }
+  #cuerpo { scroll-margin-top: 12px; }
+  .btn-todo {
+    width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+    margin: 0 0 14px; padding: 16px 18px; border-radius: 16px; border: 1px solid var(--ink);
+    background: var(--ink); color: #fffdf8; font: inherit; text-align: left; cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+  .btn-todo strong { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+  .btn-todo small { color: rgba(255, 253, 248, 0.78); font-size: 14.5px; line-height: 1.35; }
+  .btn-todo.listo { background: var(--card); color: var(--ink); border-color: var(--line); }
+  .btn-todo.listo small { color: var(--muted); }
+  .btn-todo:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-todo:hover { filter: brightness(1.06); }
   .panel-clientes {
     background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-top: 10px;
   }
@@ -141,6 +154,8 @@
   @media (max-width: 640px) {
     .kpis { grid-template-columns: 1fr; }
     .lista-clientes { grid-template-columns: 1fr; }
+    .btn-todo { padding: 14px 14px; }
+    .btn-todo strong { font-size: 20px; }
   }
   @media print {
     @page { size: letter landscape; margin: 12mm; }
@@ -177,6 +192,11 @@
   </header>
   <p id="pieImpreso" class="solo-impresion"></p>
 
+  <button type="button" class="btn-todo no-print" id="btnTodosDatos">
+    <strong>Todos los datos</strong>
+    <small id="btnTodosMeta">Todas las empresas, todas las piezas</small>
+  </button>
+
   <nav class="bar">
     <button type="button" class="jump activa" data-periodo="dia">Día</button>
     <span class="dia-nav visible" id="diaNav">
@@ -195,13 +215,13 @@
     <button type="button" class="jump no-print" id="btnActualizar" onclick="actualizarReporte()">Actualizar</button>
   </nav>
 
+  <div id="cuerpo"></div>
+
   <div id="panelClientes" class="panel-clientes no-print">
-    <h2>Elige el cliente</h2>
-    <p class="sub">Oprime una tarjeta para ver solo a esa empresa. Otra vez, o Todos, regresa al total.</p>
+    <h2>Una empresa</h2>
+    <p class="sub">Oprime una tarjeta si quieres ver solo a esa. Otra vez, vuelves a ver a todas en este periodo.</p>
     <div class="lista-clientes" id="listaClientes"></div>
   </div>
-
-  <div id="cuerpo"></div>
   <p class="nota"><strong>Queda guardada en este navegador.</strong> Al volver a abrirla se ve la última lectura aunque el seguimiento tarde. En cuanto BOLSEO responde, esa lectura se reemplaza con lo nuevo.</p>
 </div>
 <script>
@@ -634,6 +654,7 @@ function pintar() {
     + bloqueDetalle
   );
   sincronizarDia();
+  marcarBotonTodos();
 
   function kpi(lbl, num, d, texto) {
     return '<article class="kpi"><div class="lbl">' + esc(lbl) + '</div><div class="num' + (texto ? " texto" : "") + '">' + esc(num) + '</div><div class="hint ' + d.cls + '">' + esc(d.txt) + "</div></article>";
@@ -702,11 +723,36 @@ function llenarClientes() {
   });
   const nombres = entradas.map(([n]) => n);
   if (cliente && !nombres.includes(cliente)) cliente = "";
-  const totalPzas = entradas.reduce((s, [, info]) => s + info.piezas, 0);
   const linea = (nombre, piezas) => esc(nombre) + ' · <span class="cli-pzas">' + esc(fmt(piezas) + " pzas") + "</span>";
   const boton = (nombre, titulo, detalle, activo) => '<button type="button" class="cli-btn' + (activo ? " activa" : "") + '" data-elegir="' + esc(nombre) + '" aria-pressed="' + (activo ? "true" : "false") + '"><strong>' + esc(titulo) + "</strong><small>" + detalle + "</small></button>";
-  lista.innerHTML = boton("", "Todos los clientes", "Ver a todas las empresas · <span class=\"cli-pzas\">" + esc(fmt(totalPzas) + " pzas") + "</span>", !cliente)
-    + entradas.map(([n, info]) => boton(n, corto(n, 0), linea(n, info.piezas), n === cliente)).join("");
+  lista.innerHTML = entradas.map(([n, info]) => boton(n, corto(n, 0), linea(n, info.piezas), n === cliente)).join("");
+}
+
+function marcarBotonTodos() {
+  const b = document.getElementById("btnTodosDatos");
+  const meta = document.getElementById("btnTodosMeta");
+  if (!b || !meta) return;
+  const viendoTodo = periodo === "todo" && !cliente && registros.length > 0;
+  b.classList.toggle("listo", viendoTodo);
+  b.setAttribute("aria-pressed", viendoTodo ? "true" : "false");
+  if (!registros.length) {
+    meta.textContent = "Todas las empresas, todas las piezas";
+    return;
+  }
+  const todo = resumir(registros);
+  const cifras = fmt(todo.piezas) + " piezas · " + fmt(todo.kilos, todo.kilos >= 100 ? 0 : 1) + " kg · " + fmt(todo.clientes) + " empresas";
+  meta.textContent = viendoTodo ? "Ya estás viendo todo · " + cifras : "Un toque y ves todo · " + cifras;
+}
+
+function verTodosLosDatos() {
+  cliente = "";
+  periodo = "todo";
+  diaElegido = null;
+  document.querySelectorAll("[data-periodo]").forEach(b => b.classList.toggle("activa", b.dataset.periodo === "todo"));
+  llenarClientes();
+  pintar();
+  const cuerpo = document.getElementById("cuerpo");
+  if (cuerpo) cuerpo.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function elegirCliente(nombre) {
@@ -929,11 +975,15 @@ document.querySelector("nav.bar").addEventListener("click", e => {
   }
 });
 
+document.getElementById("btnTodosDatos").addEventListener("click", verTodosLosDatos);
+
 document.getElementById("listaClientes").addEventListener("click", e => {
   const b = e.target.closest("[data-elegir]");
   if (!b) return;
   const nombre = b.dataset.elegir || "";
   elegirCliente(cliente === nombre ? "" : nombre);
+  const cuerpo = document.getElementById("cuerpo");
+  if (cuerpo) cuerpo.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 document.getElementById("cuerpo").addEventListener("click", e => {
