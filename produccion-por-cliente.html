@@ -142,34 +142,33 @@
   .btn-todo:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .btn-todo:hover { filter: brightness(1.06); }
   .cal {
-    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
-    padding: 8px 8px 9px; margin: 0 0 14px; box-shadow: var(--shadow);
-    max-width: 280px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 5px 5px 6px; margin: 0 0 12px; box-shadow: var(--shadow);
+    max-width: 196px;
   }
-  .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
   .cal-nav, .cal-titulo {
     border: 1px solid var(--line); background: #fffdf8; color: var(--ink);
     font: inherit; cursor: pointer;
   }
   .cal-nav {
-    width: 28px; height: 28px; border-radius: 999px; font-size: 16px; line-height: 1; flex: none;
+    width: 22px; height: 22px; border-radius: 999px; font-size: 14px; line-height: 1; flex: none;
   }
   .cal-nav:disabled { opacity: 0.35; cursor: default; }
   .cal-titulo {
-    flex: 1; border-radius: 999px; padding: 4px 8px; font-size: 13px; font-weight: 700;
+    flex: 1; border-radius: 999px; padding: 2px 6px; font-size: 12px; font-weight: 700;
     text-transform: capitalize; letter-spacing: -0.01em;
   }
   .cal-titulo.activo { background: var(--ink); color: #fffdf8; border-color: var(--ink); }
   .cal-nav:focus-visible, .cal-titulo:focus-visible, .cal-dia:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-top: 6px; }
-  .cal-dow { text-align: center; font-size: 10px; font-weight: 650; color: var(--muted); padding: 0 0 2px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-top: 4px; }
+  .cal-dow { text-align: center; font-size: 9px; font-weight: 650; color: var(--muted); padding: 0; }
   .cal-dia {
-    height: 26px; display: flex; align-items: center; justify-content: center;
-    border-radius: 6px; font-weight: 650; font-size: 12px; color: #c4baae;
+    height: 18px; display: flex; align-items: center; justify-content: center;
+    border-radius: 4px; font-weight: 650; font-size: 10px; color: #c4baae;
   }
-  button.cal-dia { border: 0; background: #f7f1e6; color: var(--ink); font: inherit; font-weight: 700; font-size: 12px; cursor: pointer; }
+  button.cal-dia { border: 0; background: #f7f1e6; color: var(--ink); font: inherit; font-weight: 700; font-size: 10px; cursor: pointer; }
   button.cal-dia.sel { background: var(--accent); color: #fffdf8; }
-  .cal-ayuda { margin: 6px 2px 0; color: var(--muted); font-size: 11px; line-height: 1.3; }
   .panel-clientes {
     background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-top: 10px;
   }
@@ -775,8 +774,7 @@ function sincronizarDia() {
     + '<button type="button" class="cal-nav" data-cal="ant"' + (ant ? "" : " disabled") + ' aria-label="Mes anterior">‹</button>'
     + '<button type="button" class="cal-titulo' + (mesActivo ? " activo" : "") + '" data-cal="mes">' + esc(MESES[m]) + " " + y + "</button>"
     + '<button type="button" class="cal-nav" data-cal="sig"' + (sig ? "" : " disabled") + ' aria-label="Mes siguiente">›</button>'
-    + '</div><div class="cal-grid">' + dows.map(d => '<span class="cal-dow">' + d + "</span>").join("") + celdas + "</div>"
-    + '<p class="cal-ayuda">Oprime un día con producción. Oprime el nombre del mes para verlo completo.</p>';
+    + '</div><div class="cal-grid">' + dows.map(d => '<span class="cal-dow">' + d + "</span>").join("") + celdas + "</div>";
 }
 
 function aplicarCalendario(accion, fecha) {
