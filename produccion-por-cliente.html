@@ -59,6 +59,7 @@
     background: var(--ink); color: #fffdf8; font: inherit; font-weight: 700; cursor: pointer;
   }
   .candado .error { color: var(--accent); font-weight: 650; }
+  .candado a { color: var(--accent); font-weight: 650; overflow-wrap: anywhere; }
   nav.bar {
     position: sticky; top: 0; z-index: 30;
     display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
@@ -245,14 +246,18 @@
 </style>
 </head>
 <body class="cerrado">
+<script>
+if (location.protocol === "file:") location.replace("https://betatesterg1t.github.io/registro-no-conforme/hoy.html");
+</script>
 <div class="candado">
   <form id="formaClave">
     <p class="eyebrow">Bolseo · gerencia</p>
     <h1>Producción por cliente</h1>
-    <p>Escribe la contraseña para ver las piezas y los kilos.</p>
+    <p>Escribe la contraseña. En esta computadora se queda guardada.</p>
     <input id="clave" type="password" autocomplete="current-password" placeholder="Contraseña" required>
     <button type="submit">Entrar</button>
     <p class="error" id="claveError" hidden>Esa contraseña no es.</p>
+    <p>Si descargaste el archivo, ábrelo con este enlace: <a href="https://betatesterg1t.github.io/registro-no-conforme/hoy.html">betatesterg1t.github.io/registro-no-conforme/hoy.html</a></p>
   </form>
 </div>
 <div class="wrap">
@@ -1356,8 +1361,15 @@ async function resumenClave(texto) {
   document.getElementById("formaClave").addEventListener("submit", async e => {
     e.preventDefault();
     const campo = document.getElementById("clave");
-    const h = await resumenClave(campo.value.trim());
+    let h = "";
+    try { h = await resumenClave(campo.value.trim()); }
+    catch (err) {
+      document.getElementById("claveError").textContent = "Ábrelo con el enlace, no con el archivo.";
+      document.getElementById("claveError").hidden = false;
+      return;
+    }
     if (h !== CLAVE) {
+      document.getElementById("claveError").textContent = "Esa contraseña no es.";
       document.getElementById("claveError").hidden = false;
       campo.value = "";
       campo.focus();
