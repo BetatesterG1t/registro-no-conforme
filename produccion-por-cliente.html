@@ -90,7 +90,8 @@
     color: var(--ink); border-radius: 14px; padding: 14px 16px; font: inherit; font-weight: 700;
     font-size: 16px; cursor: pointer; text-align: left; box-shadow: var(--shadow);
   }
-  .btn-desplegar small { color: var(--muted); font-weight: 500; font-size: 13px; }
+  .btn-desplegar span { line-height: 1.3; }
+  .btn-desplegar small { color: var(--muted); font-weight: 500; font-size: 13px; white-space: nowrap; }
   .btn-desplegar:hover { border-color: #cfc3b0; }
   .btn-desplegar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .desplegable { display: none; margin-top: 12px; }
@@ -645,7 +646,7 @@ function pintar() {
     bloqueDias
     + '<section><h2>' + (cliente ? "Producción de " + esc(corto(cliente)) : "Quién produjo más") + " <span>" + (metrica === "kilos" ? "kilos" : "piezas") + "</span></h2>"
     + '<p class="sub no-print">Oprime un nombre para ver solo a ese cliente. Oprime otra vez para volver a todos.</p>'
-    + '<button type="button" class="btn-desplegar" data-desplegar="participacion" aria-expanded="' + (verParticipacion ? "true" : "false") + '">Participación<small>' + (verParticipacion ? "Ocultar" : "Ver el detalle") + "</small></button>"
+    + '<button type="button" class="btn-desplegar" data-desplegar="participacion" aria-expanded="' + (verParticipacion ? "true" : "false") + '"><span>Ver detalle de todos los clientes</span>' + (verParticipacion ? "<small>Ocultar</small>" : "") + "</button>"
     + '<div class="desplegable' + (verParticipacion ? " abierto" : "") + '">'
     + '<article class="card"><div class="bars">' + barrasCli + "</div></article>"
     + '<div class="tabla-wrap" style="margin-top:12px"><table><thead><tr><th class="l">Cliente</th><th>Días</th><th>Órdenes</th><th>Piezas</th><th>Kilos</th><th>%</th></tr></thead><tbody>'
