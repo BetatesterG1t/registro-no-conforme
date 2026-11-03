@@ -167,8 +167,12 @@
     height: 18px; display: flex; align-items: center; justify-content: center;
     border-radius: 4px; font-weight: 650; font-size: 10px; color: #c4baae;
   }
-  button.cal-dia { border: 0; background: #f7f1e6; color: var(--ink); font: inherit; font-weight: 700; font-size: 10px; cursor: pointer; }
+  button.cal-dia { border: 0; background: transparent; color: #c4baae; font: inherit; font-weight: 700; font-size: 10px; cursor: pointer; }
+  button.cal-dia.hay { background: #f7f1e6; color: var(--ink); }
+  button.cal-dia.en { background: #f3d5dc; color: var(--ink); }
   button.cal-dia.sel { background: var(--accent); color: #fffdf8; }
+  .cal-rango { display: flex; justify-content: space-between; gap: 6px; margin: 4px 1px 0; font-size: 10px; color: var(--muted); }
+  .cal-rango strong { color: var(--ink); font-weight: 700; }
   .panel-clientes {
     background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-top: 10px;
   }
@@ -432,6 +436,11 @@ function esc(s) {
 }
 
 function ventana(fin, modo) {
+  if (modo === "rango" && rangoIni && rangoFin) {
+    const a = rangoIni <= rangoFin ? rangoIni : rangoFin;
+    const b = rangoIni <= rangoFin ? rangoFin : rangoIni;
+    return { ini: a, fin: b };
+  }
   if (!fin) return null;
   if (modo === "todo") {
     const ini = registros.reduce((min, r) => r.fecha < min ? r.fecha : min, fin);
@@ -536,8 +545,14 @@ function pintar() {
   const spanTodo = { cls: "", txt: rangoTxt };
   const dPiezas = periodo === "dia" ? (enCurso ? enCursoTxt : deltaTxt(res.piezas, prev.piezas, contra)) : spanTodo;
   const dKilos = periodo === "dia" ? (enCurso ? enCursoTxt : deltaTxt(res.kilos, prev.kilos, contra)) : spanTodo;
-  const etiqDia = periodo === "anio" ? "Año" : periodo === "mes" ? "Mes" : periodo === "dia" ? (hoy ? "Hoy" : "Día") : "Todo el seguimiento";
-  const tituloCorte = periodo === "anio" ? String(v.ini.getFullYear()) : periodo === "mes" ? MESES[v.ini.getMonth()] + " " + v.ini.getFullYear() : periodo === "dia" ? fmtFechaLarga(fin) : rangoTxt;
+  let etiqDia = periodo === "anio" ? "Año" : periodo === "mes" ? "Mes" : periodo === "dia" ? (hoy ? "Hoy" : "Día") : periodo === "rango" ? "Del" : "Todo el seguimiento";
+  let tituloCorte = periodo === "anio" ? String(v.ini.getFullYear()) : periodo === "mes" ? MESES[v.ini.getMonth()] + " " + v.ini.getFullYear() : periodo === "dia" ? fmtFechaLarga(fin) : rangoTxt;
+  if (periodo === "rango") {
+    const mismoMes = v.ini.getMonth() === v.fin.getMonth() && v.ini.getFullYear() === v.fin.getFullYear();
+    tituloCorte = mismoMes
+      ? v.ini.getDate() + " al " + v.fin.getDate() + " de " + MESES[v.ini.getMonth()] + " de " + v.ini.getFullYear()
+      : v.ini.getDate() + " de " + MESES[v.ini.getMonth()] + " de " + v.ini.getFullYear() + " al " + v.fin.getDate() + " de " + MESES[v.fin.getMonth()] + " de " + v.fin.getFullYear();
+  }
   document.getElementById("corteFecha").innerHTML = '<span class="corte-etiq">' + esc(etiqDia) + "</span>" + esc(tituloCorte);
   const hora = consultado
     ? horaCorta(consultado)
@@ -572,7 +587,7 @@ function pintar() {
     grafRes = resumir(tomar(grafIni, grafFin, cliente));
   }
   const diasTodos = [...grafRes.porDia.values()].sort((a, b) => a.fecha - b.fecha);
-  const diasGraf = diasTodos.slice(-14);
+  const diasGraf = diasTodos.slice(periodo === "rango" ? -31 : -14);
   if (diasGraf.length) {
     grafIni = diasGraf[0].fecha;
     grafFin = diasGraf[diasGraf.length - 1].fecha;
@@ -713,6 +728,47 @@ function pintar() {
 }
 
 let calCursor = null;
+let rangoIni = null;
+let rangoFin = null;
+let esperandoFinal = false;
+
+function limpiarRango() {
+  rangoIni = null;
+  rangoFin = null;
+  esperandoFinal = false;
+}
+
+function ordenRango() {
+  if (!rangoIni) return null;
+  const fin = rangoFin || rangoIni;
+  if (rangoIni <= fin) return { ini: rangoIni, fin };
+  return { ini: fin, fin: rangoIni };
+}
+
+function elegirExtremo(fecha) {
+  const d = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+  calCursor = new Date(d.getFullYear(), d.getMonth(), 1);
+  if (!esperandoFinal || !rangoIni) {
+    rangoIni = d;
+    rangoFin = d;
+    esperandoFinal = true;
+    periodo = "dia";
+    fijarDia(d);
+    return;
+  }
+  if (iso(d) < iso(rangoIni)) {
+    rangoFin = rangoIni;
+    rangoIni = d;
+  } else rangoFin = d;
+  esperandoFinal = false;
+  if (iso(rangoIni) === iso(rangoFin)) {
+    periodo = "dia";
+    fijarDia(d);
+  } else {
+    periodo = "rango";
+    fijarDia(rangoFin);
+  }
+}
 
 function diasDelMes(anio, mes) {
   const set = new Set();
@@ -723,11 +779,11 @@ function diasDelMes(anio, mes) {
 }
 
 function mesCalendario() {
+  if (calCursor) return new Date(calCursor.getFullYear(), calCursor.getMonth(), 1);
   if (periodo !== "todo") {
     const fin = finActivo() || corte;
     if (fin) return new Date(fin.getFullYear(), fin.getMonth(), 1);
   }
-  if (calCursor) return new Date(calCursor.getFullYear(), calCursor.getMonth(), 1);
   if (corte) return new Date(corte.getFullYear(), corte.getMonth(), 1);
   return new Date();
 }
@@ -752,29 +808,35 @@ function sincronizarDia() {
   const conDatos = new Set(diasDelMes(y, m));
   const offset = (new Date(y, m, 1).getDay() + 6) % 7;
   const ultimo = new Date(y, m + 1, 0).getDate();
-  const finDia = periodo === "dia" ? (finActivo() || corte) : null;
-  const selIso = finDia ? iso(finDia) : "";
   const finMes = finActivo() || corte;
   const mesActivo = periodo === "mes" && finMes.getFullYear() === y && finMes.getMonth() === m;
+  const marcas = (periodo === "dia" || periodo === "rango") ? ordenRango() : null;
   const ant = mesConDatos(base, -1);
   const sig = mesConDatos(base, 1);
   let celdas = "";
   for (let i = 0; i < offset; i++) celdas += "<span></span>";
   for (let dia = 1; dia <= ultimo; dia++) {
-    const clave = iso(new Date(y, m, dia));
-    if (!conDatos.has(dia)) {
-      celdas += '<span class="cal-dia">' + dia + "</span>";
-      continue;
-    }
-    const sel = periodo === "dia" && clave === selIso;
-    celdas += '<button type="button" class="cal-dia' + (sel ? " sel" : "") + '" data-cal="dia" data-fecha="' + clave + '" aria-pressed="' + (sel ? "true" : "false") + '">' + dia + "</button>";
+    const fecha = new Date(y, m, dia);
+    const clave = iso(fecha);
+    const extremo = marcas && (clave === iso(marcas.ini) || clave === iso(marcas.fin));
+    const medio = marcas && clave > iso(marcas.ini) && clave < iso(marcas.fin);
+    let cls = "cal-dia";
+    if (conDatos.has(dia)) cls += " hay";
+    if (medio) cls += " en";
+    if (extremo && !esperandoFinal || (extremo && clave === iso(marcas.ini))) cls += " sel";
+    celdas += '<button type="button" class="' + cls + '" data-cal="dia" data-fecha="' + clave + '" aria-pressed="' + (cls.includes(" sel") ? "true" : "false") + '">' + dia + "</button>";
   }
+  const cortoR = d => d.getDate() + " " + MESES_C[d.getMonth()];
+  const pie = marcas && (esperandoFinal || periodo === "rango")
+    ? '<p class="cal-rango"><span>Inicio <strong>' + esc(cortoR(marcas.ini)) + "</strong></span><span>Final <strong>" + (esperandoFinal ? "…" : esc(cortoR(marcas.fin))) + "</strong></span></p>"
+    : "";
   const dows = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"];
   caja.innerHTML = '<div class="cal-head">'
     + '<button type="button" class="cal-nav" data-cal="ant"' + (ant ? "" : " disabled") + ' aria-label="Mes anterior">‹</button>'
     + '<button type="button" class="cal-titulo' + (mesActivo ? " activo" : "") + '" data-cal="mes">' + esc(MESES[m]) + " " + y + "</button>"
     + '<button type="button" class="cal-nav" data-cal="sig"' + (sig ? "" : " disabled") + ' aria-label="Mes siguiente">›</button>'
-    + '</div><div class="cal-grid">' + dows.map(d => '<span class="cal-dow">' + d + "</span>").join("") + celdas + "</div>";
+    + '</div><div class="cal-grid">' + dows.map(d => '<span class="cal-dow">' + d + "</span>").join("") + celdas + "</div>"
+    + pie;
 }
 
 function aplicarCalendario(accion, fecha) {
@@ -782,27 +844,27 @@ function aplicarCalendario(accion, fecha) {
     const siguiente = mesConDatos(mesCalendario(), accion === "ant" ? -1 : 1);
     if (!siguiente) return;
     calCursor = siguiente;
-    periodo = "mes";
-    fijarDia(siguiente);
+    if (!esperandoFinal) {
+      limpiarRango();
+      periodo = "mes";
+      fijarDia(siguiente);
+    }
   } else if (accion === "mes") {
     const base = mesCalendario();
     calCursor = base;
+    limpiarRango();
     periodo = "mes";
     fijarDia(base);
   } else if (accion === "dia" && fecha) {
-    calCursor = new Date(fecha.getFullYear(), fecha.getMonth(), 1);
-    periodo = "dia";
-    fijarDia(fecha);
-  }
+    elegirExtremo(fecha);
+  } else return;
   llenarClientes();
   pintar();
 }
 
 function irAlDia(destino) {
   if (!destino) return;
-  fijarDia(destino);
-  periodo = "dia";
-  document.querySelectorAll("[data-periodo]").forEach(b => b.classList.toggle("activa", b.dataset.periodo === "dia"));
+  elegirExtremo(destino);
   llenarClientes();
   pintar();
 }
@@ -873,6 +935,7 @@ function verTodosLosDatos() {
   periodo = "todo";
   diaElegido = null;
   calCursor = null;
+  limpiarRango();
   document.querySelectorAll("[data-periodo]").forEach(b => b.classList.toggle("activa", b.dataset.periodo === "todo"));
   llenarClientes();
   pintar();
@@ -1219,8 +1282,7 @@ document.getElementById("cuerpo").addEventListener("click", e => {
   if (marcaFecha && marcaFecha.dataset.fecha) {
     const destino = parseIso(marcaFecha.dataset.fecha);
     if (destino) {
-      periodo = "dia";
-      fijarDia(destino);
+      elegirExtremo(destino);
       llenarClientes();
       pintar();
     }
