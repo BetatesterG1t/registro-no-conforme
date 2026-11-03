@@ -67,7 +67,7 @@
   h2 { font-family: Palatino, Georgia, serif; font-size: 28px; margin: 0 0 4px; font-weight: 600; }
   h2 span { color: var(--muted); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 15px; font-weight: 500; margin-left: 8px; }
   .sub { color: var(--muted); margin: 0 0 14px; }
-  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .kpi, .card {
     background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow);
   }
@@ -115,7 +115,8 @@
   .nota { background: #f7f1e6; border: 1px dashed #d9cdb8; border-radius: 12px; padding: 12px 14px; color: var(--muted); font-size: 14px; margin-top: 22px; }
   .nota strong { color: var(--ink); }
   .kpi .num.texto { font-size: 18px; line-height: 1.25; letter-spacing: 0; }
-  #cuerpo { scroll-margin-top: 12px; }
+  #cuerpo, #numeros { scroll-margin-top: 12px; }
+  .kpis.tres { grid-template-columns: 1.1fr 1fr 1fr; }
   .btn-todo {
     width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
     margin: 0 0 14px; padding: 16px 18px; border-radius: 16px; border: 1px solid var(--ink);
@@ -152,7 +153,7 @@
     .bar-row { grid-template-columns: 96px 1fr 92px; }
   }
   @media (max-width: 640px) {
-    .kpis { grid-template-columns: 1fr; }
+    .kpis, .kpis.tres { grid-template-columns: 1fr; }
     .lista-clientes { grid-template-columns: 1fr; }
     .btn-todo { padding: 14px 14px; }
     .btn-todo strong { font-size: 20px; }
@@ -167,7 +168,7 @@
     header.top { margin-bottom: 8px; }
     h1 { font-size: 26px; }
     .kpi, .card, .tabla-wrap { box-shadow: none; break-inside: avoid; }
-    .kpis { grid-template-columns: repeat(4, 1fr); }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
     .chart-scroll { overflow: visible; }
     svg.dias { width: 100% !important; min-width: 0 !important; height: auto !important; }
     th { position: static; background: #f4f0e8; }
@@ -198,30 +199,22 @@
   </button>
 
   <nav class="bar">
-    <button type="button" class="jump activa" data-periodo="dia">Día</button>
-    <span class="dia-nav visible" id="diaNav">
-      <button type="button" class="jump" id="btnDiaAnt">Anterior</button>
-      <input class="fecha" type="date" id="fechaDia" aria-label="Día a consultar">
-      <button type="button" class="jump" id="btnDiaSig">Siguiente</button>
-    </span>
-    <button type="button" class="jump" data-periodo="7">7 días</button>
-    <button type="button" class="jump" data-periodo="14">14 días</button>
-    <button type="button" class="jump" data-periodo="mes">Mes</button>
-    <button type="button" class="jump" data-periodo="todo">Todo</button>
-    <span class="spacer"></span>
     <button type="button" class="jump" data-metrica="piezas" id="btnPiezas">Piezas</button>
     <button type="button" class="jump" data-metrica="kilos" id="btnKilos">Kilos</button>
+    <span class="spacer"></span>
     <button type="button" class="jump no-print" id="btnImprimir" onclick="imprimirReporte()">Imprimir</button>
     <button type="button" class="jump no-print" id="btnActualizar" onclick="actualizarReporte()">Actualizar</button>
   </nav>
 
-  <div id="cuerpo"></div>
+  <div id="numeros"></div>
 
   <div id="panelClientes" class="panel-clientes no-print">
-    <h2>Una empresa</h2>
-    <p class="sub">Oprime una tarjeta si quieres ver solo a esa. Otra vez, vuelves a ver a todas en este periodo.</p>
+    <h2>Cliente</h2>
+    <p class="sub">Oprime una tarjeta para ver sus piezas y sus kilos. Otra vez, vuelves a ver a todas.</p>
     <div class="lista-clientes" id="listaClientes"></div>
   </div>
+
+  <div id="cuerpo"></div>
   <p class="nota"><strong>Queda guardada en este navegador.</strong> Al volver a abrirla se ve la última lectura aunque el seguimiento tarde. En cuanto BOLSEO responde, esa lectura se reemplaza con lo nuevo.</p>
 </div>
 <script>
@@ -236,7 +229,7 @@ const MESES_C = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", 
 let registros = [];
 let corte = null;
 let diaElegido = null;
-let periodo = "dia";
+let periodo = "todo";
 let cliente = "";
 let metrica = "piezas";
 let consultado = null;
@@ -476,12 +469,13 @@ function pintar() {
   const hoy = iso(fin) === iso(new Date());
   const enCurso = periodo === "dia" && viendoCorte && hoy;
   const enCursoTxt = { cls: "", txt: "El día todavía se está capturando" };
-  const dPiezas = enCurso ? enCursoTxt : deltaTxt(res.piezas, prev.piezas, contra);
-  const dKilos = enCurso ? enCursoTxt : deltaTxt(res.kilos, prev.kilos, contra);
-  const dCli = enCurso ? enCursoTxt : deltaTxt(res.clientes, prev.clientes, contra);
-  const dOrd = enCurso ? enCursoTxt : deltaTxt(res.ordenes, prev.ordenes, contra);
-  const etiqDia = hoy ? "Hoy" : viendoCorte ? "Último día con producción" : "Día consultado";
-  document.getElementById("corteFecha").innerHTML = '<span class="corte-etiq">' + esc(etiqDia) + "</span>" + esc(fmtFechaLarga(fin));
+  const rangoTxt = fmtFechaCorta(v.ini) + " – " + fmtFechaCorta(v.fin);
+  const spanTodo = { cls: "", txt: rangoTxt };
+  const dPiezas = periodo === "todo" ? spanTodo : (enCurso ? enCursoTxt : deltaTxt(res.piezas, prev.piezas, contra));
+  const dKilos = periodo === "todo" ? spanTodo : (enCurso ? enCursoTxt : deltaTxt(res.kilos, prev.kilos, contra));
+  const etiqDia = periodo === "todo" ? "Todo el seguimiento" : (hoy ? "Hoy" : viendoCorte ? "Último día con producción" : "Día consultado");
+  const tituloCorte = periodo === "todo" ? rangoTxt : fmtFechaLarga(fin);
+  document.getElementById("corteFecha").innerHTML = '<span class="corte-etiq">' + esc(etiqDia) + "</span>" + esc(tituloCorte);
   const hora = consultado
     ? consultado.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })
     : "";
@@ -616,7 +610,7 @@ function pintar() {
 
   const vacio = rows.length
     ? ""
-    : '<div class="estado">' + (cliente ? "Ese día no hay producción de " + esc(corto(cliente)) + "." : "Ese día no hay producción.") + "</div>";
+    : '<div class="estado">' + (cliente ? "No hay producción de " + esc(corto(cliente)) + "." : "No hay producción.") + "</div>";
 
   const bloqueDias = diasGraf.length < 2 ? "" : (
     '<section><h2>Cada día <span>' + esc(fmtFechaCorta(grafIni)) + " – " + esc(fmtFechaCorta(grafFin)) + "</span></h2>"
@@ -628,21 +622,22 @@ function pintar() {
   );
   const bloqueDetalle = dias.length < 2 ? "" : (
     '<section><h2>Día por día <span>del más reciente al más antiguo</span></h2>'
-    + '<p class="sub no-print">Oprime un día para verlo solo.</p>'
     + '<div class="tabla-wrap"><table><thead><tr><th class="l">Cliente</th><th>Órdenes</th><th>Piezas</th><th>Kilos</th><th>% del día</th></tr></thead><tbody>'
     + filasDia + "</tbody></table></div></section>"
   );
 
+  const numeros = document.getElementById("numeros");
+  if (numeros) {
+    numeros.innerHTML = vacio ? "" : (
+      '<div class="kpis' + (cambio ? " pulso" : "") + (cliente ? " tres" : "") + '">'
+      + (cliente ? kpi("Cliente", corto(cliente), { cls: "", txt: "Solo esta empresa" }, true) : "")
+      + kpi("Piezas producidas", fmt(res.piezas), dPiezas)
+      + kpi("Kilos producidos", fmt(res.kilos, res.kilos >= 100 ? 0 : 1), dKilos)
+      + "</div>"
+    );
+  }
   cuerpo.innerHTML = vacio || (
-    '<div class="kpis' + (cambio ? " pulso" : "") + '">'
-    + kpi("Piezas producidas", fmt(res.piezas), dPiezas)
-    + kpi("Kilos producidos", fmt(res.kilos, res.kilos >= 100 ? 0 : 1), dKilos)
-    + (cliente
-      ? kpi("Cliente", corto(cliente), { cls: "", txt: "Solo esta empresa" }, true)
-      : kpi("Clientes", fmt(res.clientes), dCli))
-    + kpi("Órdenes", fmt(res.ordenes), dOrd)
-    + "</div>"
-    + bloqueDias
+    bloqueDias
     + '<section><h2>' + (cliente ? "Producción de " + esc(corto(cliente)) : "Quién produjo más") + " <span>" + (metrica === "kilos" ? "kilos" : "piezas") + "</span></h2>"
     + '<p class="sub no-print">Oprime un nombre para ver solo a ese cliente. Oprime otra vez para volver a todos.</p>'
     + '<article class="card"><h3>Participación</h3>' + participacion
@@ -664,6 +659,7 @@ function pintar() {
 function sincronizarDia() {
   const nav = document.getElementById("diaNav");
   const input = document.getElementById("fechaDia");
+  if (!nav || !input) return;
   const fin = periodo === "dia" ? finActivo() : corte;
   nav.classList.toggle("visible", periodo === "dia");
   if (fin) input.value = iso(fin);
@@ -751,8 +747,8 @@ function verTodosLosDatos() {
   document.querySelectorAll("[data-periodo]").forEach(b => b.classList.toggle("activa", b.dataset.periodo === "todo"));
   llenarClientes();
   pintar();
-  const cuerpo = document.getElementById("cuerpo");
-  if (cuerpo) cuerpo.scrollIntoView({ behavior: "smooth", block: "start" });
+  const numeros = document.getElementById("numeros");
+  if (numeros) numeros.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function elegirCliente(nombre) {
@@ -902,9 +898,8 @@ function marcarBoton(txt, espera) {
 
 function actualizarReporte() {
   diaElegido = null;
-  periodo = "dia";
+  periodo = "todo";
   cliente = "";
-  document.querySelectorAll("[data-periodo]").forEach(b => b.classList.toggle("activa", b.dataset.periodo === "dia"));
   marcarBoton("Leyendo…", true);
   cargar(true);
 }
@@ -957,15 +952,7 @@ function cargar(forzar) {
 }
 
 document.querySelector("nav.bar").addEventListener("click", e => {
-  const p = e.target.closest("[data-periodo]");
   const m = e.target.closest("[data-metrica]");
-  if (p) {
-    periodo = p.dataset.periodo;
-    if (periodo === "dia") diaElegido = null;
-    document.querySelectorAll("[data-periodo]").forEach(b => b.classList.toggle("activa", b === p));
-    llenarClientes();
-    pintar();
-  }
   if (m) {
     metrica = m.dataset.metrica;
     document.getElementById("btnPiezas").classList.toggle("activa", metrica === "piezas");
@@ -982,25 +969,15 @@ document.getElementById("listaClientes").addEventListener("click", e => {
   if (!b) return;
   const nombre = b.dataset.elegir || "";
   elegirCliente(cliente === nombre ? "" : nombre);
-  const cuerpo = document.getElementById("cuerpo");
-  if (cuerpo) cuerpo.scrollIntoView({ behavior: "smooth", block: "start" });
+  const numeros = document.getElementById("numeros");
+  if (numeros) numeros.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 document.getElementById("cuerpo").addEventListener("click", e => {
   const b = e.target.closest("[data-cliente]");
-  if (b) {
-    const nombre = b.dataset.cliente;
-    elegirCliente(cliente === nombre ? "" : nombre);
-    return;
-  }
-  const marca = e.target.closest("[data-fecha]");
-  if (marca) irAlDia(parseIso(marca.dataset.fecha));
-});
-document.getElementById("btnDiaAnt").addEventListener("click", () => moverDia(-1));
-document.getElementById("btnDiaSig").addEventListener("click", () => moverDia(1));
-document.getElementById("fechaDia").addEventListener("change", e => {
-  const d = parseIso(e.target.value);
-  if (d) irAlDia(d);
+  if (!b) return;
+  const nombre = b.dataset.cliente;
+  elegirCliente(cliente === nombre ? "" : nombre);
 });
 
 document.getElementById("btnPiezas").classList.add("activa");
