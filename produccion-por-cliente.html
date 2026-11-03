@@ -39,6 +39,26 @@
   .corte strong { display: block; color: var(--ink); font-size: 20px; font-weight: 650; line-height: 1.15; }
   .corte-etiq { display: block; font-size: 12px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
   .solo-impresion { display: none; }
+  body.cerrado .wrap { display: none; }
+  .candado {
+    min-height: 100vh; display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  body.cerrado .candado { display: flex; }
+  .candado form {
+    width: min(100%, 380px); background: var(--card); border: 1px solid var(--line);
+    border-radius: 16px; padding: 22px 20px 18px; box-shadow: var(--shadow);
+  }
+  .candado h1 { font-size: 32px; }
+  .candado p { margin: 8px 0 0; color: var(--muted); }
+  .candado input {
+    width: 100%; margin-top: 16px; font: inherit; font-size: 16px; padding: 12px 14px;
+    border: 1px solid var(--line); border-radius: 12px; background: #fffdf8; color: var(--ink);
+  }
+  .candado button {
+    width: 100%; margin-top: 10px; border: 0; border-radius: 999px; padding: 12px 16px;
+    background: var(--ink); color: #fffdf8; font: inherit; font-weight: 700; cursor: pointer;
+  }
+  .candado .error { color: var(--accent); font-weight: 650; }
   nav.bar {
     position: sticky; top: 0; z-index: 30;
     display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
@@ -224,7 +244,17 @@
   }
 </style>
 </head>
-<body>
+<body class="cerrado">
+<div class="candado">
+  <form id="formaClave">
+    <p class="eyebrow">Bolseo · gerencia</p>
+    <h1>Producción por cliente</h1>
+    <p>Escribe la contraseña para ver las piezas y los kilos.</p>
+    <input id="clave" type="password" autocomplete="current-password" placeholder="Contraseña" required>
+    <button type="submit">Entrar</button>
+    <p class="error" id="claveError" hidden>Esa contraseña no es.</p>
+  </form>
+</div>
 <div class="wrap">
   <header class="top">
     <div>
@@ -263,7 +293,7 @@
   </div>
 
   <div id="cuerpo"></div>
-  <p class="nota"><strong>El mismo enlace en la computadora y en el celular.</strong> Los números salen del seguimiento de BOLSEO, así que no se quedan en un solo equipo. Quien abra el enlace ve las mismas empresas, las mismas piezas y los mismos kilos. Si el seguimiento tarda, esta pantalla enseña la última lectura y la cambia en cuanto responde.<br><button type="button" class="jump" id="btnCopiar">Copiar enlace</button><span class="enlace" id="enlaceVisible"></span></p>
+  <p class="nota"><strong>El mismo enlace en la computadora y en el celular.</strong> Hace falta la contraseña. Quien la tenga ve las mismas empresas, las mismas piezas y los mismos kilos. Si el seguimiento tarda, esta pantalla enseña la última lectura y la cambia en cuanto responde.<br><button type="button" class="jump" id="btnCopiar">Copiar enlace</button><span class="enlace" id="enlaceVisible"></span></p>
 </div>
 <script>
 const SHEET_CSV = "https://docs.google.com/spreadsheets/d/1lt9KyIA2dLe1UWGZwvZT-tG4MF9w9iWGn45io8saew4/export?format=csv&gid=2535843";
@@ -1300,9 +1330,44 @@ document.getElementById("cuerpo").addEventListener("click", e => {
 
 document.getElementById("btnPiezas").classList.add("activa");
 window.addEventListener("afterprint", () => { document.title = "Producción por cliente"; });
-restaurar();
-cargar(false);
-setInterval(() => cargar(false), 20000);
+
+const CLAVE = "e873dbc66e445a79dce97ac9ef3cee60aaa3c700ef128f3e33e0ec1cbe9a1d58";
+const ENTRADA = "bolseo-entrada";
+
+function abrirReporte() {
+  document.body.classList.remove("cerrado");
+  restaurar();
+  cargar(false);
+  if (!window.__reloj) window.__reloj = setInterval(() => cargar(false), 20000);
+}
+
+async function resumenClave(texto) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(texto));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+(async function puerta() {
+  let guardada = "";
+  try { guardada = localStorage.getItem(ENTRADA) || ""; } catch (e) {}
+  if (guardada === CLAVE) {
+    abrirReporte();
+    return;
+  }
+  document.getElementById("formaClave").addEventListener("submit", async e => {
+    e.preventDefault();
+    const campo = document.getElementById("clave");
+    const h = await resumenClave(campo.value.trim());
+    if (h !== CLAVE) {
+      document.getElementById("claveError").hidden = false;
+      campo.value = "";
+      campo.focus();
+      return;
+    }
+    try { localStorage.setItem(ENTRADA, h); } catch (err) {}
+    abrirReporte();
+  });
+  document.getElementById("clave").focus();
+})();
 </script>
 </body>
 </html>
