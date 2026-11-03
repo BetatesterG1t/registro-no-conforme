@@ -141,6 +141,20 @@
   .btn-todo.listo small { color: var(--muted); }
   .btn-todo:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .btn-todo:hover { filter: brightness(1.06); }
+  .fecha-elige {
+    display: grid; grid-template-columns: 1fr 1.3fr 0.9fr; gap: 10px; margin: 0 0 14px;
+  }
+  .fecha-elige label {
+    display: flex; flex-direction: column; gap: 4px;
+    font-size: 12px; font-weight: 650; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted);
+  }
+  .fecha-elige select {
+    appearance: none; font: inherit; font-size: 16px; font-weight: 650; letter-spacing: 0; text-transform: none;
+    color: var(--ink); background: var(--card) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%235e574c' d='M1 1.5 6 6.5 11 1.5'/></svg>") no-repeat right 14px center;
+    border: 1px solid var(--line); border-radius: 14px; padding: 12px 36px 12px 14px; box-shadow: var(--shadow); width: 100%;
+  }
+  .fecha-elige select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .fecha-elige select:disabled { color: var(--muted); }
   .panel-clientes {
     background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-top: 10px;
   }
@@ -167,6 +181,7 @@
   @media (max-width: 640px) {
     .kpis, .kpis.tres { grid-template-columns: 1fr; }
     .lista-clientes { grid-template-columns: 1fr; }
+    .fecha-elige { grid-template-columns: 1fr; }
     .btn-todo { padding: 14px 14px; }
     .btn-todo strong { font-size: 20px; }
   }
@@ -211,6 +226,12 @@
     <strong>Todos los datos</strong>
     <small id="btnTodosMeta">Todas las empresas, todas las piezas</small>
   </button>
+
+  <div class="fecha-elige no-print" id="fechaElige">
+    <label>Día<select id="selDia"><option value="">Todo</option></select></label>
+    <label>Mes<select id="selMes"><option value="">Todo</option></select></label>
+    <label>Año<select id="selAnio"><option value="">Todo</option></select></label>
+  </div>
 
   <nav class="bar">
     <button type="button" class="jump" data-metrica="piezas" id="btnPiezas">Piezas</button>
@@ -408,7 +429,8 @@ function ventana(fin, modo) {
     return { ini, fin };
   }
   if (modo === "dia") return { ini: fin, fin };
-  if (modo === "mes") return { ini: new Date(fin.getFullYear(), fin.getMonth(), 1), fin };
+  if (modo === "anio") return { ini: new Date(fin.getFullYear(), 0, 1), fin: new Date(fin.getFullYear(), 11, 31) };
+  if (modo === "mes") return { ini: new Date(fin.getFullYear(), fin.getMonth(), 1), fin: new Date(fin.getFullYear(), fin.getMonth() + 1, 0) };
   const n = modo === "14" ? 13 : 6;
   return { ini: addDays(fin, -n), fin };
 }
@@ -482,7 +504,7 @@ function pintar() {
     cuerpo.innerHTML = '<div class="estado">Todavía no hay fechas en el seguimiento.</div>';
     return;
   }
-  const fin = periodo === "dia" ? finActivo() : corte;
+  const fin = periodo === "todo" ? corte : finActivo();
   const v = ventana(fin, periodo);
   const rows = tomar(v.ini, v.fin, cliente);
   const res = resumir(rows);
@@ -503,10 +525,10 @@ function pintar() {
   const enCursoTxt = { cls: "", txt: "El día todavía se está capturando" };
   const rangoTxt = fmtFechaCorta(v.ini) + " – " + fmtFechaCorta(v.fin);
   const spanTodo = { cls: "", txt: rangoTxt };
-  const dPiezas = periodo === "todo" ? spanTodo : (enCurso ? enCursoTxt : deltaTxt(res.piezas, prev.piezas, contra));
-  const dKilos = periodo === "todo" ? spanTodo : (enCurso ? enCursoTxt : deltaTxt(res.kilos, prev.kilos, contra));
-  const etiqDia = periodo === "todo" ? "Todo el seguimiento" : (hoy ? "Hoy" : viendoCorte ? "Último día con producción" : "Día consultado");
-  const tituloCorte = periodo === "todo" ? rangoTxt : fmtFechaLarga(fin);
+  const dPiezas = periodo === "dia" ? (enCurso ? enCursoTxt : deltaTxt(res.piezas, prev.piezas, contra)) : spanTodo;
+  const dKilos = periodo === "dia" ? (enCurso ? enCursoTxt : deltaTxt(res.kilos, prev.kilos, contra)) : spanTodo;
+  const etiqDia = periodo === "anio" ? "Año" : periodo === "mes" ? "Mes" : periodo === "dia" ? (hoy ? "Hoy" : "Día") : "Todo el seguimiento";
+  const tituloCorte = periodo === "anio" ? String(v.ini.getFullYear()) : periodo === "mes" ? MESES[v.ini.getMonth()] + " " + v.ini.getFullYear() : periodo === "dia" ? fmtFechaLarga(fin) : rangoTxt;
   document.getElementById("corteFecha").innerHTML = '<span class="corte-etiq">' + esc(etiqDia) + "</span>" + esc(tituloCorte);
   const hora = consultado
     ? horaCorta(consultado)
@@ -681,21 +703,79 @@ function pintar() {
   }
 }
 
+let ajustandoFecha = false;
+
+function aniosConDatos() {
+  const set = new Set();
+  registros.forEach(r => set.add(r.fecha.getFullYear()));
+  return [...set].sort((a, b) => b - a);
+}
+
+function mesesConDatos(anio) {
+  const set = new Set();
+  registros.forEach(r => { if (r.fecha.getFullYear() === anio) set.add(r.fecha.getMonth()); });
+  return [...set].sort((a, b) => a - b);
+}
+
+function diasDelMes(anio, mes) {
+  const set = new Set();
+  registros.forEach(r => {
+    if (r.fecha.getFullYear() === anio && r.fecha.getMonth() === mes) set.add(r.fecha.getDate());
+  });
+  return [...set].sort((a, b) => a - b);
+}
+
 function sincronizarDia() {
-  const nav = document.getElementById("diaNav");
-  const input = document.getElementById("fechaDia");
-  if (!nav || !input) return;
-  const fin = periodo === "dia" ? finActivo() : corte;
-  nav.classList.toggle("visible", periodo === "dia");
-  if (fin) input.value = iso(fin);
-  const fechas = fechasConDatos(cliente);
-  if (fechas.length) {
-    input.min = fechas[0];
-    input.max = iso(corte);
+  const anio = document.getElementById("selAnio");
+  const mes = document.getElementById("selMes");
+  const dia = document.getElementById("selDia");
+  if (!anio || !mes || !dia) return;
+  ajustandoFecha = true;
+  const anios = aniosConDatos();
+  anio.innerHTML = '<option value="">Todo</option>' + anios.map(a => '<option value="' + a + '">' + a + "</option>").join("");
+  let y = "";
+  let m = "";
+  let d = "";
+  if (periodo !== "todo" && corte) {
+    const fin = finActivo() || corte;
+    y = String(fin.getFullYear());
+    if (periodo === "mes" || periodo === "dia") m = String(fin.getMonth());
+    if (periodo === "dia") d = String(fin.getDate());
   }
-  const actual = fin ? iso(fin) : "";
-  document.getElementById("btnDiaAnt").disabled = !fechas.some(f => f < actual);
-  document.getElementById("btnDiaSig").disabled = !fechas.some(f => f > actual);
+  anio.value = y;
+  const meses = y ? mesesConDatos(Number(y)) : [];
+  mes.innerHTML = '<option value="">' + (y ? "Todo el año" : "Todo") + "</option>" + meses.map(n => '<option value="' + n + '">' + MESES[n] + "</option>").join("");
+  mes.disabled = !y;
+  if (m !== "" && !meses.includes(Number(m))) m = "";
+  mes.value = m;
+  const dias = y && m !== "" ? diasDelMes(Number(y), Number(m)) : [];
+  dia.innerHTML = '<option value="">' + (m !== "" ? "Todo el mes" : "Todo") + "</option>" + dias.map(n => '<option value="' + n + '">' + n + "</option>").join("");
+  dia.disabled = m === "";
+  if (d !== "" && !dias.includes(Number(d))) d = "";
+  dia.value = d;
+  ajustandoFecha = false;
+}
+
+function cambioFecha() {
+  if (ajustandoFecha) return;
+  const y = document.getElementById("selAnio").value;
+  const m = document.getElementById("selMes").value;
+  const d = document.getElementById("selDia").value;
+  if (!y) {
+    periodo = "todo";
+    diaElegido = null;
+  } else if (m === "") {
+    periodo = "anio";
+    fijarDia(new Date(Number(y), 11, 31));
+  } else if (d === "") {
+    periodo = "mes";
+    fijarDia(new Date(Number(y), Number(m), 1));
+  } else {
+    periodo = "dia";
+    fijarDia(new Date(Number(y), Number(m), Number(d)));
+  }
+  llenarClientes();
+  pintar();
 }
 
 function irAlDia(destino) {
@@ -719,7 +799,7 @@ function moverDia(dir) {
 }
 
 function conteoDelPeriodo() {
-  const fin = periodo === "dia" ? finActivo() : corte;
+  const fin = periodo === "todo" ? corte : finActivo();
   const v = ventana(fin, periodo);
   return v ? resumir(tomar(v.ini, v.fin, "")).porCliente : new Map();
 }
@@ -729,10 +809,13 @@ function llenarClientes() {
   if (!lista) return;
   const enPeriodo = conteoDelPeriodo();
   const totales = new Map();
-  registros.forEach(r => {
-    if (!totales.has(r.cliente)) totales.set(r.cliente, { piezas: 0, kilos: 0 });
-  });
+  if (periodo === "todo") {
+    registros.forEach(r => {
+      if (!totales.has(r.cliente)) totales.set(r.cliente, { piezas: 0, kilos: 0 });
+    });
+  }
   enPeriodo.forEach((info, nombre) => {
+    if (!info.piezas && !info.kilos) return;
     totales.set(nombre, { piezas: info.piezas, kilos: info.kilos });
   });
   const entradas = [...totales.entries()].sort((a, b) => {
@@ -1003,7 +1086,7 @@ function aplicarLista(nuevas) {
 
 function imprimirReporte() {
   if (!registros.length || !corte) return;
-  const fin = periodo === "dia" ? finActivo() : corte;
+  const fin = periodo === "todo" ? corte : finActivo();
   document.title = "Producción por cliente · " + fmtFechaLarga(fin);
   window.print();
 }
@@ -1019,13 +1102,6 @@ function actualizarReporte() {
   if (cargando) {
     marcarBoton("Leyendo…", true);
     return;
-  }
-  diaElegido = null;
-  periodo = "todo";
-  cliente = "";
-  if (registros.length) {
-    llenarClientes();
-    pintar();
   }
   cargar(true);
 }
@@ -1083,6 +1159,18 @@ document.querySelector("nav.bar").addEventListener("click", e => {
 });
 
 document.getElementById("btnTodosDatos").addEventListener("click", verTodosLosDatos);
+document.getElementById("selAnio").addEventListener("change", () => {
+  if (ajustandoFecha) return;
+  document.getElementById("selMes").value = "";
+  document.getElementById("selDia").value = "";
+  cambioFecha();
+});
+document.getElementById("selMes").addEventListener("change", () => {
+  if (ajustandoFecha) return;
+  document.getElementById("selDia").value = "";
+  cambioFecha();
+});
+document.getElementById("selDia").addEventListener("change", cambioFecha);
 
 document.getElementById("enlaceVisible").textContent = ENLACE;
 document.getElementById("btnCopiar").addEventListener("click", copiarEnlace);
@@ -1113,6 +1201,17 @@ document.getElementById("listaClientes").addEventListener("click", e => {
 });
 
 document.getElementById("cuerpo").addEventListener("click", e => {
+  const marcaFecha = e.target.closest("[data-fecha]");
+  if (marcaFecha && marcaFecha.dataset.fecha) {
+    const destino = parseIso(marcaFecha.dataset.fecha);
+    if (destino) {
+      periodo = "dia";
+      fijarDia(destino);
+      llenarClientes();
+      pintar();
+    }
+    return;
+  }
   const desplegar = e.target.closest("[data-desplegar]");
   if (desplegar) {
     verParticipacion = !verParticipacion;
