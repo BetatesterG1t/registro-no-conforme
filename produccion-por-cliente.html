@@ -122,8 +122,10 @@
     background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 28px 18px; text-align: center;
   }
   .estado.error { border-color: #e7c2cb; background: #fdf2f4; }
-  .nota { background: #f7f1e6; border: 1px dashed #d9cdb8; border-radius: 12px; padding: 12px 14px; color: var(--muted); font-size: 14px; margin-top: 22px; }
+  .nota { background: #f7f1e6; border: 1px dashed #d9cdb8; border-radius: 12px; padding: 12px 14px; color: var(--muted); font-size: 14px; margin-top: 22px; line-height: 1.45; }
   .nota strong { color: var(--ink); }
+  .nota .jump { margin: 10px 8px 0 0; color: var(--ink); font-weight: 650; }
+  .nota .enlace { display: block; margin-top: 8px; color: var(--ink); font-weight: 650; overflow-wrap: anywhere; }
   .kpi .num.texto { font-size: 18px; line-height: 1.25; letter-spacing: 0; }
   #cuerpo, #numeros { scroll-margin-top: 12px; }
   .kpis.tres { grid-template-columns: 1.1fr 1fr 1fr; }
@@ -227,10 +229,11 @@
   </div>
 
   <div id="cuerpo"></div>
-  <p class="nota"><strong>Queda guardada en este navegador.</strong> Al volver a abrirla se ve la última lectura aunque el seguimiento tarde. En cuanto BOLSEO responde, esa lectura se reemplaza con lo nuevo.</p>
+  <p class="nota"><strong>El mismo enlace en la computadora y en el celular.</strong> Los números salen del seguimiento de BOLSEO, así que no se quedan en un solo equipo. Quien abra el enlace ve las mismas empresas, las mismas piezas y los mismos kilos. Si el seguimiento tarda, esta pantalla enseña la última lectura y la cambia en cuanto responde.<br><button type="button" class="jump" id="btnCopiar">Copiar enlace</button><span class="enlace" id="enlaceVisible"></span></p>
 </div>
 <script>
 const SHEET_CSV = "https://docs.google.com/spreadsheets/d/1lt9KyIA2dLe1UWGZwvZT-tG4MF9w9iWGn45io8saew4/export?format=csv&gid=2535843";
+const ENLACE = "https://betatesterg1t.github.io/registro-no-conforme/hoy.html";
 const PALETA = ["#9f1239", "#0f6e56", "#9a3412", "#1d4e89", "#7c3aed", "#a16207"];
 const OTROS = "#8a8175";
 const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
@@ -258,6 +261,10 @@ window.google = window.google || {};
 google.visualization = google.visualization || {};
 google.visualization.Query = google.visualization.Query || {};
 google.visualization.Query.setResponse = function (resp) { aplicar(resp, null); };
+
+function horaCorta(d) {
+  return d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", timeZone: "America/Mexico_City" });
+}
 
 function reparar(s) {
   s = String(s || "").replace(/\s+/g, " ").trim();
@@ -502,11 +509,11 @@ function pintar() {
   const tituloCorte = periodo === "todo" ? rangoTxt : fmtFechaLarga(fin);
   document.getElementById("corteFecha").innerHTML = '<span class="corte-etiq">' + esc(etiqDia) + "</span>" + esc(tituloCorte);
   const hora = consultado
-    ? consultado.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })
+    ? horaCorta(consultado)
     : "";
   document.getElementById("corteMeta").textContent = lecturaLocal
-    ? "Copia guardada de las " + hora
-    : "Actualizado a las " + hora;
+    ? "Copia de este equipo, " + hora + ". Leyendo el seguimiento…"
+    : "Actualizado a las " + hora + " · igual en todos los equipos";
   const pie = document.getElementById("pieImpreso");
   if (pie) {
     const rango = periodo === "dia"
@@ -925,7 +932,9 @@ function restaurar() {
         kilos: Number(f[4]) || 0
       });
     });
-    if (!out.length) return false;
+    if (out.length < 50) return false;
+    const empresas = new Set(out.map(r => r.cliente));
+    if (data.parcial || empresas.size < 8) return false;
     registros = out;
     corte = out.reduce((max, r) => !max || r.fecha > max ? r.fecha : max, null);
     consultado = new Date(data.t || Date.now());
@@ -944,7 +953,7 @@ function avisoGuardado(msg) {
   const meta = document.getElementById("corteMeta");
   if (!meta) return;
   if (registros.length && consultado) {
-    const hora = consultado.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+    const hora = horaCorta(consultado);
     meta.textContent = msg + " Se muestra lo guardado a las " + hora + ".";
   } else meta.textContent = msg;
 }
@@ -982,7 +991,7 @@ function aplicarLista(nuevas) {
   const igual = firma === firmaLectura;
   firmaLectura = firma;
   marcarBoton("Actualizar", false);
-  const hora = consultado.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+  const hora = horaCorta(consultado);
   if (igual) {
     document.getElementById("corteMeta").textContent = "Actualizado a las " + hora;
     return;
@@ -1074,6 +1083,25 @@ document.querySelector("nav.bar").addEventListener("click", e => {
 });
 
 document.getElementById("btnTodosDatos").addEventListener("click", verTodosLosDatos);
+
+document.getElementById("enlaceVisible").textContent = ENLACE;
+document.getElementById("btnCopiar").addEventListener("click", copiarEnlace);
+
+function copiarEnlace() {
+  const b = document.getElementById("btnCopiar");
+  const listo = () => {
+    b.textContent = "Enlace copiado";
+    setTimeout(() => { b.textContent = "Copiar enlace"; }, 2200);
+  };
+  const rango = document.createRange();
+  rango.selectNodeContents(document.getElementById("enlaceVisible"));
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(rango);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ENLACE).then(listo).catch(() => {});
+  }
+}
 
 document.getElementById("listaClientes").addEventListener("click", e => {
   const b = e.target.closest("[data-elegir]");
