@@ -230,8 +230,7 @@
   <p class="nota"><strong>Queda guardada en este navegador.</strong> Al volver a abrirla se ve la última lectura aunque el seguimiento tarde. En cuanto BOLSEO responde, esa lectura se reemplaza con lo nuevo.</p>
 </div>
 <script>
-const SHEET = "https://docs.google.com/spreadsheets/d/1lt9KyIA2dLe1UWGZwvZT-tG4MF9w9iWGn45io8saew4/gviz/tq?gid=2535843";
-const COLUMNAS = "select B, C, G, L, P";
+const SHEET_CSV = "https://docs.google.com/spreadsheets/d/1lt9KyIA2dLe1UWGZwvZT-tG4MF9w9iWGn45io8saew4/export?format=csv&gid=2535843";
 const PALETA = ["#9f1239", "#0f6e56", "#9a3412", "#1d4e89", "#7c3aed", "#a16207"];
 const OTROS = "#8a8175";
 const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
@@ -298,12 +297,23 @@ function corto(nombre, limite = 22) {
     [/miguelito/i, "Miguelito"],
     [/sun coast/i, "Sun Coast"],
     [/kipi/i, "Kipi"],
-    [/nuevos desarrollos/i, "Nuevos Desarrollos"]
+    [/nuevos desarrollos/i, "Nuevos Desarrollos"],
+    [/no sabe fallar/i, "No Sabe Fallar"],
+    [/effem/i, "Effem"],
+    [/malta texo/i, "Malta Texo"],
+    [/zell/i, "Zell"],
+    [/impoc/i, "Impoc"],
+    [/don zabor/i, "Don Zabor"],
+    [/medell[ií]n/i, "Medellín"],
+    [/sulfatos/i, "Sulfatos"],
+    [/aresla/i, "Aresla"],
+    [/cuautitl/i, "Cuautitlán"],
+    [/finos del norte/i, "Finos del Norte"]
   ];
   for (const [re, nombreCorto] of reglas) {
     if (re.test(nombre)) return nombreCorto;
   }
-  const base = nombre.split(",")[0].replace(/\s+S\.?A\.?.*$/i, "").trim();
+  const base = nombre.split(",")[0].replace(/\s+S\.?\s*A\.?\s*(?:B\.?\s*)?(?:de\s+C\.?\s*V\.?|de\s+R\.?\s*L\.?).*/i, "").trim();
   if (limite > 0 && base.length > limite) return base.slice(0, limite - 1) + "…";
   return base;
 }
@@ -771,6 +781,71 @@ function estado(msg, error) {
   document.getElementById("cuerpo").innerHTML = '<div class="estado' + (error ? " error" : "") + '">' + esc(msg) + "</div>";
 }
 
+function partirCsv(texto) {
+  const filas = [];
+  let fila = [];
+  let celda = "";
+  let comillas = false;
+  for (let i = 0; i < texto.length; i++) {
+    const ch = texto[i];
+    if (comillas) {
+      if (ch === '"') {
+        if (texto[i + 1] === '"') { celda += '"'; i++; }
+        else comillas = false;
+      } else celda += ch;
+    } else if (ch === '"') comillas = true;
+    else if (ch === ",") { fila.push(celda); celda = ""; }
+    else if (ch === "\n") { fila.push(celda); filas.push(fila); fila = []; celda = ""; }
+    else if (ch !== "\r") celda += ch;
+  }
+  if (celda.length || fila.length) { fila.push(celda); filas.push(fila); }
+  return filas;
+}
+
+function numeroCsv(s) {
+  s = String(s || "").trim();
+  if (!s) return 0;
+  if (s.includes(",") && !s.includes(".")) s = s.replace(",", ".");
+  else s = s.replace(/,/g, "");
+  const n = Number(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function fechaCsv(s) {
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(s || "").trim());
+  if (!m) return null;
+  return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+}
+
+function filasDeCsv(texto) {
+  const tabla = partirCsv(texto);
+  if (tabla.length < 2) return [];
+  const head = tabla[0].map(c => String(c || "").trim());
+  const iFecha = head.indexOf("FECHA");
+  const iCliente = head.indexOf("CLIENTE");
+  const iOrden = head.indexOf("ORDEN");
+  const iPiezas = head.indexOf("CANTIDAD PIEZAS");
+  const iKilos = head.findIndex(c => c.trim() === "PESO TOTAL");
+  if (iFecha < 0 || iCliente < 0 || iPiezas < 0 || iKilos < 0) return [];
+  const out = [];
+  for (let r = 1; r < tabla.length; r++) {
+    const c = tabla[r];
+    const fecha = fechaCsv(c[iFecha]);
+    if (!fecha) continue;
+    const piezas = numeroCsv(c[iPiezas]);
+    const kilos = numeroCsv(c[iKilos]);
+    if (!piezas && !kilos) continue;
+    out.push({
+      fecha,
+      cliente: reparar(c[iCliente] || ""),
+      orden: String(c[iOrden] || "").trim(),
+      piezas,
+      kilos
+    });
+  }
+  return out;
+}
+
 function filasDe(resp) {
   const cols = resp.table.cols.map(c => c.label);
   const iFecha = cols.indexOf("FECHA");
@@ -887,16 +962,19 @@ function aplicar(resp, desde) {
     document.getElementById("corteMeta").textContent = "Sin capturas en esa lectura. Pulsa Actualizar otra vez.";
     return;
   }
-  if (!desde) {
-    registros = nuevas;
-  } else {
+  if (!desde) aplicarLista(nuevas);
+  else {
     const min = nuevas.reduce((m, r) => !m || r.fecha < m ? r.fecha : m, null);
-    if (min && iso(min) < iso(desde)) registros = nuevas;
+    if (min && iso(min) < iso(desde)) aplicarLista(nuevas);
     else {
       const k = iso(desde);
-      registros = registros.filter(r => iso(r.fecha) < k).concat(nuevas);
+      aplicarLista(registros.filter(r => iso(r.fecha) < k).concat(nuevas));
     }
   }
+}
+
+function aplicarLista(nuevas) {
+  registros = nuevas;
   corte = registros.reduce((max, r) => !max || r.fecha > max ? r.fecha : max, null);
   consultado = new Date();
   lecturaLocal = false;
@@ -948,49 +1026,40 @@ function cargar(forzar) {
   const id = ++reqId;
   cargando = true;
   const manual = !!forzar;
-  const parcial = registros.length > 0 && corte && !copiaParcial;
-  const desde = parcial ? addDays(corte, -21) : null;
   if (!registros.length) estado("Leyendo el seguimiento de AppSheet…");
   else if (manual) {
     document.getElementById("corteMeta").textContent = "Leyendo capturas nuevas…";
     marcarBoton("Leyendo…", true);
   }
-  const nombre = "__bolseo" + id;
-  window[nombre] = function (resp) {
-    try { delete window[nombre]; } catch (e) { window[nombre] = undefined; }
-    if (id !== reqId) return;
-    cargando = false;
-    clearTimeout(window.__sheetTimer);
-    aplicar(resp, desde);
-  };
-  const previo = document.getElementById("sheet-jsonp");
-  if (previo) previo.remove();
-  const s = document.createElement("script");
-  s.id = "sheet-jsonp";
-  let url = SHEET + "&tqx=" + encodeURIComponent("out:json;responseHandler:" + nombre) + "&t=" + Date.now();
-  let tq = COLUMNAS;
-  if (desde) tq += " where G >= date '" + iso(desde) + "'";
-  url += "&tq=" + encodeURIComponent(tq);
-  s.src = url;
-  s.onerror = () => {
-    try { delete window[nombre]; } catch (e) { window[nombre] = undefined; }
-    if (id !== reqId) return;
-    cargando = false;
-    marcarBoton("Actualizar", false);
-    if (!registros.length) estado("No se pudo consultar el seguimiento. Revisa que la hoja siga pública.", true);
-    else avisoGuardado("No se pudo actualizar.");
-  };
-  document.body.appendChild(s);
+  const ctrl = typeof AbortController === "function" ? new AbortController() : null;
   clearTimeout(window.__sheetTimer);
-  window.__sheetTimer = setTimeout(() => {
-    if (id !== reqId) return;
-    cargando = false;
-    marcarBoton("Actualizar", false);
-    const node = document.getElementById("sheet-jsonp");
-    if (node) node.remove();
-    if (!registros.length) estado("El seguimiento tardó demasiado. Pulsa Actualizar.", true);
-    else avisoGuardado("La lectura tardó.");
-  }, desde ? 25000 : 45000);
+  window.__sheetTimer = setTimeout(() => { if (ctrl) ctrl.abort(); }, 45000);
+  fetch(SHEET_CSV + "&t=" + Date.now(), { cache: "no-store", signal: ctrl ? ctrl.signal : undefined })
+    .then(r => {
+      if (!r.ok) throw new Error(String(r.status));
+      return r.text();
+    })
+    .then(texto => {
+      if (id !== reqId) return;
+      cargando = false;
+      clearTimeout(window.__sheetTimer);
+      const nuevas = filasDeCsv(texto);
+      if (nuevas.length < 50) {
+        marcarBoton("Actualizar", false);
+        if (!registros.length) estado("El seguimiento vino incompleto. Pulsa Actualizar.", true);
+        else avisoGuardado("La lectura vino incompleta.");
+        return;
+      }
+      aplicarLista(nuevas);
+    })
+    .catch(() => {
+      if (id !== reqId) return;
+      cargando = false;
+      clearTimeout(window.__sheetTimer);
+      marcarBoton("Actualizar", false);
+      if (!registros.length) estado("No se pudo consultar el seguimiento. Revisa que la hoja siga pública.", true);
+      else avisoGuardado("No se pudo actualizar.");
+    });
 }
 
 document.querySelector("nav.bar").addEventListener("click", e => {
