@@ -224,7 +224,7 @@
 
   <div id="panelClientes" class="panel-clientes no-print">
     <h2>Cliente</h2>
-    <p class="sub">Oprime una tarjeta para ver sus piezas y sus kilos. Otra vez, vuelves a ver a todas.</p>
+    <p class="sub">Solo el área de bolseo. Oprime una tarjeta para ver sus piezas y sus kilos. Otra vez, vuelves a ver a todas.</p>
     <div class="lista-clientes" id="listaClientes"></div>
   </div>
 
@@ -233,6 +233,7 @@
 </div>
 <script>
 const SHEET_CSV = "https://docs.google.com/spreadsheets/d/1lt9KyIA2dLe1UWGZwvZT-tG4MF9w9iWGn45io8saew4/export?format=csv&gid=2535843";
+const CATALOGO_CSV = "https://docs.google.com/spreadsheets/d/1lt9KyIA2dLe1UWGZwvZT-tG4MF9w9iWGn45io8saew4/gviz/tq?tqx=out:csv&sheet=rep-ov-esp&headers=1&tq=" + encodeURIComponent("select B,J");
 const ENLACE = "https://betatesterg1t.github.io/registro-no-conforme/hoy.html";
 const PALETA = ["#9f1239", "#0f6e56", "#9a3412", "#1d4e89", "#7c3aed", "#a16207"];
 const OTROS = "#8a8175";
@@ -824,13 +825,37 @@ function fechaCsv(s) {
   return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
 }
 
-function filasDeCsv(texto) {
+function tiposDeCatalogo(texto) {
+  const tabla = partirCsv(texto);
+  const map = new Map();
+  for (let i = 1; i < tabla.length; i++) {
+    const orden = String((tabla[i] && tabla[i][0]) || "").trim().toUpperCase();
+    const tipo = String((tabla[i] && tabla[i][1]) || "").trim().toUpperCase();
+    if (!orden || !tipo) continue;
+    if (map.get(orden) === "SIDE WELD") continue;
+    map.set(orden, tipo);
+  }
+  return map;
+}
+
+function maquinaDeBolseo(m) {
+  m = String(m || "").trim().toUpperCase().replace(/\s+/g, " ");
+  if (!m || m.startsWith("DOBLADORA")) return false;
+  if (/^[A-H]$/.test(m)) return true;
+  if (/^SDAI \d+$/.test(m)) return true;
+  if (m === "CONTEC" || m === "ITALIANA") return true;
+  if (m.startsWith("LYAN YOU") || m.startsWith("LIAN YU")) return true;
+  return /^CH-?\d+$/.test(m);
+}
+
+function filasDeCsv(texto, tipos) {
   const tabla = partirCsv(texto);
   if (tabla.length < 2) return [];
   const head = tabla[0].map(c => String(c || "").trim());
   const iFecha = head.indexOf("FECHA");
   const iCliente = head.indexOf("CLIENTE");
   const iOrden = head.indexOf("ORDEN");
+  const iMaquina = head.indexOf("MAQUINA");
   const iPiezas = head.indexOf("CANTIDAD PIEZAS");
   const iKilos = head.findIndex(c => c.trim() === "PESO TOTAL");
   if (iFecha < 0 || iCliente < 0 || iPiezas < 0 || iKilos < 0) return [];
@@ -839,13 +864,20 @@ function filasDeCsv(texto) {
     const c = tabla[r];
     const fecha = fechaCsv(c[iFecha]);
     if (!fecha) continue;
+    const orden = String(c[iOrden] || "").trim();
+    const ordenClave = orden.toUpperCase();
+    if (ordenClave === "MUESTRAS") continue;
+    if (String(c[iCliente] || "").trim().toUpperCase() === "MUESTRAS") continue;
+    const tipo = tipos && tipos.get ? (tipos.get(ordenClave) || "") : "";
+    if (tipo === "POUCH" || tipo === "BOB") continue;
+    if (tipo !== "SIDE WELD" && !maquinaDeBolseo(iMaquina >= 0 ? c[iMaquina] : "")) continue;
     const piezas = numeroCsv(c[iPiezas]);
     const kilos = numeroCsv(c[iKilos]);
     if (!piezas && !kilos) continue;
     out.push({
       fecha,
       cliente: reparar(c[iCliente] || ""),
-      orden: String(c[iOrden] || "").trim(),
+      orden,
       piezas,
       kilos
     });
@@ -1043,16 +1075,19 @@ function cargar(forzar) {
   const ctrl = typeof AbortController === "function" ? new AbortController() : null;
   clearTimeout(window.__sheetTimer);
   window.__sheetTimer = setTimeout(() => { if (ctrl) ctrl.abort(); }, 45000);
-  fetch(SHEET_CSV + "&t=" + Date.now(), { cache: "no-store", signal: ctrl ? ctrl.signal : undefined })
+  const leer = url => fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store", signal: ctrl ? ctrl.signal : undefined })
     .then(r => {
       if (!r.ok) throw new Error(String(r.status));
       return r.text();
-    })
-    .then(texto => {
+    });
+  Promise.all([leer(SHEET_CSV), leer(CATALOGO_CSV)])
+    .then(([texto, catalogo]) => {
       if (id !== reqId) return;
       cargando = false;
       clearTimeout(window.__sheetTimer);
-      const nuevas = filasDeCsv(texto);
+      const tipos = tiposDeCatalogo(catalogo);
+      if (tipos.size < 100) throw new Error("catalogo");
+      const nuevas = filasDeCsv(texto, tipos);
       if (nuevas.length < 50) {
         marcarBoton("Actualizar", false);
         if (!registros.length) estado("El seguimiento vino incompleto. Pulsa Actualizar.", true);
