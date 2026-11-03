@@ -119,15 +119,18 @@
     background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-top: 10px;
   }
   .panel-clientes h2 { font-size: 22px; margin-bottom: 10px; }
-  .lista-clientes { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+  .lista-clientes { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
   .cli-btn {
-    text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 12px;
-    padding: 10px 12px; font: inherit; color: inherit; cursor: pointer;
-    display: flex; flex-direction: column; gap: 2px;
+    text-align: left; border: 1px solid var(--line); background: var(--card); border-radius: 14px;
+    padding: 12px 14px 11px; font: inherit; color: inherit; cursor: pointer;
+    display: flex; flex-direction: column; gap: 3px; box-shadow: var(--shadow); line-height: 1.3;
   }
-  .cli-btn small { color: var(--muted); font-size: 12px; }
-  .cli-btn strong { font-size: 15px; }
-  .cli-btn.activa { border-color: var(--accent); background: var(--accent-soft); }
+  .cli-btn strong { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+  .cli-btn small { color: var(--muted); font-size: 12.5px; font-weight: 450; overflow-wrap: break-word; }
+  .cli-pzas { white-space: nowrap; }
+  .cli-btn:hover { border-color: #cfc3b0; }
+  .cli-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .cli-btn.activa { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent); }
   @media (max-width: 980px) {
     .kpis { grid-template-columns: 1fr 1fr; display: grid; }
     header.top { display: grid; grid-template-columns: 1fr; gap: 12px; }
@@ -137,6 +140,7 @@
   }
   @media (max-width: 640px) {
     .kpis { grid-template-columns: 1fr; }
+    .lista-clientes { grid-template-columns: 1fr; }
   }
   @media print {
     @page { size: letter landscape; margin: 12mm; }
@@ -193,7 +197,7 @@
 
   <div id="panelClientes" class="panel-clientes no-print">
     <h2>Elige el cliente</h2>
-    <p class="sub">Oprime un nombre. El tablero muestra solo a ese cliente.</p>
+    <p class="sub">Oprime una tarjeta para ver solo a esa empresa. Otra vez, o Todos, regresa al total.</p>
     <div class="lista-clientes" id="listaClientes"></div>
   </div>
 
@@ -245,7 +249,7 @@ function reparar(s) {
   }
 }
 
-function corto(nombre) {
+function corto(nombre, limite = 22) {
   const reglas = [
     [/kimberly/i, "Kimberly-Clark"],
     [/essity/i, "Essity"],
@@ -272,7 +276,8 @@ function corto(nombre) {
     if (re.test(nombre)) return nombreCorto;
   }
   const base = nombre.split(",")[0].replace(/\s+S\.?A\.?.*$/i, "").trim();
-  return base.length > 22 ? base.slice(0, 21) + "…" : base;
+  if (limite > 0 && base.length > limite) return base.slice(0, limite - 1) + "…";
+  return base;
 }
 
 function parseFecha(v) {
@@ -671,19 +676,37 @@ function moverDia(dir) {
   if (destino) irAlDia(parseIso(destino));
 }
 
+function conteoDelPeriodo() {
+  const fin = periodo === "dia" ? finActivo() : corte;
+  const v = ventana(fin, periodo);
+  return v ? resumir(tomar(v.ini, v.fin, "")).porCliente : new Map();
+}
+
 function llenarClientes() {
   const lista = document.getElementById("listaClientes");
   if (!lista) return;
-  const fin = periodo === "dia" ? finActivo() : corte;
-  const v = ventana(fin, periodo);
-  const entradas = v
-    ? [...resumir(tomar(v.ini, v.fin, "")).porCliente.entries()].sort((a, b) => valorDe(b[1]) - valorDe(a[1]))
-    : [];
+  const enPeriodo = conteoDelPeriodo();
+  const totales = new Map();
+  registros.forEach(r => {
+    if (!totales.has(r.cliente)) totales.set(r.cliente, { piezas: 0, kilos: 0 });
+  });
+  enPeriodo.forEach((info, nombre) => {
+    totales.set(nombre, { piezas: info.piezas, kilos: info.kilos });
+  });
+  const entradas = [...totales.entries()].sort((a, b) => {
+    const d = b[1].piezas - a[1].piezas;
+    if (d) return d;
+    if (a[0] === "(sin cliente)") return 1;
+    if (b[0] === "(sin cliente)") return -1;
+    return a[0].localeCompare(b[0], "es");
+  });
   const nombres = entradas.map(([n]) => n);
   if (cliente && !nombres.includes(cliente)) cliente = "";
-  const boton = (nombre, titulo, detalle, activo) => '<button type="button" class="cli-btn' + (activo ? " activa" : "") + '" data-elegir="' + esc(nombre) + '"><strong>' + esc(titulo) + "</strong><small>" + esc(detalle) + "</small></button>";
-  lista.innerHTML = boton("", "Todos los clientes", "Ver el total de todos", !cliente)
-    + entradas.map(([n, info]) => boton(n, corto(n), n === corto(n) ? etiquetaMetrica(valorDe(info)) : n + " · " + etiquetaMetrica(valorDe(info)), n === cliente)).join("");
+  const totalPzas = entradas.reduce((s, [, info]) => s + info.piezas, 0);
+  const linea = (nombre, piezas) => esc(nombre) + ' · <span class="cli-pzas">' + esc(fmt(piezas) + " pzas") + "</span>";
+  const boton = (nombre, titulo, detalle, activo) => '<button type="button" class="cli-btn' + (activo ? " activa" : "") + '" data-elegir="' + esc(nombre) + '" aria-pressed="' + (activo ? "true" : "false") + '"><strong>' + esc(titulo) + "</strong><small>" + detalle + "</small></button>";
+  lista.innerHTML = boton("", "Todos los clientes", "Ver a todas las empresas · <span class=\"cli-pzas\">" + esc(fmt(totalPzas) + " pzas") + "</span>", !cliente)
+    + entradas.map(([n, info]) => boton(n, corto(n, 0), linea(n, info.piezas), n === cliente)).join("");
 }
 
 function elegirCliente(nombre) {
@@ -909,7 +932,8 @@ document.querySelector("nav.bar").addEventListener("click", e => {
 document.getElementById("listaClientes").addEventListener("click", e => {
   const b = e.target.closest("[data-elegir]");
   if (!b) return;
-  elegirCliente(b.dataset.elegir);
+  const nombre = b.dataset.elegir || "";
+  elegirCliente(cliente === nombre ? "" : nombre);
 });
 
 document.getElementById("cuerpo").addEventListener("click", e => {
