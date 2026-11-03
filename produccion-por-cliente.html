@@ -510,7 +510,12 @@ function pintar() {
     grafFin = fin;
     grafRes = resumir(tomar(grafIni, grafFin, cliente));
   }
-  const diasGraf = [...grafRes.porDia.values()].sort((a, b) => a.fecha - b.fecha);
+  const diasTodos = [...grafRes.porDia.values()].sort((a, b) => a.fecha - b.fecha);
+  const diasGraf = diasTodos.slice(-14);
+  if (diasGraf.length) {
+    grafIni = diasGraf[0].fecha;
+    grafFin = diasGraf[diasGraf.length - 1].fecha;
+  }
   const rankGraf = [...grafRes.porCliente.entries()].sort((a, b) => valorDe(b[1]) - valorDe(a[1]));
   const topGraf = rankGraf.slice(0, 5).map(([nombre]) => nombre);
   const colorGraf = colores(topGraf);
@@ -617,8 +622,8 @@ function pintar() {
   const bloqueDias = diasGraf.length < 2 ? "" : (
     '<section><h2>Cada día <span>' + esc(fmtFechaCorta(grafIni)) + " – " + esc(fmtFechaCorta(grafFin)) + "</span></h2>"
     + '<p class="sub no-print">' + (cliente
-      ? "Cada barra es lo de ese cliente. El número de arriba es el total del día."
-      : "El número de arriba es el total del día. Cada color es un cliente.") + "</p>"
+      ? "Los últimos días de ese cliente. La última barra es la fecha más nueva."
+      : "Los últimos días. La última barra es la fecha más nueva. Cada color es un cliente.") + "</p>"
     + '<article class="card"><div class="leyenda">' + leyenda + '</div><div class="chart-scroll"><svg class="dias" width="' + Math.ceil(ancho) + '" height="' + alto + '" viewBox="0 0 ' + ancho + " " + alto + '" role="img" aria-label="Producción diaria">'
     + barrasSvg + "</svg></div></article></section>"
   );
@@ -652,6 +657,7 @@ function pintar() {
   );
   sincronizarDia();
   marcarBotonTodos();
+  document.querySelectorAll(".chart-scroll").forEach(zona => { zona.scrollLeft = zona.scrollWidth; });
 
   function kpi(lbl, num, d, texto) {
     return '<article class="kpi"><div class="lbl">' + esc(lbl) + '</div><div class="num' + (texto ? " texto" : "") + '">' + esc(num) + '</div><div class="hint ' + d.cls + '">' + esc(d.txt) + "</div></article>";
