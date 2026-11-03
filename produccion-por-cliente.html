@@ -84,8 +84,17 @@
   .chart-scroll { overflow-x: auto; }
   svg.dias { display: block; width: auto; min-width: 100%; height: auto; }
   svg.dias text { font-family: "Avenir Next", "Segoe UI", sans-serif; }
-  .part { display: flex; height: 16px; border-radius: 99px; overflow: hidden; background: #f3eee6; }
-  .part span { display: block; height: 100%; }
+  .btn-desplegar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    width: 100%; margin-top: 12px; border: 1px solid var(--line); background: var(--card);
+    color: var(--ink); border-radius: 14px; padding: 14px 16px; font: inherit; font-weight: 700;
+    font-size: 16px; cursor: pointer; text-align: left; box-shadow: var(--shadow);
+  }
+  .btn-desplegar small { color: var(--muted); font-weight: 500; font-size: 13px; }
+  .btn-desplegar:hover { border-color: #cfc3b0; }
+  .btn-desplegar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .desplegable { display: none; margin-top: 12px; }
+  .desplegable.abierto { display: block; }
   .bars { display: flex; flex-direction: column; gap: 8px; }
   .bar-row {
     display: grid; grid-template-columns: 148px 1fr 168px; gap: 8px; align-items: center;
@@ -168,6 +177,8 @@
     header.top { margin-bottom: 8px; }
     h1 { font-size: 26px; }
     .kpi, .card, .tabla-wrap { box-shadow: none; break-inside: avoid; }
+    .btn-desplegar { display: none !important; }
+    .desplegable { display: block !important; }
     .kpis { grid-template-columns: repeat(2, 1fr); }
     .chart-scroll { overflow: visible; }
     svg.dias { width: 100% !important; min-width: 0 !important; height: auto !important; }
@@ -237,6 +248,7 @@ let consultado = null;
 let cargando = false;
 let reqId = 0;
 let firmaVista = "";
+let verParticipacion = false;
 let firmaLectura = "";
 let lecturaLocal = false;
 let copiaParcial = false;
@@ -581,20 +593,6 @@ function pintar() {
       + '<span class="bar-num">' + etiquetaMetrica(val) + " · " + fmt(100 * val / totalRank, 1) + "%</span></button>";
   }).join("");
 
-  const participacion = ranking.length
-    ? '<div class="part" aria-hidden="true">' + (function () {
-        const segs = [];
-        let otros = 0;
-        ranking.forEach(([nombre, info]) => {
-          const val = valorDe(info);
-          if (top.includes(nombre)) segs.push('<span style="width:' + (100 * val / totalRank).toFixed(2) + "%;background:" + color.get(nombre) + '" title="' + esc(corto(nombre)) + '"></span>');
-          else otros += val;
-        });
-        if (otros) segs.push('<span style="width:' + (100 * otros / totalRank).toFixed(2) + "%;background:" + OTROS + '"></span>');
-        return segs.join("");
-      })() + "</div>"
-    : "";
-
   const filasCliente = ranking.map(([nombre, info]) => {
     const val = valorDe(info);
     return '<tr class="click' + (nombre === cliente ? " sel" : "") + '" data-cliente="' + esc(nombre) + '"><td class="l">' + esc(nombre) + "</td><td>"
@@ -647,12 +645,13 @@ function pintar() {
     bloqueDias
     + '<section><h2>' + (cliente ? "Producción de " + esc(corto(cliente)) : "Quién produjo más") + " <span>" + (metrica === "kilos" ? "kilos" : "piezas") + "</span></h2>"
     + '<p class="sub no-print">Oprime un nombre para ver solo a ese cliente. Oprime otra vez para volver a todos.</p>'
-    + '<article class="card"><h3>Participación</h3>' + participacion
-    + '<div class="bars" style="margin-top:14px">' + barrasCli + "</div></article>"
+    + '<button type="button" class="btn-desplegar" data-desplegar="participacion" aria-expanded="' + (verParticipacion ? "true" : "false") + '">Participación<small>' + (verParticipacion ? "Ocultar" : "Ver el detalle") + "</small></button>"
+    + '<div class="desplegable' + (verParticipacion ? " abierto" : "") + '">'
+    + '<article class="card"><div class="bars">' + barrasCli + "</div></article>"
     + '<div class="tabla-wrap" style="margin-top:12px"><table><thead><tr><th class="l">Cliente</th><th>Días</th><th>Órdenes</th><th>Piezas</th><th>Kilos</th><th>%</th></tr></thead><tbody>'
     + filasCliente
     + '<tr class="total"><td class="l">' + (dias.length < 2 ? "Día" : "Periodo") + '</td><td></td><td>' + fmt(res.ordenes) + "</td><td>" + fmt(res.piezas) + "</td><td>" + fmt(res.kilos, 0) + "</td><td>100%</td></tr>"
-    + "</tbody></table></div></section>"
+    + "</tbody></table></div></div></section>"
     + bloqueDetalle
   );
   sincronizarDia();
@@ -1016,6 +1015,12 @@ document.getElementById("listaClientes").addEventListener("click", e => {
 });
 
 document.getElementById("cuerpo").addEventListener("click", e => {
+  const desplegar = e.target.closest("[data-desplegar]");
+  if (desplegar) {
+    verParticipacion = !verParticipacion;
+    pintar();
+    return;
+  }
   const b = e.target.closest("[data-cliente]");
   if (!b) return;
   const nombre = b.dataset.cliente;
