@@ -304,7 +304,7 @@ if (location.protocol === "file:") location.replace("https://betatesterg1t.githu
     <div>
       <p class="eyebrow">Bolseo · gerencia</p>
       <h1>Producción por cliente</h1>
-      <p class="lede">Lo primero son los turnos. Justo debajo está el acumulado de cada día.</p>
+      <p class="lede">El calendario elige el inicio y el final. Debajo están los turnos y, enseguida, el acumulado de cada día.</p>
     </div>
     <div class="corte">
       <strong id="corteFecha">Cargando…</strong>
@@ -312,6 +312,8 @@ if (location.protocol === "file:") location.replace("https://betatesterg1t.githu
     </div>
   </header>
   <p id="pieImpreso" class="solo-impresion"></p>
+
+  <div class="cal no-print" id="calendario" aria-label="Calendario"></div>
 
   <section id="turnoVisible" class="turno-arriba" aria-label="Producción por turno"></section>
 
@@ -321,8 +323,6 @@ if (location.protocol === "file:") location.replace("https://betatesterg1t.githu
     <strong>Todos los datos</strong>
     <small id="btnTodosMeta">Todas las empresas, todas las piezas</small>
   </button>
-
-  <div class="cal no-print" id="calendario" aria-label="Calendario"></div>
 
   <nav class="bar">
     <button type="button" class="jump" data-metrica="piezas" id="btnPiezas">Piezas</button>
