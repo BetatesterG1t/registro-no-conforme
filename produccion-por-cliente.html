@@ -94,7 +94,7 @@
   }
   .kpi { padding: 14px 14px 12px; }
   .kpi .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
-  .kpi .num { font-variant-numeric: tabular-nums; font-size: 26px; font-weight: 650; letter-spacing: -0.03em; margin-top: 4px; }
+  .kpi .num { font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 650; letter-spacing: -0.03em; margin-top: 4px; }
   .kpi .hint { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
   .kpis.pulso .kpi { animation: pulso 1.2s ease; }
   @keyframes pulso { from { background: var(--accent-soft); } to { background: var(--card); } }
@@ -206,7 +206,12 @@
   .turno-totales { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
   .turno-totales article { background: #fbf7f1; border-radius: 12px; padding: 8px 10px; }
   .turno-totales span { display: block; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
-  .turno-totales strong { font-size: 18px; font-variant-numeric: tabular-nums; }
+  .turno-totales strong { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .turno-num, .turno-kg { display: block; }
+  .turno-kg { margin-top: 2px; font-size: 12px; font-weight: 650; color: var(--muted); }
+  .turno-graf { margin: 0 0 12px; }
+  .turno-graf h3 { margin: 0 0 8px; font-size: 16px; }
+  .turno-scroll { overflow-x: auto; }
   .turno-tabla th.l, .turno-tabla td.l { position: sticky; left: 0; z-index: 1; background: #fffdf8; min-width: 108px; }
   .turno-tabla th.l { z-index: 2; background: #fbf7f1; }
   .turno-tabla tr.sel td.l { background: var(--accent-soft); }
@@ -549,7 +554,7 @@ function valorDe(obj) {
 }
 
 function etiquetaMetrica(n) {
-  return metrica === "kilos" ? fmt(n, n >= 100 ? 0 : 1) + " kg" : fmt(n) + " pzas";
+  return metrica === "kilos" ? fmt(n, n >= 100 ? 0 : 1) + " kg" : fmt(n) + " piezas";
 }
 
 function deltaTxt(actual, anterior, contra) {
@@ -752,8 +757,8 @@ function pintar() {
   if (numeros) {
     numeros.innerHTML = '<div class="kpis' + (cambio ? " pulso" : "") + (cliente ? " tres" : "") + '">'
       + (cliente ? kpi("Cliente", corto(cliente), { cls: "", txt: "Solo esta empresa" }, true) : "")
-      + kpi("Piezas producidas", fmt(res.piezas), dPiezas)
-      + kpi("Kilos producidos", fmt(res.kilos, res.kilos >= 100 ? 0 : 1), dKilos)
+      + kpi("Piezas producidas", fmt(res.piezas) + " piezas", dPiezas)
+      + kpi("Kilos producidos", fmt(res.kilos, res.kilos >= 100 ? 0 : 1) + " kg", dKilos)
       + "</div>";
   }
   cuerpo.innerHTML = vacio || (
@@ -953,9 +958,57 @@ function clientesFijos() {
   }).map(([nombre]) => nombre);
 }
 
-function numTurno(info) {
-  const n = info ? (metrica === "kilos" ? info.kilos : info.piezas) : 0;
-  return metrica === "kilos" ? fmt(n, n >= 100 ? 0 : 1) : fmt(n);
+function textoPiezasKg(info) {
+  const p = info ? info.piezas : 0;
+  const k = info ? info.kilos : 0;
+  return '<span class="turno-num">' + esc(fmt(p)) + ' piezas</span><span class="turno-kg">' + esc(fmt(k, k >= 100 ? 0 : 1)) + " kg</span>";
+}
+
+function graficaTurnos(titulo, series, columnas) {
+  const totales = columnas.map(t => {
+    let piezas = 0;
+    let kilos = 0;
+    series.forEach(s => {
+      const v = s.valores.get(t) || { piezas: 0, kilos: 0 };
+      piezas += v.piezas;
+      kilos += v.kilos;
+    });
+    return { t, piezas, kilos };
+  });
+  const max = Math.max(1, ...totales.map(x => x.piezas));
+  const n = Math.max(columnas.length, 1);
+  const ancho = Math.max(640, n * 168);
+  const alto = 248;
+  const base = 132;
+  const maxBar = 96;
+  const gap = 16;
+  const bw = (ancho - 36 - gap * n) / n;
+  let x = 18;
+  const barras = totales.map(item => {
+    let y = base;
+    const rects = [];
+    series.forEach(s => {
+      const v = s.valores.get(item.t) || { piezas: 0, kilos: 0 };
+      const h = Math.max(0, (v.piezas / max) * maxBar);
+      if (h <= 0) return;
+      y -= h;
+      rects.push('<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="' + s.color + '"><title>' + esc(s.nombre) + " " + esc(fmt(v.piezas)) + " piezas, " + esc(fmt(v.kilos, v.kilos >= 100 ? 0 : 1)) + " kg</title></rect>");
+    });
+    if (!rects.length) rects.push('<rect x="' + x.toFixed(1) + '" y="' + (base - 2).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="2" fill="#e3d9c8"></rect>');
+    const cx = x + bw / 2;
+    const label = item.t ? "Turno " + item.t : "Sin turno";
+    const g = "<g>" + rects.join("")
+      + '<text x="' + cx.toFixed(1) + '" y="156" text-anchor="middle" font-size="13" font-weight="700" fill="#1c1915">' + esc(label) + "</text>"
+      + '<text x="' + cx.toFixed(1) + '" y="176" text-anchor="middle" font-size="11" font-weight="650" fill="#1c1915">' + esc(fmt(item.piezas)) + " piezas</text>"
+      + '<text x="' + cx.toFixed(1) + '" y="194" text-anchor="middle" font-size="11" fill="#5e574c">' + esc(fmt(item.kilos, item.kilos >= 100 ? 0 : 1)) + " kg</text></g>";
+    x += bw + gap;
+    return g;
+  }).join("");
+  const leyenda = series.length > 1
+    ? '<div class="leyenda">' + series.map(s => '<span><i style="background:' + s.color + '"></i>' + esc(corto(s.nombre, 18)) + "</span>").join("") + "</div>"
+    : "";
+  return '<article class="card turno-graf"><h3>' + esc(titulo) + '</h3>' + leyenda
+    + '<div class="turno-scroll"><svg width="' + Math.ceil(ancho) + '" height="' + alto + '" viewBox="0 0 ' + ancho + " " + alto + '" role="img" aria-label="' + esc(titulo) + '">' + barras + "</svg></div></article>";
 }
 
 function pintarTurnos() {
@@ -1005,7 +1058,7 @@ function pintarTurnos() {
     suma.kilos += r.kilos;
   });
   const titulo = t => t ? "Turno " + t : "Sin turno";
-  const chips = columnas.map(t => "<article><span>" + esc(titulo(t)) + "</span><strong>" + numTurno(totTurno.get(t)) + "</strong></article>").join("");
+  const chips = columnas.map(t => "<article><span>" + esc(titulo(t)) + "</span><strong>" + textoPiezasKg(totTurno.get(t)) + "</strong></article>").join("");
   const head = "<th class=\"l\">Cliente</th>" + columnas.map(t => "<th>" + esc(titulo(t)) + "</th>").join("") + "<th>Total</th>";
   const filaDe = (nombre, mapa, clase) => {
     let piezas = 0;
@@ -1014,19 +1067,44 @@ function pintarTurnos() {
       const info = mapa.get(t) || { piezas: 0, kilos: 0 };
       piezas += info.piezas;
       kilos += info.kilos;
-      return "<td>" + numTurno(info) + "</td>";
+      return "<td>" + textoPiezasKg(info) + "</td>";
     }).join("");
     const marca = nombre && nombre === cliente ? " sel" : "";
     const attr = nombre ? " data-cliente=\"" + esc(nombre) + "\"" : "";
-    return "<tr class=\"" + clase + marca + "\"" + attr + "><td class=\"l\">" + esc(nombre ? corto(nombre) : "Total") + "</td>" + celdas + "<td>" + numTurno({ piezas, kilos }) + "</td></tr>";
+    return "<tr class=\"" + clase + marca + "\"" + attr + "><td class=\"l\">" + esc(nombre ? corto(nombre) : "Total") + "</td>" + celdas + "<td>" + textoPiezasKg({ piezas, kilos }) + "</td></tr>";
   };
   const cuerpoFilas = clientesFijos().map(nombre => {
     const mapa = porCliente.get(nombre) || new Map();
     return filaDe(nombre, mapa, "click");
   }).join("");
-  const unidad = metrica === "kilos" ? "kilos" : "piezas";
+  const ordenPiezas = [...porCliente.entries()].map(([nombre, mapa]) => {
+    let piezas = 0;
+    mapa.forEach(info => { piezas += info.piezas; });
+    return [nombre, piezas];
+  }).sort((a, b) => b[1] - a[1]);
+  const top = ordenPiezas.slice(0, 5).map(([nombre]) => nombre);
+  const color = colores(top);
+  const seriesTodos = top.map(nombre => ({ nombre, color: color.get(nombre), valores: porCliente.get(nombre) || new Map() }));
+  const otros = new Map();
+  columnas.forEach(t => otros.set(t, { piezas: 0, kilos: 0 }));
+  porCliente.forEach((mapa, nombre) => {
+    if (top.includes(nombre)) return;
+    columnas.forEach(t => {
+      const info = mapa.get(t);
+      if (!info) return;
+      otros.get(t).piezas += info.piezas;
+      otros.get(t).kilos += info.kilos;
+    });
+  });
+  if ([...otros.values()].some(v => v.piezas || v.kilos)) seriesTodos.push({ nombre: "Otros", color: OTROS, valores: otros });
+  const grafTodos = graficaTurnos("Todos los clientes", seriesTodos, columnas);
+  const grafCliente = cliente
+    ? graficaTurnos(corto(cliente), [{ nombre: cliente, color: "#9f1239", valores: porCliente.get(cliente) || new Map() }], columnas)
+    : "";
   caja.innerHTML = "<h2>Por turno</h2>"
-    + "<p class=\"turno-nota\">El turno es el que viene en el seguimiento, para las fechas de arriba. Las cifras son " + unidad + ". La franja de arriba es el total de todos. En el teléfono, desliza la tabla para ver cada turno y el total de la empresa.</p>"
+    + "<p class=\"turno-nota\">La altura de la barra es por piezas. Debajo de cada turno se leen las piezas y los kg. Los colores son los clientes con más piezas; el resto va en Otros. Si eliges una empresa, abajo sale su gráfica. En el teléfono, desliza la gráfica para ver los cuatro turnos.</p>"
+    + grafTodos
+    + grafCliente
     + "<div class=\"turno-totales\">" + chips + "</div>"
     + "<div class=\"tabla-wrap\"><table class=\"turno-tabla\"><thead><tr>" + head + "</tr></thead><tbody>"
     + cuerpoFilas
@@ -1039,7 +1117,7 @@ function llenarClientes() {
   if (!lista) return;
   const enPeriodo = conteoDelPeriodo();
   const nombres = clientesFijos();
-  const linea = (nombre, piezas) => esc(nombre) + ' · <span class="cli-pzas">' + esc(fmt(piezas) + " pzas") + "</span>";
+  const linea = (nombre, piezas) => esc(nombre) + ' · <span class="cli-pzas">' + esc(fmt(piezas) + " piezas") + "</span>";
   const boton = (nombre, titulo, detalle, activo) => '<button type="button" class="cli-btn' + (activo ? " activa" : "") + '" data-elegir="' + esc(nombre) + '" aria-pressed="' + (activo ? "true" : "false") + '"><strong>' + esc(titulo) + "</strong><small>" + detalle + "</small></button>";
   lista.innerHTML = nombres.map(n => {
     const info = enPeriodo.get(n);
