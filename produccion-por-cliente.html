@@ -445,11 +445,13 @@ function corto(nombre, limite = 22) {
 function parseFecha(v) {
   const m = /^Date\((\d+),(\d+),(\d+)/.exec(String(v || ""));
   if (!m) return null;
-  return new Date(Number(m[1]), Number(m[2]), Number(m[3]));
+  const anio = Number(m[1]);
+  if (!anioCreible(anio)) return null;
+  return new Date(anio, Number(m[2]), Number(m[3]));
 }
 
 function iso(d) {
-  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  return String(d.getFullYear()).padStart(4, "0") + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
 
 function parseIso(s) {
@@ -1189,10 +1191,16 @@ function numeroCsv(s) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function anioCreible(anio) {
+  return anio >= 2020 && anio <= 2035;
+}
+
 function fechaCsv(s) {
   const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(s || "").trim());
   if (!m) return null;
-  return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+  const anio = Number(m[3]);
+  if (!anioCreible(anio)) return null;
+  return new Date(anio, Number(m[2]) - 1, Number(m[1]));
 }
 
 function filasDeCsv(texto) {
