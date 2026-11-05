@@ -684,7 +684,8 @@ function pintar() {
   const topGraf = rankGraf.slice(0, 5).map(([nombre]) => nombre);
   const colorGraf = colores(topGraf);
   const maxDia = Math.max(1, ...diasGraf.map(valorDe));
-  const ancho = Math.max(720, diasGraf.length * 92);
+  const unaEmpresa = !!cliente;
+  const ancho = Math.max(720, diasGraf.length * (unaEmpresa ? 156 : 92));
 
   const partes = diasGraf.map(dia => {
     let otros = 0;
@@ -703,11 +704,11 @@ function pintar() {
     + (rankGraf.length > 5 ? '<span><i style="background:' + OTROS + '"></i>Otros</span>' : "");
 
   let x0 = 36;
-  const alto = 236;
-  const base = 178;
-  const maxBar = 142;
+  const alto = unaEmpresa ? 268 : 236;
+  const base = unaEmpresa ? 176 : 178;
+  const maxBar = unaEmpresa ? 112 : 142;
   const gap = 14;
-  const bw = Math.max(64, (ancho - 52 - gap * diasGraf.length) / Math.max(diasGraf.length, 1));
+  const bw = Math.max(unaEmpresa ? 132 : 64, (ancho - 52 - gap * diasGraf.length) / Math.max(diasGraf.length, 1));
   const barrasSvg = partes.map(({ dia, segs }) => {
     let y = base;
     const rects = [];
@@ -726,9 +727,15 @@ function pintar() {
     const totalDia = valorDe(dia);
     const numDia = fmt(totalDia, metrica === "kilos" && totalDia < 100 ? 1 : 0);
     const etiqueta = fmtFechaCorta(dia.fecha);
+    const piezasTxt = fmt(dia.piezas) + " piezas";
+    const kilosTxt = fmt(dia.kilos, dia.kilos >= 100 ? 0 : 1) + " kg";
+    const cifra = unaEmpresa
+      ? '<text x="' + cx.toFixed(1) + '" y="' + Math.max(16, y - 20).toFixed(1) + '" text-anchor="middle" font-size="11" font-weight="700" fill="#1c1915">' + esc(piezasTxt) + "</text>"
+        + '<text x="' + cx.toFixed(1) + '" y="' + Math.max(30, y - 6).toFixed(1) + '" text-anchor="middle" font-size="11" fill="#5e574c">' + esc(kilosTxt) + "</text>"
+      : '<text x="' + cx.toFixed(1) + '" y="' + Math.max(14, y - 6).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="700" fill="#1c1915">' + esc(numDia) + "</text>";
     const g = '<g data-fecha="' + iso(dia.fecha) + '" style="cursor:pointer">' + rects.join("")
-      + '<text x="' + cx.toFixed(1) + '" y="' + Math.max(14, y - 6).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="700" fill="#1c1915">' + esc(numDia) + "</text>"
-      + '<text x="' + cx.toFixed(1) + '" y="206" text-anchor="middle" font-size="11" fill="#5e574c">' + esc(etiqueta) + "</text></g>";
+      + cifra
+      + '<text x="' + cx.toFixed(1) + '" y="' + (unaEmpresa ? 214 : 206) + '" text-anchor="middle" font-size="11" fill="#5e574c">' + esc(etiqueta) + "</text></g>";
     x0 += bw + gap;
     return g;
   }).join("");
@@ -769,10 +776,12 @@ function pintar() {
     ? ""
     : '<div class="estado">' + (cliente ? "No hay producción de " + esc(corto(cliente)) + "." : "No hay producción.") + "</div>";
 
-  const bloqueDias = diasGraf.length < 2 ? "" : (
-    '<section><h2>Cada día <span>' + esc(fmtFechaCorta(grafIni)) + " – " + esc(fmtFechaCorta(grafFin)) + "</span></h2>"
+  const bloqueDias = !diasGraf.length ? (cliente
+    ? '<section><h2>Cada día · ' + esc(corto(cliente)) + '</h2><p class="sub">No hay días de ' + esc(corto(cliente)) + " en esas fechas.</p></section>"
+    : "") : (
+    '<section><h2>Cada día' + (cliente ? " · " + esc(corto(cliente)) : "") + ' <span>' + esc(fmtFechaCorta(grafIni)) + " – " + esc(fmtFechaCorta(grafFin)) + "</span></h2>"
     + '<p class="sub no-print">' + (cliente
-      ? "Los últimos días de ese cliente. La última barra es la fecha más nueva."
+      ? "Solo " + esc(corto(cliente)) + ". Cada barra dice las piezas y los kg. La última barra es la fecha más nueva."
       : "Los últimos días. La última barra es la fecha más nueva. Cada color es un cliente.") + "</p>"
     + '<article class="card"><div class="leyenda">' + leyenda + '</div><div class="chart-scroll"><svg class="dias" width="' + Math.ceil(ancho) + '" height="' + alto + '" viewBox="0 0 ' + ancho + " " + alto + '" role="img" aria-label="Producción diaria">'
     + barrasSvg + "</svg></div></article></section>"
@@ -1073,9 +1082,11 @@ function pintarTurnos() {
   }).join("");
   if (arriba) {
     const mapa = cliente ? (porCliente.get(cliente) || new Map()) : totTurno;
-    arriba.innerHTML = "<h2>Producción por turno</h2>"
-      + "<p>Cada barra es un turno. La más larga tiene más piezas. No es la gráfica de los días.</p>"
-      + bloqueTurno(mapa, cliente ? corto(cliente) : "");
+    arriba.innerHTML = "<h2>Producción por turno" + (cliente ? " · " + esc(corto(cliente)) : "") + "</h2>"
+      + "<p>" + (cliente
+        ? "Solo " + esc(corto(cliente)) + ". Cada barra es un turno, con sus piezas y sus kg."
+        : "Cada barra es un turno. La más larga tiene más piezas. No es la gráfica de los días.") + "</p>"
+      + bloqueTurno(mapa, "");
   }
   caja.innerHTML = "<h2>Tabla por turno</h2>"
     + "<p class=\"turno-nota\">La misma producción, cliente por cliente. Cada celda dice las piezas y los kg. En el teléfono, desliza para ver cada turno.</p>"
@@ -1132,6 +1143,10 @@ function elegirCliente(nombre) {
   cliente = nombre || "";
   llenarClientes();
   pintar();
+  if (cliente) {
+    const caja = document.getElementById("turnoVisible");
+    if (caja) caja.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
 
 function estado(msg, error) {
@@ -1477,8 +1492,6 @@ document.getElementById("listaClientes").addEventListener("click", e => {
   if (!b) return;
   const nombre = b.dataset.elegir || "";
   elegirCliente(cliente === nombre ? "" : nombre);
-  const numeros = document.getElementById("numeros");
-  if (numeros) numeros.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 document.getElementById("quien").addEventListener("click", e => {
