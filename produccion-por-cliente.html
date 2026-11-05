@@ -319,6 +319,8 @@ if (location.protocol === "file:") location.replace("https://betatesterg1t.githu
 
   <div id="acumulado"></div>
 
+  <div id="quien"></div>
+
   <button type="button" class="btn-todo no-print" id="btnTodosDatos">
     <strong>Todos los datos</strong>
     <small id="btnTodosMeta">Todas las empresas, todas las piezas</small>
@@ -603,6 +605,8 @@ function pintar() {
   if (!corte) {
     cuerpo.innerHTML = '<div class="estado">Todavía no hay fechas en el seguimiento.</div>';
     if (acumulado) acumulado.innerHTML = "";
+    const quienVacio = document.getElementById("quien");
+    if (quienVacio) quienVacio.innerHTML = "";
     pintarTurnos();
     return;
   }
@@ -788,18 +792,18 @@ function pintar() {
       + "</div>";
   }
   if (acumulado) acumulado.innerHTML = bloqueDias;
-  cuerpo.innerHTML = vacio || (
-    '<section><h2>' + (cliente ? "Producción de " + esc(corto(cliente)) : "Quién produjo más") + " <span>" + (metrica === "kilos" ? "kilos" : "piezas") + "</span></h2>"
+  const quien = document.getElementById("quien");
+  const bloqueQuien = '<section><h2>' + (cliente ? "Producción de " + esc(corto(cliente)) : "Quién produjo más") + " <span>" + (metrica === "kilos" ? "kilos" : "piezas") + "</span></h2>"
     + '<p class="sub no-print">Oprime un nombre para ver solo a ese cliente. Oprime otra vez para volver a todos.</p>'
+    + '<article class="card"><div class="bars">' + barrasCli + "</div></article>"
     + '<button type="button" class="btn-desplegar" data-desplegar="participacion" aria-expanded="' + (verParticipacion ? "true" : "false") + '"><span>Ver detalle de todos los clientes</span>' + (verParticipacion ? "<small>Ocultar</small>" : "") + "</button>"
     + '<div class="desplegable' + (verParticipacion ? " abierto" : "") + '">'
-    + '<article class="card"><div class="bars">' + barrasCli + "</div></article>"
-    + '<div class="tabla-wrap" style="margin-top:12px"><table><thead><tr><th class="l">Cliente</th><th>Días</th><th>Órdenes</th><th>Piezas</th><th>Kilos</th><th>%</th></tr></thead><tbody>'
+    + '<div class="tabla-wrap"><table><thead><tr><th class="l">Cliente</th><th>Días</th><th>Órdenes</th><th>Piezas</th><th>Kilos</th><th>%</th></tr></thead><tbody>'
     + filasCliente
     + '<tr class="total"><td class="l">' + (dias.length < 2 ? "Día" : "Periodo") + '</td><td></td><td>' + fmt(res.ordenes) + "</td><td>" + fmt(res.piezas) + "</td><td>" + fmt(res.kilos, 0) + "</td><td>100%</td></tr>"
-    + "</tbody></table></div></div></section>"
-    + bloqueDetalle
-  );
+    + "</tbody></table></div></div></section>";
+  if (quien) quien.innerHTML = vacio || bloqueQuien;
+  cuerpo.innerHTML = vacio ? "" : bloqueDetalle;
   pintarTurnos();
   sincronizarDia();
   marcarBotonTodos();
@@ -1136,6 +1140,8 @@ function estado(msg, error) {
   document.getElementById("cuerpo").innerHTML = '<div class="estado' + (error ? " error" : "") + '">' + esc(msg) + "</div>";
   const acumulado = document.getElementById("acumulado");
   if (acumulado) acumulado.innerHTML = "";
+  const quien = document.getElementById("quien");
+  if (quien) quien.innerHTML = "";
 }
 
 function partirCsv(texto) {
@@ -1473,6 +1479,18 @@ document.getElementById("listaClientes").addEventListener("click", e => {
   elegirCliente(cliente === nombre ? "" : nombre);
   const numeros = document.getElementById("numeros");
   if (numeros) numeros.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+document.getElementById("quien").addEventListener("click", e => {
+  const desplegar = e.target.closest("[data-desplegar]");
+  if (desplegar) {
+    verParticipacion = !verParticipacion;
+    pintar();
+    return;
+  }
+  const b = e.target.closest("[data-cliente]");
+  if (!b) return;
+  elegirCliente(cliente === b.dataset.cliente ? "" : b.dataset.cliente);
 });
 
 document.getElementById("acumulado").addEventListener("click", e => {
