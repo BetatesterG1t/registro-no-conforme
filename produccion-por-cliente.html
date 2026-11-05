@@ -304,7 +304,7 @@ if (location.protocol === "file:") location.replace("https://betatesterg1t.githu
     <div>
       <p class="eyebrow">Bolseo · gerencia</p>
       <h1>Producción por cliente</h1>
-      <p class="lede">Lo primero son los turnos. Cada barra dice sus piezas y sus kg. Más abajo está el acumulado de todos los días.</p>
+      <p class="lede">Lo primero son los turnos. Justo debajo está el acumulado de cada día.</p>
     </div>
     <div class="corte">
       <strong id="corteFecha">Cargando…</strong>
@@ -314,6 +314,8 @@ if (location.protocol === "file:") location.replace("https://betatesterg1t.githu
   <p id="pieImpreso" class="solo-impresion"></p>
 
   <section id="turnoVisible" class="turno-arriba" aria-label="Producción por turno"></section>
+
+  <div id="acumulado"></div>
 
   <button type="button" class="btn-todo no-print" id="btnTodosDatos">
     <strong>Todos los datos</strong>
@@ -597,8 +599,10 @@ function colores(nombres) {
 
 function pintar() {
   const cuerpo = document.getElementById("cuerpo");
+  const acumulado = document.getElementById("acumulado");
   if (!corte) {
     cuerpo.innerHTML = '<div class="estado">Todavía no hay fechas en el seguimiento.</div>';
+    if (acumulado) acumulado.innerHTML = "";
     pintarTurnos();
     return;
   }
@@ -783,9 +787,9 @@ function pintar() {
       + kpi("Kilos producidos", fmt(res.kilos, res.kilos >= 100 ? 0 : 1) + " kg", dKilos)
       + "</div>";
   }
+  if (acumulado) acumulado.innerHTML = bloqueDias;
   cuerpo.innerHTML = vacio || (
-    bloqueDias
-    + '<section><h2>' + (cliente ? "Producción de " + esc(corto(cliente)) : "Quién produjo más") + " <span>" + (metrica === "kilos" ? "kilos" : "piezas") + "</span></h2>"
+    '<section><h2>' + (cliente ? "Producción de " + esc(corto(cliente)) : "Quién produjo más") + " <span>" + (metrica === "kilos" ? "kilos" : "piezas") + "</span></h2>"
     + '<p class="sub no-print">Oprime un nombre para ver solo a ese cliente. Oprime otra vez para volver a todos.</p>'
     + '<button type="button" class="btn-desplegar" data-desplegar="participacion" aria-expanded="' + (verParticipacion ? "true" : "false") + '"><span>Ver detalle de todos los clientes</span>' + (verParticipacion ? "<small>Ocultar</small>" : "") + "</button>"
     + '<div class="desplegable' + (verParticipacion ? " abierto" : "") + '">'
@@ -1130,6 +1134,8 @@ function estado(msg, error) {
   document.getElementById("corteFecha").textContent = error ? "No se pudo leer" : "Cargando…";
   document.getElementById("corteMeta").textContent = "";
   document.getElementById("cuerpo").innerHTML = '<div class="estado' + (error ? " error" : "") + '">' + esc(msg) + "</div>";
+  const acumulado = document.getElementById("acumulado");
+  if (acumulado) acumulado.innerHTML = "";
 }
 
 function partirCsv(texto) {
@@ -1467,6 +1473,16 @@ document.getElementById("listaClientes").addEventListener("click", e => {
   elegirCliente(cliente === nombre ? "" : nombre);
   const numeros = document.getElementById("numeros");
   if (numeros) numeros.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+document.getElementById("acumulado").addEventListener("click", e => {
+  const marcaFecha = e.target.closest("[data-fecha]");
+  if (!marcaFecha || !marcaFecha.dataset.fecha) return;
+  const destino = parseIso(marcaFecha.dataset.fecha);
+  if (!destino) return;
+  elegirExtremo(destino);
+  llenarClientes();
+  pintar();
 });
 
 document.getElementById("cuerpo").addEventListener("click", e => {
