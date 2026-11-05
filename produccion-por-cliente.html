@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <title>Producción por cliente</title>
 <style>
   :root {
@@ -643,7 +645,7 @@ function pintar() {
     const rango = periodo === "dia"
       ? fmtFechaLarga(fin)
       : fmtFechaCorta(v.ini) + " – " + fmtFechaCorta(v.fin);
-    pie.textContent = rango + (cliente ? " · " + cliente : " · Todos los clientes")
+    pie.textContent = rango + (cliente ? " · " + cliente : "")
       + " · " + (metrica === "kilos" ? "Kilos" : "Piezas");
   }
   const firma = periodo + "|" + iso(fin) + "|" + cliente + "|" + res.piezas + "|" + res.kilos;
