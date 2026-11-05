@@ -203,7 +203,7 @@
   }
   .panel-turnos h2 { font-size: 22px; margin: 0 0 6px; }
   .turno-nota { margin: 0 0 12px; color: var(--muted); font-size: 13.5px; }
-  .turno-totales { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+  .turno-totales { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
   .turno-totales article { background: #fbf7f1; border-radius: 12px; padding: 8px 10px; }
   .turno-totales span { display: block; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
   .turno-totales strong { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -1019,43 +1019,29 @@ function pintarTurnos() {
     if (arriba) arriba.innerHTML = "";
     return;
   }
-  const vistos = new Set();
-  let hayVacio = false;
-  registros.forEach(r => {
-    const t = String(r.turno || "").trim();
-    if (!t) hayVacio = true;
-    else vistos.add(t);
-  });
-  const turnos = [...vistos].sort((a, b) => a.localeCompare(b, "es", { numeric: true }));
-  if (!turnos.length) {
-    caja.innerHTML = "<h2>Por turno</h2><p class=\"turno-nota\">La hoja tiene la columna de turno, pero las capturas vienen vacías. No se inventan turnos.</p>";
-    if (arriba) arriba.innerHTML = "";
-    return;
-  }
   const fin = periodo === "todo" ? corte : finActivo();
   const v = ventana(fin, periodo);
   const rows = v ? tomar(v.ini, v.fin, "") : [];
-  const columnas = hayVacio ? turnos.concat([""]) : turnos.slice();
+  const columnas = ["1", "2", "3"];
   const porCliente = new Map();
   const totTurno = new Map();
   columnas.forEach(t => totTurno.set(t, { piezas: 0, kilos: 0 }));
   rows.forEach(r => {
     const t = String(r.turno || "").trim();
-    const clave = vistos.has(t) ? t : "";
+    if (!columnas.includes(t)) return;
     if (!porCliente.has(r.cliente)) {
       const m = new Map();
       columnas.forEach(x => m.set(x, { piezas: 0, kilos: 0 }));
       porCliente.set(r.cliente, m);
     }
-    const celda = porCliente.get(r.cliente).get(clave);
-    const suma = totTurno.get(clave);
-    if (!celda || !suma) return;
+    const celda = porCliente.get(r.cliente).get(t);
+    const suma = totTurno.get(t);
     celda.piezas += r.piezas;
     celda.kilos += r.kilos;
     suma.piezas += r.piezas;
     suma.kilos += r.kilos;
   });
-  const titulo = t => t ? "Turno " + t : "Sin turno";
+  const titulo = t => "Turno " + t;
   const chips = columnas.map(t => "<article><span>" + esc(titulo(t)) + "</span><strong>" + textoPiezasKg(totTurno.get(t)) + "</strong></article>").join("");
   const head = "<th class=\"l\">Cliente</th>" + columnas.map(t => "<th>" + esc(titulo(t)) + "</th>").join("") + "<th>Total</th>";
   const filaDe = (nombre, mapa, clase) => {
