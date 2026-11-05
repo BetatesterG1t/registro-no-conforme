@@ -198,6 +198,19 @@
     background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-top: 10px;
   }
   .panel-clientes h2 { font-size: 22px; margin-bottom: 10px; }
+  .panel-turnos {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-top: 10px;
+  }
+  .panel-turnos h2 { font-size: 22px; margin: 0 0 6px; }
+  .turno-nota { margin: 0 0 12px; color: var(--muted); font-size: 13.5px; }
+  .turno-totales { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+  .turno-totales article { background: #fbf7f1; border-radius: 12px; padding: 8px 10px; }
+  .turno-totales span { display: block; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
+  .turno-totales strong { font-size: 18px; font-variant-numeric: tabular-nums; }
+  .turno-tabla th.l, .turno-tabla td.l { position: sticky; left: 0; z-index: 1; background: #fffdf8; min-width: 108px; }
+  .turno-tabla th.l { z-index: 2; background: #fbf7f1; }
+  .turno-tabla tr.sel td.l { background: var(--accent-soft); }
+  .turno-tabla tr.total td.l { background: #fbf7f1; }
   .lista-clientes { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
   .cli-btn {
     text-align: left; border: 1px solid var(--line); background: var(--card); border-radius: 14px;
@@ -220,6 +233,7 @@
   @media (max-width: 640px) {
     .kpis, .kpis.tres { grid-template-columns: 1fr; }
     .lista-clientes { grid-template-columns: 1fr; }
+    .turno-totales { grid-template-columns: 1fr 1fr; }
     .btn-todo { padding: 14px 14px; }
     .btn-todo strong { font-size: 20px; }
   }
@@ -297,6 +311,8 @@ if (location.protocol === "file:") location.replace("https://betatesterg1t.githu
     <div class="lista-clientes" id="listaClientes"></div>
   </div>
 
+  <section id="porTurno" class="panel-turnos"></section>
+
   <div id="cuerpo"></div>
   <p class="nota"><strong>El mismo enlace en la computadora y en el celular.</strong> Hace falta la contraseña. Quien la tenga ve las mismas empresas, las mismas piezas y los mismos kilos. Si el seguimiento tarda, esta pantalla enseña la última lectura y la cambia en cuanto responde.<br><button type="button" class="jump" id="btnCopiar">Copiar enlace</button><span class="enlace" id="enlaceVisible"></span></p>
 </div>
@@ -324,7 +340,8 @@ let verParticipacion = false;
 let firmaLectura = "";
 let lecturaLocal = false;
 let copiaParcial = false;
-const STORE = "bolseo-reporte-v1";
+let turnoEnHoja = false;
+const STORE = "bolseo-reporte-v2";
 
 window.google = window.google || {};
 google.visualization = google.visualization || {};
@@ -555,6 +572,7 @@ function pintar() {
   const cuerpo = document.getElementById("cuerpo");
   if (!corte) {
     cuerpo.innerHTML = '<div class="estado">Todavía no hay fechas en el seguimiento.</div>';
+    pintarTurnos();
     return;
   }
   const fin = periodo === "todo" ? corte : finActivo();
@@ -751,6 +769,7 @@ function pintar() {
     + "</tbody></table></div></div></section>"
     + bloqueDetalle
   );
+  pintarTurnos();
   sincronizarDia();
   marcarBotonTodos();
   document.querySelectorAll(".chart-scroll").forEach(zona => { zona.scrollLeft = zona.scrollWidth; });
@@ -934,6 +953,87 @@ function clientesFijos() {
   }).map(([nombre]) => nombre);
 }
 
+function numTurno(info) {
+  const n = info ? (metrica === "kilos" ? info.kilos : info.piezas) : 0;
+  return metrica === "kilos" ? fmt(n, n >= 100 ? 0 : 1) : fmt(n);
+}
+
+function pintarTurnos() {
+  const caja = document.getElementById("porTurno");
+  if (!caja) return;
+  if (!corte || !registros.length) {
+    caja.innerHTML = "";
+    return;
+  }
+  if (!turnoEnHoja) {
+    caja.innerHTML = "<h2>Por turno</h2><p class=\"turno-nota\">El seguimiento no trae turno. No se inventan turnos.</p>";
+    return;
+  }
+  const vistos = new Set();
+  let hayVacio = false;
+  registros.forEach(r => {
+    const t = String(r.turno || "").trim();
+    if (!t) hayVacio = true;
+    else vistos.add(t);
+  });
+  const turnos = [...vistos].sort((a, b) => a.localeCompare(b, "es", { numeric: true }));
+  if (!turnos.length) {
+    caja.innerHTML = "<h2>Por turno</h2><p class=\"turno-nota\">La hoja tiene la columna de turno, pero las capturas vienen vacías. No se inventan turnos.</p>";
+    return;
+  }
+  const fin = periodo === "todo" ? corte : finActivo();
+  const v = ventana(fin, periodo);
+  const rows = v ? tomar(v.ini, v.fin, "") : [];
+  const columnas = hayVacio ? turnos.concat([""]) : turnos.slice();
+  const porCliente = new Map();
+  const totTurno = new Map();
+  columnas.forEach(t => totTurno.set(t, { piezas: 0, kilos: 0 }));
+  rows.forEach(r => {
+    const t = String(r.turno || "").trim();
+    const clave = vistos.has(t) ? t : "";
+    if (!porCliente.has(r.cliente)) {
+      const m = new Map();
+      columnas.forEach(x => m.set(x, { piezas: 0, kilos: 0 }));
+      porCliente.set(r.cliente, m);
+    }
+    const celda = porCliente.get(r.cliente).get(clave);
+    const suma = totTurno.get(clave);
+    if (!celda || !suma) return;
+    celda.piezas += r.piezas;
+    celda.kilos += r.kilos;
+    suma.piezas += r.piezas;
+    suma.kilos += r.kilos;
+  });
+  const titulo = t => t ? "Turno " + t : "Sin turno";
+  const chips = columnas.map(t => "<article><span>" + esc(titulo(t)) + "</span><strong>" + numTurno(totTurno.get(t)) + "</strong></article>").join("");
+  const head = "<th class=\"l\">Cliente</th>" + columnas.map(t => "<th>" + esc(titulo(t)) + "</th>").join("") + "<th>Total</th>";
+  const filaDe = (nombre, mapa, clase) => {
+    let piezas = 0;
+    let kilos = 0;
+    const celdas = columnas.map(t => {
+      const info = mapa.get(t) || { piezas: 0, kilos: 0 };
+      piezas += info.piezas;
+      kilos += info.kilos;
+      return "<td>" + numTurno(info) + "</td>";
+    }).join("");
+    const marca = nombre && nombre === cliente ? " sel" : "";
+    const attr = nombre ? " data-cliente=\"" + esc(nombre) + "\"" : "";
+    return "<tr class=\"" + clase + marca + "\"" + attr + "><td class=\"l\">" + esc(nombre ? corto(nombre) : "Total") + "</td>" + celdas + "<td>" + numTurno({ piezas, kilos }) + "</td></tr>";
+  };
+  const cuerpoFilas = clientesFijos().map(nombre => {
+    const mapa = porCliente.get(nombre) || new Map();
+    return filaDe(nombre, mapa, "click");
+  }).join("");
+  const unidad = metrica === "kilos" ? "kilos" : "piezas";
+  caja.innerHTML = "<h2>Por turno</h2>"
+    + "<p class=\"turno-nota\">El turno es el que viene en el seguimiento, para las fechas de arriba. Las cifras son " + unidad + ". La franja de arriba es el total de todos. En el teléfono, desliza la tabla para ver cada turno y el total de la empresa.</p>"
+    + "<div class=\"turno-totales\">" + chips + "</div>"
+    + "<div class=\"tabla-wrap\"><table class=\"turno-tabla\"><thead><tr>" + head + "</tr></thead><tbody>"
+    + cuerpoFilas
+    + filaDe("", totTurno, "total")
+    + "</tbody></table></div>";
+}
+
 function llenarClientes() {
   const lista = document.getElementById("listaClientes");
   if (!lista) return;
@@ -1033,6 +1133,8 @@ function filasDeCsv(texto) {
   const iOrden = head.indexOf("ORDEN");
   const iPiezas = head.indexOf("CANTIDAD PIEZAS");
   const iKilos = head.findIndex(c => c.trim() === "PESO TOTAL");
+  const iTurno = head.indexOf("TURNO");
+  turnoEnHoja = iTurno >= 0;
   if (iFecha < 0 || iCliente < 0 || iPiezas < 0 || iKilos < 0) return [];
   const out = [];
   for (let r = 1; r < tabla.length; r++) {
@@ -1047,7 +1149,8 @@ function filasDeCsv(texto) {
       cliente: reparar(c[iCliente] || ""),
       orden: String(c[iOrden] || "").trim(),
       piezas,
-      kilos
+      kilos,
+      turno: iTurno >= 0 ? String(c[iTurno] || "").trim() : ""
     });
   }
   return out;
@@ -1060,6 +1163,8 @@ function filasDe(resp) {
   const iOrden = cols.indexOf("ORDEN");
   const iPiezas = cols.indexOf("CANTIDAD PIEZAS");
   const iKilos = cols.findIndex(c => c && c.trim() === "PESO TOTAL");
+  const iTurno = cols.indexOf("TURNO");
+  turnoEnHoja = iTurno >= 0;
   const out = [];
   resp.table.rows.forEach(row => {
     const c = row.c || [];
@@ -1074,7 +1179,8 @@ function filasDe(resp) {
       cliente: reparar(leer(iCliente) || ""),
       orden: String(leer(iOrden) || "").trim(),
       piezas,
-      kilos
+      kilos,
+      turno: iTurno >= 0 ? String(leer(iTurno) || "").trim() : ""
     });
   });
   return out;
@@ -1090,17 +1196,17 @@ function firmaDatos(lista) {
     kilos += r.kilos;
     const k = iso(r.fecha);
     if (k > max) max = k;
-    extra = (extra + r.piezas * 13 + r.cliente.length * 17 + r.orden.length) % 10000019;
+    extra = (extra + r.piezas * 13 + r.cliente.length * 17 + r.orden.length + String(r.turno || "").length * 19) % 10000019;
   });
   return lista.length + "|" + max + "|" + piezas + "|" + Math.round(kilos * 10) + "|" + extra;
 }
 
 function empaquetar(lista) {
-  return lista.map(r => [iso(r.fecha), r.cliente, r.orden, r.piezas, Math.round(r.kilos * 10) / 10]);
+  return lista.map(r => [iso(r.fecha), r.cliente, r.orden, r.piezas, Math.round(r.kilos * 10) / 10, r.turno || ""]);
 }
 
 function guardar() {
-  const payload = (filas, parcial) => JSON.stringify({ v: 1, t: Date.now(), parcial: !!parcial, filas });
+  const payload = (filas, parcial) => JSON.stringify({ v: 2, t: Date.now(), parcial: !!parcial, turno: turnoEnHoja, filas });
   try {
     localStorage.setItem(STORE, payload(empaquetar(registros), false));
     copiaParcial = false;
@@ -1119,23 +1225,25 @@ function restaurar() {
     const raw = localStorage.getItem(STORE);
     if (!raw) return false;
     const data = JSON.parse(raw);
-    if (!data || data.v !== 1 || !Array.isArray(data.filas) || !data.filas.length) return false;
+    if (!data || data.v !== 2 || !Array.isArray(data.filas) || !data.filas.length) return false;
     const out = [];
     data.filas.forEach(f => {
       const fecha = parseIso(f[0]);
-      if (!fecha) return;
+      if (!fecha || f.length < 6) return;
       out.push({
         fecha,
         cliente: f[1] || "(sin cliente)",
         orden: f[2] || "",
         piezas: Number(f[3]) || 0,
-        kilos: Number(f[4]) || 0
+        kilos: Number(f[4]) || 0,
+        turno: String(f[5] || "").trim()
       });
     });
     if (out.length < 50) return false;
     const empresas = new Set(out.map(r => r.cliente));
     if (data.parcial || empresas.size < 8) return false;
     registros = out;
+    turnoEnHoja = data.turno !== false;
     corte = out.reduce((max, r) => !max || r.fecha > max ? r.fecha : max, null);
     consultado = new Date(data.t || Date.now());
     copiaParcial = !!data.parcial;
@@ -1300,6 +1408,13 @@ function copiarEnlace() {
     navigator.clipboard.writeText(ENLACE).then(listo).catch(() => {});
   }
 }
+
+document.getElementById("porTurno").addEventListener("click", e => {
+  const b = e.target.closest("[data-cliente]");
+  if (!b) return;
+  const nombre = b.dataset.cliente || "";
+  elegirCliente(cliente === nombre ? "" : nombre);
+});
 
 document.getElementById("listaClientes").addEventListener("click", e => {
   const b = e.target.closest("[data-elegir]");
