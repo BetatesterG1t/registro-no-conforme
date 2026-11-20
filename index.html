@@ -158,7 +158,7 @@
           <label for="orden">Orden</label>
           <input type="text" id="orden" name="orden" list="ordenesList" autocomplete="off" required>
           <datalist id="ordenesList"></datalist>
-          <div class="hint" id="ordenHint">Escribe la orden para traer cliente, SKU y producto desde Seguimiento OT (rep-ov-espec).</div>
+          <div class="hint" id="ordenHint">Escribe la orden para traer cliente, SKU, ID producto y producto desde Seguimiento OT (rep-ov-espec).</div>
         </div>
       </div>
 
@@ -175,6 +175,10 @@
         <div>
           <label for="codigo">SKU</label>
           <input type="text" id="codigo" name="codigo" required>
+        </div>
+        <div>
+          <label for="id_producto">ID Producto</label>
+          <input type="text" id="id_producto" name="id_producto">
         </div>
         <div class="span-2">
           <label for="producto">Producto</label>
@@ -721,7 +725,7 @@
       const clave = normalizarClave(valor);
 
       if (!clave) {
-        hint.textContent = "Escribe la orden para traer cliente, SKU y producto desde Seguimiento OT (rep-ov-espec).";
+        hint.textContent = "Escribe la orden para traer cliente, SKU, ID producto y producto desde Seguimiento OT (rep-ov-espec).";
         productoSeleccionDiv.style.display = "none";
         return;
       }
@@ -741,7 +745,7 @@
       const unicos = [];
       const vistos = new Set();
       registros.forEach(r => {
-        const key = codigoDe(r) + "||" + r.producto;
+        const key = codigoDe(r) + "||" + (r.idProducto || "") + "||" + r.producto;
         if (!vistos.has(key)) {
           vistos.add(key);
           unicos.push(r);
@@ -753,14 +757,14 @@
       if (unicos.length === 1) {
         aplicarProducto(unicos[0]);
         productoSeleccionDiv.style.display = "none";
-        hint.textContent = "Cliente, SKU y producto encontrados en rep-ov-espec.";
+        hint.textContent = "Cliente, SKU, ID producto y producto encontrados en rep-ov-espec.";
       } else {
         const select = document.getElementById("productoOpciones");
         select.innerHTML = "";
         unicos.forEach((r, i) => {
           const opt = document.createElement("option");
           opt.value = i;
-          opt.textContent = (codigoDe(r) ? codigoDe(r) + " - " : "") + r.producto;
+          opt.textContent = [codigoDe(r), r.idProducto, r.producto].filter(Boolean).join(" - ");
           select.appendChild(opt);
         });
         select.onchange = function() {
@@ -775,21 +779,24 @@
     function aplicarProducto(registro) {
       setCampo("producto", registro.producto);
       setCampo("codigo", codigoDe(registro));
+      setCampo("id_producto", registro.idProducto);
     }
 
     function setCampo(id, valor) {
       const input = document.getElementById(id);
-      if (!valor) return;
-      input.value = valor;
-      input.classList.add("auto-filled");
+      if (!input) return;
+      const v = valor == null ? "" : String(valor).trim();
+      input.value = v;
+      if (v) input.classList.add("auto-filled");
+      else input.classList.remove("auto-filled");
     }
 
     function limpiarFormulario(form) {
       form.reset();
       document.getElementById("um").value = "KG";
       document.getElementById("productoSeleccion").style.display = "none";
-      ["cliente", "producto", "codigo"].forEach(id => document.getElementById(id).classList.remove("auto-filled"));
-      document.getElementById("ordenHint").textContent = "Escribe la orden para traer cliente, SKU y producto desde Seguimiento OT (rep-ov-espec).";
+      ["cliente", "producto", "codigo", "id_producto"].forEach(id => document.getElementById(id).classList.remove("auto-filled"));
+      document.getElementById("ordenHint").textContent = "Escribe la orden para traer cliente, SKU, ID producto y producto desde Seguimiento OT (rep-ov-espec).";
       reiniciarCamposCondicionales();
       fechaHoy();
     }
@@ -845,7 +852,8 @@
       "Proceso que detecta", "Máquina que detecta", "Operador que detecta",
       "Proceso que origina", "Máquina que origina", "Operador que origina",
       "Supervisor que origina", "Defecto", "Reporta", "Autorizo",
-      "Se autoriza", "Se sanea", "Material recuperado", "Material rechazado"
+      "Se autoriza", "Se sanea", "Material recuperado", "Material rechazado",
+      "ID Producto"
     ];
 
     function escaparHtml(s) {

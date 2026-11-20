@@ -46,7 +46,8 @@ const HEADERS = [
   "Se autoriza",
   "Se sanea",
   "Material recuperado",
-  "Material rechazado"
+  "Material rechazado",
+  "ID Producto"
 ];
 
 function getSpreadsheet() {
@@ -229,7 +230,8 @@ function guardarRegistro(data) {
       data.se_autoriza || "",
       data.se_sanea || "",
       data.material_recuperado || "",
-      data.material_rechazado || ""
+      data.material_rechazado || "",
+      data.id_producto || ""
     ]);
     return { ok: true, id: id, siguienteId: id + 1, sheetUrl: ss.getUrl() };
   } finally {
