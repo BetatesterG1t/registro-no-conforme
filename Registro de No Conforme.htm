@@ -40,11 +40,6 @@
     button:disabled, button:disabled:hover {
       background: #9aa3ad; cursor: not-allowed;
     }
-    .export-lock { margin-top: 8px; }
-    .export-pin label { margin-top: 12px; font-size: 0.9em; }
-    .export-pin input {
-      width: 140px; letter-spacing: 0.35em; text-align: center; font-size: 1.1em;
-    }
     .autocomplete { position: relative; }
     .autocomplete.abierto { z-index: 40; }
     .sugerencias {
@@ -55,27 +50,6 @@
     }
     .sugerencias div { padding: 8px 10px; cursor: pointer; }
     .sugerencias div:hover, .sugerencias div.activa { background: #e8f3ff; }
-    #pinAcceso {
-      display: none;
-      max-width: 420px;
-      margin: 40px auto;
-      padding: 24px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background: #f9f9f9;
-    }
-    body.bloqueado #pinAcceso { display: block; }
-    body.bloqueado > h1,
-    body.bloqueado #fuentesStatus,
-    body.bloqueado #tabs,
-    body.bloqueado #registro,
-    body.bloqueado #historial { display: none; }
-    #pin {
-      font-size: 1.6em;
-      letter-spacing: 0.45em;
-      text-align: center;
-    }
-    .pin-error { color: #b00020; margin-top: 8px; min-height: 1.2em; }
     .tabs { display: flex; gap: 8px; max-width: 820px; margin: 0 0 12px; }
     .tab {
       margin-top: 0; padding: 8px 18px; background: #d5dbe3; color: #222;
@@ -101,20 +75,53 @@
     }
     #tablaHistorial th { background: #e8eef4; position: sticky; top: 0; z-index: 1; }
     #tablaHistorial tbody tr:nth-child(even) { background: #f6f8fa; }
+    #tablaHistorial .etiq-btn {
+      margin-top: 0; padding: 4px 8px; font-size: 0.85em; background: #5f6b7a;
+    }
+    #tablaHistorial .etiq-btn:hover { background: #45505c; }
+    #etiquetaImprimir { display: none; }
+    @media print {
+      @page { size: 4in 2in; margin: 0; }
+      html, body { background: #fff; margin: 0; width: 4in; height: 2in; }
+      body > h1,
+      #fuentesStatus, #tabs, #registro, #historial { display: none !important; }
+      #etiquetaImprimir { display: block !important; }
+    }
+    .etiq-marco {
+      width: 4in;
+      height: 2in;
+      border: 2px solid #111;
+      padding: 4px 6px;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+      color: #111;
+      background: #fff;
+      overflow: hidden;
+    }
+    .etiq-titulo {
+      text-align: center;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      border-bottom: 2px solid #111;
+      padding-bottom: 2px;
+      margin-bottom: 3px;
+    }
+    .etiq-id {
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0 0 3px;
+    }
+    .etiq-tabla { width: 100%; border-collapse: collapse; font-size: 9px; }
+    .etiq-tabla th {
+      text-align: left; width: 18mm; padding: 0 4px 0 0; vertical-align: top; font-weight: bold;
+    }
+    .etiq-tabla td { padding: 0; vertical-align: top; word-break: break-word; }
+    .etiq-sku { font-size: 11px; font-weight: bold; letter-spacing: 0.03em; }
   </style>
 </head>
 <body>
-  <div id="pinAcceso">
-    <h1>Registro de No Conforme</h1>
-    <p>Ingresa el PIN de 4 dígitos para continuar.</p>
-    <form id="formPin">
-      <label for="pin">PIN</label>
-      <input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="one-time-code" required>
-      <div id="pinError" class="pin-error"></div>
-      <button type="submit">Entrar</button>
-    </form>
-  </div>
-
   <h1>Registro de No Conforme</h1>
 
   <div id="fuentesStatus" class="fuentes-status">
@@ -151,7 +158,7 @@
           <label for="orden">Orden</label>
           <input type="text" id="orden" name="orden" list="ordenesList" autocomplete="off" required>
           <datalist id="ordenesList"></datalist>
-          <div class="hint" id="ordenHint">Escribe la orden para traer cliente, SKU y producto desde Seguimiento OT (rep-ov-espec).</div>
+          <div class="hint" id="ordenHint">Escribe la orden para traer cliente, SKU, ID producto y producto desde Seguimiento OT (rep-ov-espec).</div>
         </div>
       </div>
 
@@ -168,6 +175,10 @@
         <div>
           <label for="codigo">SKU</label>
           <input type="text" id="codigo" name="codigo" required>
+        </div>
+        <div>
+          <label for="id_producto">ID Producto</label>
+          <input type="text" id="id_producto" name="id_producto">
         </div>
         <div class="span-2">
           <label for="producto">Producto</label>
@@ -293,16 +304,10 @@
 
       <div class="actions">
         <button type="submit">Guardar Registro</button>
+        <button type="button" id="btnImprimirEtiqueta" class="secondary-btn">Imprimir etiqueta</button>
       </div>
+      <p class="hint">Etiqueta Zebra 4 x 2 pulgadas. Elige la impresora Zebra, papel 4x2 y quita encabezados. En Historial también puedes reimprimir.</p>
     </form>
-    <div class="actions export-lock">
-      <div class="export-pin">
-        <label for="pinExportar">PIN para descargar</label>
-        <input id="pinExportar" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••">
-        <div id="pinExportarError" class="pin-error"></div>
-      </div>
-      <button type="button" id="btnExportar" class="secondary-btn" disabled>Exportar registros</button>
-    </div>
   </div>
 
   <div id="historial" class="form-panel">
@@ -318,10 +323,27 @@
     </div>
   </div>
 
+  <div id="etiquetaImprimir">
+    <div class="etiq-marco">
+      <div class="etiq-titulo">NO CONFORME</div>
+      <div class="etiq-id" id="etiqId">—</div>
+      <table class="etiq-tabla">
+        <tr><th>Fecha</th><td id="etiqFecha"></td></tr>
+        <tr><th>Orden</th><td id="etiqOrden"></td></tr>
+        <tr><th>SKU</th><td id="etiqSku" class="etiq-sku"></td></tr>
+        <tr><th>Producto</th><td id="etiqProducto"></td></tr>
+        <tr><th>Cliente</th><td id="etiqCliente"></td></tr>
+        <tr><th>Defecto</th><td id="etiqDefecto"></td></tr>
+        <tr><th>Cantidad</th><td id="etiqCantidad"></td></tr>
+        <tr><th>Origen</th><td id="etiqOrigen"></td></tr>
+        <tr><th>Autoriza</th><td id="etiqAutoriza"></td></tr>
+      </table>
+    </div>
+  </div>
+
   <script>
     const VALIDACIONES_URL = "data/validaciones.json";
     const ORDENES_URL = "data/ordenes.json";
-    const REGISTROS_KEY = "ncRegistros";
     const ULTIMO_ID_KEY = "ncUltimoID_v2";
     // URL de la Aplicación web de Apps Script (Implementar > Nueva implementación)
     const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzwAib5SjWeallxMSRfzjs6Na5ZEHGY0DrsRno8hRwbxXaHVGtZUEVt2bEgCem9LdLqVg/exec";
@@ -703,7 +725,7 @@
       const clave = normalizarClave(valor);
 
       if (!clave) {
-        hint.textContent = "Escribe la orden para traer cliente, SKU y producto desde Seguimiento OT (rep-ov-espec).";
+        hint.textContent = "Escribe la orden para traer cliente, SKU, ID producto y producto desde Seguimiento OT (rep-ov-espec).";
         productoSeleccionDiv.style.display = "none";
         return;
       }
@@ -723,7 +745,7 @@
       const unicos = [];
       const vistos = new Set();
       registros.forEach(r => {
-        const key = codigoDe(r) + "||" + r.producto;
+        const key = codigoDe(r) + "||" + (r.idProducto || "") + "||" + r.producto;
         if (!vistos.has(key)) {
           vistos.add(key);
           unicos.push(r);
@@ -735,14 +757,14 @@
       if (unicos.length === 1) {
         aplicarProducto(unicos[0]);
         productoSeleccionDiv.style.display = "none";
-        hint.textContent = "Cliente, SKU y producto encontrados en rep-ov-espec.";
+        hint.textContent = "Cliente, SKU, ID producto y producto encontrados en rep-ov-espec.";
       } else {
         const select = document.getElementById("productoOpciones");
         select.innerHTML = "";
         unicos.forEach((r, i) => {
           const opt = document.createElement("option");
           opt.value = i;
-          opt.textContent = (codigoDe(r) ? codigoDe(r) + " - " : "") + r.producto;
+          opt.textContent = [codigoDe(r), r.idProducto, r.producto].filter(Boolean).join(" - ");
           select.appendChild(opt);
         });
         select.onchange = function() {
@@ -757,36 +779,24 @@
     function aplicarProducto(registro) {
       setCampo("producto", registro.producto);
       setCampo("codigo", codigoDe(registro));
+      setCampo("id_producto", registro.idProducto);
     }
 
     function setCampo(id, valor) {
       const input = document.getElementById(id);
-      if (!valor) return;
-      input.value = valor;
-      input.classList.add("auto-filled");
-    }
-
-    function leerRegistros() {
-      try {
-        return JSON.parse(localStorage.getItem(REGISTROS_KEY) || "[]");
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function guardarCopiaLocal(data) {
-      const registros = leerRegistros();
-      registros.push(data);
-      localStorage.setItem(REGISTROS_KEY, JSON.stringify(registros));
-      localStorage.setItem(ULTIMO_ID_KEY, String(data.id));
+      if (!input) return;
+      const v = valor == null ? "" : String(valor).trim();
+      input.value = v;
+      if (v) input.classList.add("auto-filled");
+      else input.classList.remove("auto-filled");
     }
 
     function limpiarFormulario(form) {
       form.reset();
       document.getElementById("um").value = "KG";
       document.getElementById("productoSeleccion").style.display = "none";
-      ["cliente", "producto", "codigo"].forEach(id => document.getElementById(id).classList.remove("auto-filled"));
-      document.getElementById("ordenHint").textContent = "Escribe la orden para traer cliente, SKU y producto desde Seguimiento OT (rep-ov-espec).";
+      ["cliente", "producto", "codigo", "id_producto"].forEach(id => document.getElementById(id).classList.remove("auto-filled"));
+      document.getElementById("ordenHint").textContent = "Escribe la orden para traer cliente, SKU, ID producto y producto desde Seguimiento OT (rep-ov-espec).";
       reiniciarCamposCondicionales();
       fechaHoy();
     }
@@ -842,13 +852,188 @@
       "Proceso que detecta", "Máquina que detecta", "Operador que detecta",
       "Proceso que origina", "Máquina que origina", "Operador que origina",
       "Supervisor que origina", "Defecto", "Reporta", "Autorizo",
-      "Se autoriza", "Se sanea", "Material recuperado", "Material rechazado"
+      "Se autoriza", "Se sanea", "Material recuperado", "Material rechazado",
+      "ID Producto"
     ];
 
     function escaparHtml(s) {
       return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
         return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
       });
+    }
+
+    function textoEtiqueta(v) {
+      const s = String(v == null ? "" : v).trim();
+      return s || "—";
+    }
+
+    function unirCantidad(kg, um, pzas, umPzas) {
+      const partes = [];
+      const kilos = String(kg == null ? "" : kg).trim();
+      const pzasTxt = String(pzas == null ? "" : pzas).trim();
+      if (kilos) partes.push(kilos + " " + (String(um || "KG").trim() || "KG"));
+      if (pzasTxt) partes.push(pzasTxt + (String(umPzas || "").trim() ? " " + String(umPzas).trim() : ""));
+      return partes.length ? partes.join(" / ") : "—";
+    }
+
+    function unirOrigen(proceso, maquina) {
+      const partes = [proceso, maquina].map(function (v) { return String(v == null ? "" : v).trim(); }).filter(Boolean);
+      return partes.length ? partes.join(" · ") : "—";
+    }
+
+    function datosEtiquetaDesdeFormulario() {
+      return {
+        id: document.getElementById("id").value,
+        fecha: document.getElementById("fecha").value,
+        orden: document.getElementById("orden").value,
+        sku: document.getElementById("codigo").value,
+        producto: document.getElementById("producto").value,
+        cliente: document.getElementById("cliente").value,
+        defecto: document.getElementById("defecto").value,
+        cantidad: unirCantidad(
+          document.getElementById("cantidad").value,
+          document.getElementById("um").value,
+          document.getElementById("cantidad_pzas").value,
+          document.getElementById("um_pzas").value
+        ),
+        origen: unirOrigen(document.getElementById("proceso_origina").value, document.getElementById("maquina").value),
+        autoriza: document.getElementById("se_autoriza").value
+      };
+    }
+
+    function datosEtiquetaDesdePayload(data) {
+      return {
+        id: data.id,
+        fecha: data.fecha,
+        orden: data.orden,
+        sku: data.codigo,
+        producto: data.producto,
+        cliente: data.cliente,
+        defecto: data.defecto,
+        cantidad: unirCantidad(data.cantidad, data.um, data.cantidad_pzas, data.um_pzas),
+        origen: unirOrigen(data.proceso_origina, data.maquina),
+        autoriza: data.se_autoriza
+      };
+    }
+
+    function datosEtiquetaDesdeHistorial(fila) {
+      return {
+        id: fila["ID"],
+        fecha: fila["Fecha"],
+        orden: fila["Orden"],
+        sku: fila["SKU"],
+        producto: fila["Producto"],
+        cliente: fila["Cliente"],
+        defecto: fila["Defecto"],
+        cantidad: unirCantidad(fila["Cantidad KG"], fila["UM"], fila["Cantidad Pzas/ML"], fila["Unidad"]),
+        origen: unirOrigen(fila["Proceso que origina"], fila["Máquina que origina"]),
+        autoriza: fila["Se autoriza"]
+      };
+    }
+
+    function llenarEtiqueta(datos) {
+      document.getElementById("etiqId").textContent = "ID " + textoEtiqueta(datos.id);
+      document.getElementById("etiqFecha").textContent = textoEtiqueta(datos.fecha);
+      document.getElementById("etiqOrden").textContent = textoEtiqueta(datos.orden);
+      document.getElementById("etiqSku").textContent = textoEtiqueta(datos.sku);
+      document.getElementById("etiqProducto").textContent = textoEtiqueta(datos.producto);
+      document.getElementById("etiqCliente").textContent = textoEtiqueta(datos.cliente);
+      document.getElementById("etiqDefecto").textContent = textoEtiqueta(datos.defecto);
+      document.getElementById("etiqCantidad").textContent = textoEtiqueta(datos.cantidad);
+      document.getElementById("etiqOrigen").textContent = textoEtiqueta(datos.origen);
+      document.getElementById("etiqAutoriza").textContent = textoEtiqueta(datos.autoriza);
+    }
+
+    function etiquetaTieneDatos(datos) {
+      return String(datos.orden || "").trim() !== "" || String(datos.sku || "").trim() !== "";
+    }
+
+    function zplTexto(v) {
+      return String(v == null ? "" : v)
+        .replace(/[\^~\\]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function zplLinea(v) {
+      return zplTexto(v) || "-";
+    }
+
+    function codigoBarrasEtiqueta(datos) {
+      const sku = zplTexto(datos.sku).replace(/\s+/g, "");
+      if (/^[A-Za-z0-9\-\.\/\+]+$/.test(sku) && sku.length >= 3) return sku;
+      const orden = zplTexto(datos.orden).replace(/\s+/g, "");
+      if (/^[A-Za-z0-9\-\.\/\+]+$/.test(orden) && orden.length >= 3) return orden;
+      return "";
+    }
+
+    function armarZpl(datos) {
+      const id = zplLinea(datos.id);
+      const fecha = zplLinea(datos.fecha);
+      const orden = zplLinea(datos.orden);
+      const sku = zplLinea(datos.sku);
+      const producto = zplLinea(datos.producto);
+      const cliente = zplLinea(datos.cliente);
+      const defecto = zplLinea(datos.defecto);
+      const cantidad = zplLinea(datos.cantidad);
+      const origen = zplLinea(datos.origen);
+      const autoriza = zplLinea(datos.autoriza);
+      const barras = codigoBarrasEtiqueta(datos);
+      const lineas = [
+        "^XA",
+        "^CI28",
+        "^PW812",
+        "^LL406",
+        "^LH0,0",
+        "^FO20,10^A0N,32,32^FDNO CONFORME^FS",
+        "^FO520,10^A0N,32,32^FDID " + id + "^FS",
+        "^FO20,46^GB772,2,2^FS",
+        "^FO20,56^A0N,24,24^FD" + fecha + "^FS",
+        "^FO20,86^A0N,26,26^FDOT " + orden + "^FS",
+        "^FO20,118^A0N,28,28^FDSKU " + sku + "^FS",
+        "^FO20,152^A0N,22,22^FB770,2,0,L,0^FD" + producto + "^FS",
+        "^FO20,204^A0N,20,20^FB770,1,0,L,0^FD" + cliente + "^FS",
+        "^FO20,230^A0N,22,22^FDDefecto: " + defecto + "^FS",
+        "^FO20,258^A0N,20,20^FDCant: " + cantidad + "^FS",
+        "^FO420,258^A0N,20,20^FDAutoriza: " + autoriza + "^FS",
+        "^FO20,284^A0N,18,18^FB770,1,0,L,0^FDOrigen: " + origen + "^FS"
+      ];
+      if (barras) {
+        lineas.push("^FO20,312^BY2,2,50^BCN,48,N,N,N^FD" + barras + "^FS");
+      }
+      lineas.push("^XZ");
+      return lineas.join("\n");
+    }
+
+    function enviarZplZebra(zpl) {
+      return new Promise(function (resolve) {
+        if (!window.BrowserPrint || typeof window.BrowserPrint.getDefaultDevice !== "function") {
+          resolve(false);
+          return;
+        }
+        try {
+          window.BrowserPrint.getDefaultDevice("printer", function (device) {
+            if (!device || typeof device.send !== "function") {
+              resolve(false);
+              return;
+            }
+            device.send(zpl, function () { resolve(true); }, function () { resolve(false); });
+          }, function () { resolve(false); });
+        } catch (err) {
+          resolve(false);
+        }
+      });
+    }
+
+    async function imprimirEtiqueta(datos) {
+      if (!etiquetaTieneDatos(datos)) {
+        alert("Completa al menos la orden o el SKU para imprimir la etiqueta.");
+        return;
+      }
+      llenarEtiqueta(datos);
+      const enviada = await enviarZplZebra(armarZpl(datos));
+      if (enviada) return;
+      window.print();
     }
 
     function mostrarPestana(nombre) {
@@ -864,14 +1049,14 @@
       const tabla = document.getElementById("tablaHistorial");
       const thead = tabla.querySelector("thead");
       const tbody = tabla.querySelector("tbody");
-      thead.innerHTML = "<tr>" + HISTORIAL_COLUMNAS.map(function (h) {
+      thead.innerHTML = "<tr><th>Etiqueta</th>" + HISTORIAL_COLUMNAS.map(function (h) {
         return "<th>" + escaparHtml(h) + "</th>";
       }).join("") + "</tr>";
       tbody.innerHTML = "";
       if (!registros.length) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = HISTORIAL_COLUMNAS.length;
+        td.colSpan = HISTORIAL_COLUMNAS.length + 1;
         td.textContent = "No hay registros para mostrar.";
         tr.appendChild(td);
         tbody.appendChild(tr);
@@ -879,6 +1064,16 @@
       }
       registros.forEach(function (fila) {
         const tr = document.createElement("tr");
+        const tdBtn = document.createElement("td");
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "etiq-btn";
+        btn.textContent = "Imprimir";
+        btn.addEventListener("click", function () {
+          imprimirEtiqueta(datosEtiquetaDesdeHistorial(fila));
+        });
+        tdBtn.appendChild(btn);
+        tr.appendChild(tdBtn);
         HISTORIAL_COLUMNAS.forEach(function (h) {
           const td = document.createElement("td");
           td.textContent = fila[h] == null ? "" : fila[h];
@@ -925,6 +1120,9 @@
     document.getElementById("tabCaptura").addEventListener("click", function () { mostrarPestana("captura"); });
     document.getElementById("tabHistorial").addEventListener("click", function () { mostrarPestana("historial"); });
     document.getElementById("btnActualizarHistorial").addEventListener("click", cargarHistorial);
+    document.getElementById("btnImprimirEtiqueta").addEventListener("click", function () {
+      imprimirEtiqueta(datosEtiquetaDesdeFormulario());
+    });
 
     document.getElementById("formNoConforme").addEventListener("submit", async function(e) {
       e.preventDefault();
@@ -935,76 +1133,22 @@
       const textoOriginal = btn.textContent;
       btn.disabled = true;
       btn.textContent = "Guardando en Google Sheets...";
-      guardarCopiaLocal(data);
       try {
         await guardarEnGoogleSheets(data);
         const idEnviado = Number(data.id) || 1;
-        alert("Registro enviado a Google Sheets. El ID definitivo lo asigna la hoja.");
+        const imprimir = confirm("Registro enviado a Google Sheets. ¿Imprimir etiqueta en Zebra?");
+        if (imprimir) imprimirEtiqueta(datosEtiquetaDesdePayload(data));
         limpiarFormulario(this);
         await aplicarIdDesdeSheets({ minEsperado: idEnviado + 1, intentos: 6, espera: 700 });
         if (document.getElementById("historial").classList.contains("panel-visible")) {
           cargarHistorial();
         }
       } catch (err) {
-        alert("No se pudo guardar en Google Sheets: " + err.message + "\nSe quedó una copia en este navegador (Exportar registros).");
+        alert("No se pudo guardar en Google Sheets: " + err.message);
       } finally {
         btn.disabled = false;
         btn.textContent = textoOriginal;
       }
-    });
-
-    const ACCESO_PIN = "2580";
-    const EXPORTAR_PIN = "7391";
-    const PIN_KEY = "ncPinOk";
-    const EXPORTAR_PIN_KEY = "ncPinExportarOk_v2";
-
-    function actualizarBotonExportar() {
-      const ok = sessionStorage.getItem(EXPORTAR_PIN_KEY) === "1";
-      document.getElementById("btnExportar").disabled = !ok;
-    }
-
-    document.getElementById("pinExportar").addEventListener("input", function() {
-      this.value = this.value.replace(/\D/g, "").slice(0, 4);
-      const error = document.getElementById("pinExportarError");
-      error.textContent = "";
-      if (this.value.length < 4) {
-        sessionStorage.removeItem(EXPORTAR_PIN_KEY);
-        actualizarBotonExportar();
-        return;
-      }
-      if (this.value === EXPORTAR_PIN) {
-        sessionStorage.setItem(EXPORTAR_PIN_KEY, "1");
-        actualizarBotonExportar();
-      } else {
-        sessionStorage.removeItem(EXPORTAR_PIN_KEY);
-        error.textContent = "PIN incorrecto.";
-        this.value = "";
-        actualizarBotonExportar();
-      }
-    });
-
-    document.getElementById("btnExportar").addEventListener("click", function() {
-      if (sessionStorage.getItem(EXPORTAR_PIN_KEY) !== "1") {
-        alert("Ingresa el PIN de 4 dígitos para descargar.");
-        return;
-      }
-      const registros = leerRegistros();
-      if (!registros.length) {
-        alert("No hay registros guardados en este navegador.");
-        return;
-      }
-      const headers = Object.keys(registros[0]);
-      const lineas = [headers.join(",")];
-      registros.forEach(r => {
-        lineas.push(headers.map(h => '"' + String(r[h] == null ? "" : r[h]).replace(/"/g, '""') + '"').join(","));
-      });
-      const blob = new Blob(["\uFEFF" + lineas.join("\n")], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "registros-no-conforme.csv";
-      a.click();
-      URL.revokeObjectURL(url);
     });
 
     function iniciarApp() {
@@ -1013,49 +1157,15 @@
       cargarValidaciones();
       cargarOrdenes();
       verificarGoogleSheets();
-      actualizarBotonExportar();
     }
 
     document.addEventListener("visibilitychange", function() {
-      if (document.visibilityState === "visible" && sessionStorage.getItem(PIN_KEY) === "1") {
+      if (document.visibilityState === "visible") {
         aplicarIdDesdeSheets();
       }
     });
 
-    function desbloquearApp() {
-      sessionStorage.setItem(PIN_KEY, "1");
-      document.body.classList.remove("bloqueado");
-      iniciarApp();
-    }
-
-    document.getElementById("formPin").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const pin = document.getElementById("pin");
-      const error = document.getElementById("pinError");
-      if (pin.value === ACCESO_PIN) {
-        error.textContent = "";
-        desbloquearApp();
-      } else {
-        error.textContent = "PIN incorrecto.";
-        pin.value = "";
-        pin.focus();
-      }
-    });
-
-    document.getElementById("pin").addEventListener("input", function() {
-      this.value = this.value.replace(/\D/g, "").slice(0, 4);
-      document.getElementById("pinError").textContent = "";
-    });
-
-    window.onload = function() {
-      if (sessionStorage.getItem(PIN_KEY) === "1") {
-        document.body.classList.remove("bloqueado");
-        iniciarApp();
-      } else {
-        document.body.classList.add("bloqueado");
-        document.getElementById("pin").focus();
-      }
-    };
+    window.onload = iniciarApp;
   </script>
 </body>
 </html>
