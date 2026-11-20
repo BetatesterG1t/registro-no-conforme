@@ -178,7 +178,8 @@
         </div>
         <div>
           <label for="id_producto">ID Producto</label>
-          <input type="text" id="id_producto" name="id_producto">
+          <input type="text" id="id_producto" name="id_producto" readonly>
+          <div class="hint">Se llena solo con la columna ID Producto del Seguimiento OT.</div>
         </div>
         <div class="span-2">
           <label for="producto">Producto</label>
@@ -757,7 +758,9 @@
       if (unicos.length === 1) {
         aplicarProducto(unicos[0]);
         productoSeleccionDiv.style.display = "none";
-        hint.textContent = "Cliente, SKU, ID producto y producto encontrados en rep-ov-espec.";
+        hint.textContent = idProductoDe(unicos[0])
+          ? "Cliente, SKU, ID producto y producto encontrados en rep-ov-espec."
+          : "Cliente, SKU y producto encontrados. Esta orden no trae ID Producto en el Excel.";
       } else {
         const select = document.getElementById("productoOpciones");
         select.innerHTML = "";
@@ -776,10 +779,15 @@
       }
     }
 
+    function idProductoDe(registro) {
+      if (!registro) return "";
+      return String(registro.idProducto || registro.id_producto || "").trim();
+    }
+
     function aplicarProducto(registro) {
       setCampo("producto", registro.producto);
       setCampo("codigo", codigoDe(registro));
-      setCampo("id_producto", registro.idProducto);
+      setCampo("id_producto", idProductoDe(registro));
     }
 
     function setCampo(id, valor) {
